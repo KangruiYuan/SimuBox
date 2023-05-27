@@ -1,0 +1,40 @@
+[build-system]
+requires = [
+"setuptools>=42",
+"setuptools-scm",
+"wheel"
+]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project]
+name = "SimuBox"
+version = "0.1.0"
+authors = [
+    { name = "Alkaid Yuan", email = "kryuan@qq.com" }
+]
+description = "Free python package to do some science calculation."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { file = "LICENSE" }
+classifiers =[
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+    "pytorch",
+    "matplotlib",
+    "scipy",
+    "opencv-python",
+    "numpy",
+    "pandas"
+]
+
+[project.urls]
+"Homepage" = "https://github.com/KangruiYuan/SimuBox"
+
+[tool.setuptools_scm]

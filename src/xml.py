@@ -1,6 +1,5 @@
 
 from tqdm import tqdm
-import xml.dom.minidom
 import pandas as pd
 import numpy as np
 import re
