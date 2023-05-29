@@ -37,7 +37,6 @@ class PhaseDiagram():
                         'fA': r'$f_{\rm{A}}$',
                         'chiN': r'$\chi \rm{N}$'
                     },
-                    div = 1,
                     **kwargs
                     ) -> None:
         
@@ -47,7 +46,6 @@ class PhaseDiagram():
         self.label_dict.update(kwargs.get('label', {}))
         self.xlabel = xlabel
         self.ylabel = ylabel
-        self.div = div
         pass
     
     def query_point(self, df, xval=None, yval=None, **kwargs):
@@ -72,20 +70,31 @@ class PhaseDiagram():
             if i in candidates:
                 return True
         return False
-    
+
+    def data(self, path, **kwargs):
+        dropset = kwargs.get('dropset', ['lx', 'ly', 'lz', 'phase', 'freeE'])
+        div = kwargs.get('div', 1)
+        div_var = kwargs.get('div_var', 'chiN')
+        acc = kwargs.get('acc', 3)
+
+        df = pd.read_csv(path)
+        if dropset:
+            df = df.drop_duplicates(subset=dropset)
+        df['lylz'] = np.around(df['ly']/df['lz'], acc)
+        df['lxly'] = np.around(df['lx']/df['ly'], acc)
+        try:
+            df[div_var] = df[div_var]/div
+        except KeyError:
+            pass
+        return df
+
     def compare(self,
                 path:str,
                 plot:bool=True,
                 acc:int=3,
                 **kwargs):
         
-        dropset = kwargs.get('dropset', ['lx', 'ly', 'lz', 'phase'])
-        df = pd.read_csv(path)
-        if dropset:
-            df = df.drop_duplicates(subset=dropset)
-        df['lylz'] = np.around(df['ly']/df['lz'], acc)
-        df['lxly'] = np.around(df['lx']/df['ly'], acc)
-        df[self.ylabel] = df[self.ylabel]/self.div
+        df = self.data(path=path, acc=acc)
         print(f"Include phase: {set(df['phase'].values)}")
         
         plot_dict = dict()

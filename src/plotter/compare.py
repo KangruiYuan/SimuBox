@@ -95,7 +95,7 @@ class CompareJudger():
         df['lxly'] = np.around(df['lx']/df['ly'], self.acc)
         try:
             df['chiN'] = df['chiN']/self.div
-        except:
+        except KeyError:
             pass
         return df
     
