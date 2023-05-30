@@ -69,10 +69,15 @@ class Labels:
     }
 
 
-_style_ref = (cycler(color=list('rbm')) +
-          cycler(marker=['s', 'X', 'v']))
-_style_abs = (cycler(color=list('krbm')) +
-          cycler(marker=['o', 's', 'X', 'v']))
+_style_ref = (cycler(color=list('rbm') + [
+                'indianred', 'tomato', 'chocolate',
+                'olivedrab', 'teal', 'deepskyblue', 'darkviolet']) +
+          cycler(marker=list('sXvoP*D><p')))
+
+_style_abs = (cycler(color=list('krbm') + [
+                'indianred', 'tomato', 'chocolate',
+                'olivedrab', 'teal', 'deepskyblue']) +
+              cycler(marker=list('osXvP*D><p')))
 
 class CompareJudger():
     
@@ -90,6 +95,7 @@ class CompareJudger():
     # @lazyproperty
     def data(self, subset=['lx', 'ly', 'lz', 'phase', 'freeE'], **kwargs):
         df = pd.read_csv(self.path)
+        df = df.dropna(axis=0)
         df = df.drop_duplicates(subset=subset)
         df['lylz'] = np.around(df['ly']/df['lz'], self.acc)
         df['lxly'] = np.around(df['lx']/df['ly'], self.acc)
@@ -100,6 +106,9 @@ class CompareJudger():
         return df
     
     def ref_compare(self, base, others, xlabel, ylabel, ax:Optional[object]=None, horiline:bool=False, **kwargs):
+        
+        ref_labels = Labels.ref_label.copy()
+        ref_labels.update(kwargs.get('labels', {}))
         
         data = self.data()
         data = data.sort_values(by=xlabel)
@@ -127,13 +136,13 @@ class CompareJudger():
             # base_xticks_mask = base_xticks[inverse_mask]
             base_yticks_mask = base_yticks[inverse_mask]
             ax.plot(o_xticks, o_yticks-base_yticks_mask, 
-                    label=Labels.ref_label[o],
+                    label=ref_labels.get(o, o),
                      lw=2.5, markersize=8, alpha=1.0)
         
         if horiline:
             ax.plot(
                 base_xticks, [0]*len(base_xticks),
-                label=Labels.ref_label[base],
+                label=ref_labels.get(base, base),
                 lw=2.5, c='k', marker='o', markersize=8, alpha=0.8)
         
         if trans := kwargs.get('trans'):
@@ -142,11 +151,12 @@ class CompareJudger():
         
         ax.xaxis.set_minor_locator(AutoMinorLocator(5))
         ax.yaxis.set_minor_locator(AutoMinorLocator(5))
-        ax.yaxis.set_major_locator(MultipleLocator(kwargs.get('ymain', 0.005)))
+        if ymain := kwargs.get('ymain', False):
+            ax.yaxis.set_major_locator(MultipleLocator(ymain))
         
         plt.tick_params(axis='both', labelsize=25, pad=8)
-        plt.ylabel(Labels.ref_label.get(ylabel, ylabel), fontsize=30)
-        plt.xlabel(Labels.ref_label.get(xlabel, xlabel), fontsize=30)
+        plt.ylabel(ref_labels.get(ylabel, ylabel), fontsize=30)
+        plt.xlabel(ref_labels.get(xlabel, xlabel), fontsize=30)
         if kwargs.get('legend', True):
             plt.legend(fontsize=25)
         plt.margins(*kwargs.get('margin',(0.15,0.15)))
@@ -155,6 +165,9 @@ class CompareJudger():
             plt.savefig(save, dpi=300)
 
     def abs_compare(self, phases: Union[list, str], xlabel, ylabel, **kwargs):
+        
+        abs_labels = Labels.abs_label.copy()
+        abs_labels.update(kwargs.get('labels', {}))
 
         data = self.data()
         data = data.sort_values(by=xlabel)
@@ -168,14 +181,16 @@ class CompareJudger():
         for p in phases:
             tmp = data[data.phase == p]
             ax.plot(tmp[xlabel], tmp[ylabel],
-                    label=Labels.abs_label.get(p, p),
+                    label=abs_labels.get(p, p),
                     lw=2.5, markersize=8)
             
-        plt.xlabel(Labels.abs_label.get(xlabel, xlabel), fontsize=30)
-        plt.ylabel(Labels.abs_label.get(ylabel, ylabel), fontsize=30)
+        plt.xlabel(abs_labels.get(xlabel, xlabel), fontsize=30)
+        plt.ylabel(abs_labels.get(ylabel, ylabel), fontsize=30)
         plt.tick_params(axis='both', labelsize=25, pad=8)
         ax.xaxis.set_minor_locator(AutoMinorLocator(5))
         ax.yaxis.set_minor_locator(AutoMinorLocator(5))
+        if ymain := kwargs.get('ymain', False):
+            ax.yaxis.set_major_locator(MultipleLocator(ymain))
         if trans := kwargs.get('trans'):
             for i in trans:
                 plt.axvline(x=i, c='k', alpha=0.5, ls='--', lw=2.5)

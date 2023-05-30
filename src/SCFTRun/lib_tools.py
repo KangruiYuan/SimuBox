@@ -23,6 +23,36 @@ class Cells(Enum):
 class PhaseInit:
 
     ABC = dict(
+        C2L=[
+            {
+                "ComponentName": "A",
+                "Intensity": 0.2,
+                "TopCenter": [0.0, 0.0, 0.0],
+                "BottomCenter": [1.0, 0.0, 0.0],
+                "Radius": 0.2
+            },
+            {
+                "ComponentName": "A",
+                "Intensity": 0.2,
+                "TopCenter": [0.0, 1.0, 0.0],
+                "BottomCenter": [1.0, 1.0, 0.0],
+                "Radius": 0.2
+            },
+            {
+                "ComponentName": "C",
+                "Intensity": 0.2,
+                "TopCenter": [0.0, 0.0, 1.0],
+                "BottomCenter": [1.0, 0.0, 1.0],
+                "Radius": 0.2
+            },
+            {
+                "ComponentName": "C",
+                "Intensity": 0.2,
+                "TopCenter": [0.0, 1.0, 1.0],
+                "BottomCenter": [1.0, 1.0, 1.0],
+                "Radius": 0.2
+            }
+        ],
         C4=[
             {
                 "ComponentName": "A",
@@ -344,10 +374,40 @@ class PhaseInit:
                 "Radius": 0.5
             }
         ]
-
     )
 
     AB = dict(
+        C4=[
+            {
+                "ComponentName": "A",
+                "Intensity": 0.2,
+                "TopCenter": [0.0, 0.0, 0.0],
+                "BottomCenter": [1.0, 0.0, 0.0],
+                "Radius": 0.2
+            },
+            {
+                "ComponentName": "A",
+                "Intensity": 0.2,
+                "TopCenter": [0.0, 1.0, 0.0],
+                "BottomCenter": [1.0, 1.0, 0.0],
+                "Radius": 0.2
+            },
+            {
+                "ComponentName": "A",
+                "Intensity": 0.2,
+                "TopCenter": [0.0, 0.0, 1.0],
+                "BottomCenter": [1.0, 0.0, 1.0],
+                "Radius": 0.2
+            },
+            {
+                "ComponentName": "A",
+                "Intensity": 0.2,
+                "TopCenter": [0.0, 1.0, 1.0],
+                "BottomCenter": [1.0, 1.0, 1.0],
+                "Radius": 0.2
+            },
+        ],
+
         iHPa=[
             {
                 "Radius": 0.5,

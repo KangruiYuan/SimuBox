@@ -1,4 +1,5 @@
 from .lib_tools import Cells
+from .lib_tools import PhaseInit
 def Mask_AB_A(pn, pv, input_dict):
     if pn == "fA":
         input_dict["Block"][0]['ContourLength'] = pv
@@ -36,43 +37,38 @@ def Mask_AB_A(pn, pv, input_dict):
 
 def BABCB(pn, pv, input_dict):
     if pn == "fA":
+        global fB
         fC = fA = pv
         fB = round(1 - fA - fC, 6)
         input_dict["Block"][1]['ContourLength'] = fA
         input_dict["Block"][3]['ContourLength'] = fC
 
     elif pn == 'tau':
-        tau = pv
-        fB2 = round(tau * fB, 6)
-        fB1 = fB3 = round((1 - tau) * fB * 0.5, 6)
+        fB2 = round(pv * fB, 6)
+        fB1 = fB3 = round((1 - pv) * fB * 0.5, 6)
         input_dict["Block"][0]['ContourLength'] = fB1
         input_dict["Block"][2]['ContourLength'] = fB2
         input_dict["Block"][4]['ContourLength'] = fB3
-        input_dict['_tau_log'] = tau
+        input_dict['_tau_log'] = pv
 
 
     elif pn == "chiNAC":
-        chiNAC = pv
-        input_dict["Component"]["FloryHugginsInteraction"][0]["FloryHugginsParameter"] = chiNAC
-        input_dict["Component"]["FloryHugginsInteraction"][1]["FloryHugginsParameter"] = chiNAC
-        input_dict["Component"]["FloryHugginsInteraction"][2]["FloryHugginsParameter"] = chiNAC
+        input_dict["Component"]["FloryHugginsInteraction"][0]["FloryHugginsParameter"] = pv
+        input_dict["Component"]["FloryHugginsInteraction"][1]["FloryHugginsParameter"] = pv
+        input_dict["Component"]["FloryHugginsInteraction"][2]["FloryHugginsParameter"] = pv
 
     elif pn == "phase":
         SkipLineNumber = 1
         if pv == "C4":
-            input_dict["Initializer"]["ModelInitializer"]["Cylinder"] = PhaseInit.C4_init
+            input_dict["Initializer"]["ModelInitializer"]["Cylinder"] = PhaseInit.ABC['C4']
             input_dict["Initializer"]["UnitCell"]["Length"][0:3] = [
                 1.0, 3.0, 3.0]
-        elif pv == "C6":
-            input_dict["Initializer"]["ModelInitializer"]["Cylinder"] = PhaseInit.C6_init
-            input_dict["Initializer"]["UnitCell"]["Length"][0:3] = [
-                1.0, 3.8, 2.2]
         elif pv == 'Crect':
-            input_dict["Initializer"]["ModelInitializer"]["Cylinder"] = PhaseInit.C4_init
+            input_dict["Initializer"]["ModelInitializer"]["Cylinder"] = PhaseInit.ABC['Crect']
             input_dict["Initializer"]["UnitCell"]["Length"][0:3] = [
                 1.0, 3.510816, 2.744868]
         elif pv == 'L':
-            input_dict["Initializer"]["ModelInitializer"]["Lamellar"] = PhaseInit.L_init
+            input_dict["Initializer"]["ModelInitializer"]["Lamellar"] = PhaseInit.ABC['L']
             input_dict["Initializer"]["UnitCell"]["Length"][0:3] = [
                 1.0, 1.0, 4.3]
         elif pv == 'DG':

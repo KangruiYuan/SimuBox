@@ -22,7 +22,7 @@ matplotlib >= 3.6.2
 numpy >= 1.19.5
 opencv-contrib-python >= 4.7.0.72
 opencv-python >= 4.5.3.56
-opencv-python-headless >= 3.4.18.6
+pip i >= 3.4.18.6
 ```
 
 # Usage
@@ -46,4 +46,5 @@ opencv-python-headless >= 3.4.18.6
     - Landscaper
   - *phase*
     - PhaseDiagram
+- **SCFTRun**
 
