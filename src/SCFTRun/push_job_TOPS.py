@@ -22,6 +22,9 @@ class SCFTManager():
         assert len(paramValueList) == len(paramValueList)
         with open('input.json', "r") as f:
             input_dict = json.load(f, object_pairs_hook=OrderedDict)
+        
+        if 'Scripts' not in input_dict:
+            input_dict['Scripts'] = {}
 
         for pn, pv in zip(paramNameList, paramValueList):
             func(pn, pv, input_dict)

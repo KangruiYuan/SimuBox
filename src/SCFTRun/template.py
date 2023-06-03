@@ -1,6 +1,9 @@
 from .lib_tools import Cells
 from .lib_tools import PhaseInit
 def Mask_AB_A(pn, pv, input_dict):
+    
+    input_dict['Scripts'][pn] = pv
+    
     if pn == "fA":
         input_dict["Block"][0]['ContourLength'] = pv
         input_dict["Block"][1]['ContourLength'] = round(1-pv, 6)
@@ -25,9 +28,7 @@ def Mask_AB_A(pn, pv, input_dict):
             "Path": "phin.txt",
             "SkipLineNumber": 2
         }
-
-        input_dict['_phase_log'] = pv
-        input_dict['_which_type'] = 'gpu'
+        input_dict['Scripts']['cal_type'] = 'gpu'
 
     elif pn in ['No', 'Mark']:
         input_dict[pn] = pv
@@ -49,8 +50,6 @@ def BABCB(pn, pv, input_dict):
         input_dict["Block"][0]['ContourLength'] = fB1
         input_dict["Block"][2]['ContourLength'] = fB2
         input_dict["Block"][4]['ContourLength'] = fB3
-        input_dict['_tau_log'] = pv
-
 
     elif pn == "chiNAC":
         input_dict["Component"]["FloryHugginsInteraction"][0]["FloryHugginsParameter"] = pv
@@ -101,13 +100,10 @@ def BABCB(pn, pv, input_dict):
             "SkipLineNumber": SkipLineNumber
         }
 
-        input_dict['_phase_log'] = pv
-        input_dict['_which_type'] = 'cpu'
+        input_dict['Scripts']['cal_type'] = 'cpu'
         input_dict["Iteration"]["VariableCell"]["VariableCellAcceptance"] = [
                                                                                 0.01] * 6
         if pv in ['DG', 'CsCl', 'NaCl']:
-            input_dict["Iteration"]["VariableCell"]["VariableCellAcceptance"] = [
-                                                                                    0.05] * 6
             input_dict["Initializer"]["Mode"] = "FILE"
             input_dict["Solver"]["PseudospectralMethod"]["SpaceGridSize"] = [
                 64, 64, 64]
