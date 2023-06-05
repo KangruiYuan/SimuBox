@@ -51,6 +51,7 @@ pip i >= 3.4.18.6
   - *phase*
     - PhaseDiagram
 - **SCFTRun**
+  The scripts that execute the calculation task, and therefore have not been compiled, **needs to be modified as required.**
   - push_job_TOPS
   - repush
   - template

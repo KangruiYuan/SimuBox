@@ -19,11 +19,6 @@ parser.add_argument("-p", "--phase", default='rand',
 args = parser.parse_args()
 
 
-cmd1 = "tail ./printout.txt -n 1 -q | awk {'print $3'}"
-cmd2 = "tail ./printout.txt -n 1 -q | awk {'print $8'}"
-cmd3 = "tail -3 printout.txt | head -1"
-cmd4 = "tail -2 printout.txt | head -1"
-cmd5 = "tail -1 printout.txt | head -1"
 cmd_lxlylz = "tail -3 printout.txt | head -1"
 cmd_freeE_MaxC = "tail -1 printout.txt | head -1"
 lxlylz_re = re.compile('[.0-9]+(?!e)')
@@ -115,7 +110,6 @@ with open(os.path.join('CSV_Col/', extract_name), 'w', newline='') as csvfile:
                     Wrong_list.append(temp_path)
                     continue
                 cont = [i.strip().split(' ')[1:] for i in cont if i.split(' ')[1:]]
-                # dataDict = dict([line[0]: float(line[1]) if (len(line) == 2 and line[1] != 'nan') else line[0]:line[1] for line in dataDict])
                 cont = {line[0]: float(line[1])
                             for line in cont if len(line) == 2}
                 

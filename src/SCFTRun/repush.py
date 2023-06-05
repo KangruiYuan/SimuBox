@@ -14,6 +14,7 @@ parser = argparse.ArgumentParser(description="Parameters for data extraction")
 parser.add_argument("-n", "--name", default='EXTRACTED_DATA',
                     type=str, help="the File name")
 parser.add_argument("-d", "--dir", default=False, action='store_true')
+parser.add_argument("-a", "--all", default=False, action='store_true')
 parser.add_argument("-t", "--terminal", default='WORKING_DIR',
                     type=str, help="the Work Dir")
 args = parser.parse_args()
@@ -60,15 +61,14 @@ def FindWrongData(subList):
 
         json_base = readJson(i)
         if json_base is None: continue
-        # phase_log = json_base['_phase_log']
-        which_type = json_base.get('_which_type', 'cpu')
+        which_type = json_base['Scripts'].get('cal_type', 'gpu')
         if which_type == 'gpu' or os.path.isfile('fet.dat'):
             with open('fet.dat', 'r') as fp:
                 cont = fp.readlines()
             dataDict = [line.strip().split()[1:] for line in cont]
             dataDict = {line[0]:float(line[1]) for line in dataDict if len(line) == 2}
             # print(dataDict)
-            if json_base['Iteration']['IncompressibilityTarget'] < dataDict["inCompMax"]:
+            if args.all or (json_base['Iteration']['IncompressibilityTarget'] < dataDict["inCompMax"]):
                 WrongList.append({
                     'path': tmp_path,
                     'lxlylz': [dataDict['lx'], dataDict['ly'], dataDict['lz']],
@@ -95,11 +95,12 @@ def FindWrongData(subList):
                 print('Wrong:', tmp_path)
                 continue
         
-            if json_base['Iteration']['IncompressibilityTarget'] < uws[-1] or uws[2] < 0:
+            if args.all or (json_base['Iteration']['IncompressibilityTarget'] < uws[-1] or uws[2] < 0):
                 WrongList.append({
                     'path': tmp_path,
                     'lxlylz': lxlylz,
-                    'step':int(uws[0] + 1000)
+                    'step':int(uws[0] + 1000),
+                    'TYPE':'cpu'
                     })
                 print(tmp_path)
     return WrongList
@@ -117,6 +118,7 @@ def RepushOrDelete(wrongList):
             os.chdir(tmp_path)
             if repush == 'c':
                 json_base = readJson(tmp_path)
+                json_base['Scripts']['cal_type'] = 'gpu'
                 json_base["Iteration"]["MaxStep"] = i['step']
                 json_base['Initializer']["UnitCell"]['Length'] = i['lxlylz']
                 if os.path.isfile(os.path.join(tmp_path, 'phout.txt')):
@@ -131,10 +133,10 @@ def RepushOrDelete(wrongList):
                     with open('input.json', "w") as f:
                         json.dump(json_base, f, indent=4,
                                   separators=(",", ": "))
-                    if i['TYPE'] == 'cpu':
-                        job = sp.Popen(cpuJob, shell=True, stdout=sp.PIPE)
-                    else:
-                        job = sp.Popen(gpuJob, shell=True, stdout=sp.PIPE)
+                    # if i['TYPE'] == 'cpu':
+                    #     job = sp.Popen(cpuJob, shell=True, stdout=sp.PIPE)
+                    # else:
+                    job = sp.Popen(gpuJob, shell=True, stdout=sp.PIPE)
                 else:
                     with open('input.json', "w") as f:
                         json.dump(json_base, f, indent=4,

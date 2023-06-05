@@ -62,6 +62,7 @@ class VoronoiCell(InfoReader):
                 cv2.circle(img_voronoi, (centers[i][0], centers[i][1]),
                         3, (0, 0, 0), cv2.FILLED, cv2.LINE_AA, 0)
             self.img_voronoi = img_voronoi
+            plt.imshow(self.img_voronoi, aspect=lxlylz[2]/lxlylz[1], interpolation='spline16')
         
         self.size = size
         self.facets = facets
@@ -123,27 +124,29 @@ class VoronoiCell(InfoReader):
         X, Y = self.coordsMap(lxlylz, NxNyNz)
         centers = np.around(self.centers)
         centers = centers.astype(int)
-        centers_lxly = np.stack([X[centers[:, 0], centers[:, 1]],
-                                Y[centers[:, 0], centers[:, 1]]], axis=1)
+        centers_lxly = np.stack([X[centers[:, 1], centers[:, 0]],
+                                Y[centers[:, 1], centers[:, 0]]], axis=1)
         
         self.centers_lxly = centers_lxly
         
         mask = self.in_lim(point=centers_lxly,
-                    xlim=(self.lxlylz[1], 2*self.lxlylz[1]),
-                    ylim=(self.lxlylz[2], 2*self.lxlylz[2]))
+                    xlim=(0.9*self.lxlylz[2], 2.1*self.lxlylz[2]),
+                    ylim=(0.9*self.lxlylz[1], 2.1*self.lxlylz[1]))
         centers_cut = centers_lxly[mask]
         
         self.vor = Voronoi(centers_lxly, incremental=True)
 
-        plt.figure(figsize=kwargs.get('figsize', (6, 6)))
+        plt.figure()
+        # plt.figure(figsize=kwargs.get('figsize', (6, 6)))
         ax = plt.gca()
         fig = voronoi_plot_2d(
-            self.vor, ax,                 show_points=False,
+            self.vor, ax,
+            show_points=False,
             show_vertices=False, )
         
         plt.scatter(centers_cut[:, 0], centers_cut[:, 1], s=20, c='k')
-        plt.xlim(centers_cut[:, 0].min(), centers_cut[:, 0].max())
-        plt.ylim(centers_cut[:, 1].min(), centers_cut[:, 1].max())
+        plt.xlim(self.lxlylz[2]*0.5, 2.5*self.lxlylz[2])
+        plt.ylim(self.lxlylz[1]*0.5, 2.5*self.lxlylz[1])
         plt.xticks([])
         plt.yticks([])
         plt.tight_layout()

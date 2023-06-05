@@ -6,8 +6,8 @@ import subprocess as sp
 import numpy as np
 from collections import OrderedDict
 from itertools import product
-from .lib_tools import mypara
-from .template import Mask_AB_A
+from lib_tools import mypara
+from template import Mask_AB_A
 
 
 class SCFTManager():

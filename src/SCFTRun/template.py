@@ -1,5 +1,6 @@
-from .lib_tools import Cells
-from .lib_tools import PhaseInit
+from lib_tools import Cells
+from lib_tools import PhaseInit
+
 def Mask_AB_A(pn, pv, input_dict):
     
     input_dict['Scripts'][pn] = pv
@@ -37,6 +38,8 @@ def Mask_AB_A(pn, pv, input_dict):
 
 
 def BABCB(pn, pv, input_dict):
+    
+    input_dict['Scripts'][pn] = pv
     if pn == "fA":
         global fB
         fC = fA = pv
@@ -63,7 +66,7 @@ def BABCB(pn, pv, input_dict):
             input_dict["Initializer"]["UnitCell"]["Length"][0:3] = [
                 1.0, 3.0, 3.0]
         elif pv == 'Crect':
-            input_dict["Initializer"]["ModelInitializer"]["Cylinder"] = PhaseInit.ABC['Crect']
+            input_dict["Initializer"]["ModelInitializer"]["Cylinder"] = PhaseInit.ABC['C4']
             input_dict["Initializer"]["UnitCell"]["Length"][0:3] = [
                 1.0, 3.510816, 2.744868]
         elif pv == 'L':
@@ -71,7 +74,6 @@ def BABCB(pn, pv, input_dict):
             input_dict["Initializer"]["UnitCell"]["Length"][0:3] = [
                 1.0, 1.0, 4.3]
         elif pv == 'DG':
-            # input_dict["Initializer"]["Mode"] = "MODEL"
             # input_dict["Initializer"]["ModelInitializer"]["Gyroid"] = PhaseInit.G_init
             # input_dict["Solver"]["PseudospectralMethod"]["AcceptedSymmetry"] = "Cubic_Ia_3d"
             input_dict["Initializer"]["UnitCell"]["Length"][0:3] = [
@@ -80,7 +82,6 @@ def BABCB(pn, pv, input_dict):
                 5.163667]
 
         elif pv == 'CsCl':
-            # input_dict["Initializer"]["Mode"] = "MODEL"
             # input_dict["Initializer"]["ModelInitializer"]["Sphere"] = PhaseInit.CsCl_init
             # input_dict["Solver"]["PseudospectralMethod"]["AcceptedSymmetry"] = "Cubic_Pm_3n"
             input_dict["Initializer"]["UnitCell"]["Length"][0:3] = [
@@ -96,7 +97,7 @@ def BABCB(pn, pv, input_dict):
 
         input_dict["Initializer"]["FileInitializer"] = {
             "Mode": "OMEGA",
-            "Path": pv + "_phin.txt",
+            "Path": "phin.txt",
             "SkipLineNumber": SkipLineNumber
         }
 
