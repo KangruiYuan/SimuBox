@@ -7,7 +7,7 @@ from math import acos
 from collections import defaultdict
 from scipy.spatial import Voronoi, voronoi_plot_2d
 from tqdm import tqdm
-from .tools import InfoReader
+from ..SciTools import InfoReader
 
 __all__ = ['VoronoiCell']
 

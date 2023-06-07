@@ -1,5 +1,5 @@
 
-from .tools import InfoReader
+from ..SciTools import InfoReader
 import numpy as np
 from tqdm import tqdm
 from collections import defaultdict

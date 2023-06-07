@@ -140,17 +140,24 @@ class CompareJudger():
                      lw=2.5, markersize=8, alpha=1.0)
         
         if horiline:
+            rest = data[data['phase'] != base]
+            rest_xticks = rest[xlabel].values.unique()
+            mask = np.in1d(base_xticks, rest_xticks)
+            base_xticks_mask = base_xticks[mask]
             ax.plot(
-                base_xticks, [0]*len(base_xticks),
+                base_xticks_mask, np.zeros_like(base_xticks_mask), 
                 label=ref_labels.get(base, base),
                 lw=2.5, c='k', marker='o', markersize=8, alpha=0.8)
         
         if trans := kwargs.get('trans'):
             for t in trans:
                 ax.axvline(x=t, c='k', alpha=0.5, ls='--', lw=2.5)
-        
-        ax.xaxis.set_minor_locator(AutoMinorLocator(5))
-        ax.yaxis.set_minor_locator(AutoMinorLocator(5))
+        if xminor := kwargs.get('xminor', 5):
+            ax.xaxis.set_minor_locator(AutoMinorLocator(xminor))
+        if yminor := kwargs.get('yminor', 5):
+            ax.yaxis.set_minor_locator(AutoMinorLocator(yminor))
+        if xmain := kwargs.get('xmain', False):
+            ax.yaxis.set_major_locator(MultipleLocator(xmain))
         if ymain := kwargs.get('ymain', False):
             ax.yaxis.set_major_locator(MultipleLocator(ymain))
         
@@ -187,8 +194,12 @@ class CompareJudger():
         plt.xlabel(abs_labels.get(xlabel, xlabel), fontsize=30)
         plt.ylabel(abs_labels.get(ylabel, ylabel), fontsize=30)
         plt.tick_params(axis='both', labelsize=25, pad=8)
-        ax.xaxis.set_minor_locator(AutoMinorLocator(5))
-        ax.yaxis.set_minor_locator(AutoMinorLocator(5))
+        if xminor := kwargs.get('xminor', 5):
+            ax.xaxis.set_minor_locator(AutoMinorLocator(xminor))
+        if yminor := kwargs.get('yminor', 5):
+            ax.yaxis.set_minor_locator(AutoMinorLocator(yminor))
+        if xmain := kwargs.get('xmain', False):
+            ax.yaxis.set_major_locator(MultipleLocator(xmain))
         if ymain := kwargs.get('ymain', False):
             ax.yaxis.set_major_locator(MultipleLocator(ymain))
         if trans := kwargs.get('trans'):
