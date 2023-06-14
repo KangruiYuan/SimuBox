@@ -1,21 +1,20 @@
 
 # *SimuBox* for Science Calculation
 
-Github Version: ***0.1.6***
+GitHub Version: ***0.1.6***
 
 PYPI Version: ***0.1.6***
 
-This kit is designed to facilitate research in my research group. People who need to do similar work don't have to build computing systems over and over again.
-There are still many unfinished areas that can be raised, and I will do my best to improve them as soon as possible.
+该库为本人求学期间为完成科研工作而常用的模块的集合，可能并不完善。若有好意见请发布在`issue`或者通过邮件联系本人。
+`e-mail：kryuan@qq.com`
 
-# Guide for Installment
+# `Guide for Installment` 安装引导
 
-## Python
-
+## 请使用以下指令进行安装或者从`GitHub`中下载
 
 `pip install SimuBox`
 
-## Requirements
+## `Requirements` 环境要求
 
 ```
 python=3.9
@@ -26,12 +25,11 @@ matplotlib >= 3.6.2
 numpy >= 1.19.5
 opencv-contrib-python >= 4.7.0.72
 opencv-python >= 4.5.3.56
-pip i >= 3.4.18.6
 ```
 
-# Usage
+# `Usage` 使用说明
 
-## Modules & Functions
+## `Modules & Functions` 模块功能
 
 - *SciTools*
   - **tools**
@@ -55,7 +53,8 @@ pip i >= 3.4.18.6
     - PhaseDiagram
 - **ScriptRun**
 
-  The scripts that execute the calculation task, and therefore have not been compiled, **needs to be modified as required.**
+  以下脚本仅在`GitHub`上传，并未包含在PyPI的版本中。根据不同的需求，需要对以下脚本进行特定的补充和修改。
+
   - push_job_TOPS
   - repush
   - template
