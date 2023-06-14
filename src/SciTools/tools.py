@@ -5,6 +5,7 @@ import pandas as pd
 import json
 from collections import OrderedDict
 import matplotlib.pyplot as plt
+from pandas.errors import ParserError
 
 __all__ = ['InfoReader']
 
@@ -16,6 +17,7 @@ class InfoReader():
     def __init__(self, path, 
                  name_flag:bool=False, 
                  inverse_flag:bool=False, 
+                 scale_flag:bool=False,
                  filenames:list = ['printout.txt', 'phout.txt', 'input.json', 'fet.txt', 'block.txt']
                  ) -> None:
 
@@ -27,6 +29,7 @@ class InfoReader():
         self.freeE_re = re.compile('[.0-9e+-]+')
         self.name_flag = name_flag
         self.inverse_flag = inverse_flag
+        self.scale_flag = scale_flag
         pass
 
     def read_printout(self):
@@ -38,46 +41,56 @@ class InfoReader():
             self.lxlylz = np.array([1, 1, 1])
         
         if self.inverse_flag: self.lxlylz = self.lxlylz[::-1]
+        if self.scale_flag:
+            self.lxlylz = self.lxlylz * self.NxNyNz / self.NxNyNz.min()
 
     def read_phout(self, label=['A', 'B', 'C']):
-        NxNyNz = open(self.phout).readline().strip().split(' ')
-        NxNyNz = np.array(list(map(int, NxNyNz)), np.int32)
-        data = pd.read_csv(self.phout, skiprows=1, header=None, sep=' ')
-        self.data = data.dropna(axis=1, how='any')
-        shape = NxNyNz[1:] if NxNyNz[0] == 1 else NxNyNz
-        
-        if self.inverse_flag:
-            self.NxNyNz = NxNyNz[::-1]
-        else:
-            self.NxNyNz = NxNyNz
+        try:
+            NxNyNz = open(self.phout).readline().strip().split(' ')
+            NxNyNz = np.array(list(map(int, NxNyNz)), np.int32)
+            # data = pd.read_csv(self.phout, skiprows=1, header=None, delimiter=delimiter)
+            data = pd.read_csv(self.phout, skiprows=1, header=None, sep=r'[ ]+', engine='python')
+            self.data = data.dropna(axis=1, how='any')
+            shape = NxNyNz[1:] if NxNyNz[0] == 1 else NxNyNz
             
-        self.shape = shape
-        if self.name_flag:
-            for i in range(len(self.data.columns) // 2):
-                self.__dict__['phi'+label[i]] = self.data[i].values.reshape(shape)
-            for i in range(len(self.data.columns)  // 2, len(self.data.columns)):
-                self.__dict__['omega'+label[i - len(data.columns) // 2]] = self.data[i].values.reshape(shape)
-        else:
-            for i in range(len(self.data.columns)):
-                self.__dict__[
-                    "phi"+str(i)] = self.data[i].values.reshape(shape)
+            if self.inverse_flag:
+                self.NxNyNz = NxNyNz[::-1]
+            else:
+                self.NxNyNz = NxNyNz
+                
+            self.shape = shape
+            if self.name_flag:
+                for i in range(len(self.data.columns) // 2):
+                    self.__dict__['phi'+label[i]] = self.data[i].values.reshape(shape)
+                for i in range(len(self.data.columns)  // 2, len(self.data.columns)):
+                    self.__dict__['omega'+label[i - len(data.columns) // 2]] = self.data[i].values.reshape(shape)
+            else:
+                for i in range(len(self.data.columns)):
+                    self.__dict__[
+                        "phi"+str(i)] = self.data[i].values.reshape(shape)
+        except FileNotFoundError:
+            print('phout file not found')
+            
     
     def read_block(self):
-        NxNyNz = open(self.block).readline().strip().split(' ')
-        NxNyNz = np.array(list(map(int, NxNyNz)), np.int32)
-        data = pd.read_csv(self.block, skiprows=1, header=None, sep=' ')
-        self.data = data.dropna(axis=1, how='any')
-        shape = NxNyNz[1:] if NxNyNz[0] == 1 else NxNyNz
+        try:
+            NxNyNz = open(self.block).readline().strip().split(' ')
+            NxNyNz = np.array(list(map(int, NxNyNz)), np.int32)
+            data = pd.read_csv(self.block, skiprows=1, header=None, sep=' ')
+            self.data = data.dropna(axis=1, how='any')
+            shape = NxNyNz[1:] if NxNyNz[0] == 1 else NxNyNz
 
-        if self.inverse_flag:
-            self.NxNyNz = NxNyNz[::-1]
-        else:
-            self.NxNyNz = NxNyNz
+            if self.inverse_flag:
+                self.NxNyNz = NxNyNz[::-1]
+            else:
+                self.NxNyNz = NxNyNz
 
-        self.shape = shape
-        for i in range(len(self.data.columns)):
-            self.__dict__[
-                "block"+str(i)] = self.data[i].values.reshape(shape)
+            self.shape = shape
+            for i in range(len(self.data.columns)):
+                self.__dict__[
+                    "block"+str(i)] = self.data[i].values.reshape(shape)
+        except FileNotFoundError:
+            print("block file not found")
 
 
     def read_json(self):

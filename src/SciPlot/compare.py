@@ -141,7 +141,7 @@ class CompareJudger():
         
         if horiline:
             rest = data[data['phase'] != base]
-            rest_xticks = rest[xlabel].values.unique()
+            rest_xticks = rest[xlabel].unique()
             mask = np.in1d(base_xticks, rest_xticks)
             base_xticks_mask = base_xticks[mask]
             ax.plot(
@@ -164,8 +164,11 @@ class CompareJudger():
         plt.tick_params(axis='both', labelsize=25, pad=8)
         plt.ylabel(ref_labels.get(ylabel, ylabel), fontsize=30)
         plt.xlabel(ref_labels.get(xlabel, xlabel), fontsize=30)
-        if kwargs.get('legend', True):
-            plt.legend(fontsize=25)
+        if loc := kwargs.get('legend', 'in'):
+            if loc == 'in':
+                plt.legend(fontsize=25, loc='best')
+            elif loc == 'out':
+                plt.legend(fontsize=25, loc='upper left', bbox_to_anchor=(1, 1))
         plt.margins(*kwargs.get('margin',(0.15,0.15)))
         plt.tight_layout()
         if save := kwargs.get('save', False):
