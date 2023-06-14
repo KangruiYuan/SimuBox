@@ -1,0 +1,324 @@
+{
+    "Specy": [
+        {
+            "SpecyID": 0,
+            "VolumeFraction": 1.0,
+            "ChemicalPotential": 0.0
+        }
+    ],
+    "Block": [
+        {
+            "SpecyID": 0,
+            "ComponentName": "B",
+            "LeftVertexID": 0,
+            "RightVertexID": 1,
+            "Multiplicity": 1,
+            "BranchDirection": "LEFT_BRANCH",
+            "ContourLength": 0.164507,
+            "ContourStep": 0.001
+        },
+        {
+            "SpecyID": 0,
+            "ComponentName": "A",
+            "LeftVertexID": 1,
+            "RightVertexID": 2,
+            "Multiplicity": 1,
+            "BranchDirection": "LEFT_BRANCH",
+            "ContourLength": 0.07,
+            "ContourStep": 0.001
+        },
+        {
+            "SpecyID": 0,
+            "ComponentName": "B",
+            "LeftVertexID": 2,
+            "RightVertexID": 3,
+            "Multiplicity": 1,
+            "BranchDirection": "LEFT_BRANCH",
+            "ContourLength": 0.1118,
+            "ContourStep": 0.001
+        },
+        {
+            "SpecyID": 0,
+            "ComponentName": "A",
+            "LeftVertexID": 3,
+            "RightVertexID": 4,
+            "Multiplicity": 1,
+            "BranchDirection": "LEFT_BRANCH",
+            "ContourLength": 0.07,
+            "ContourStep": 0.001
+        },
+        {
+            "SpecyID": 0,
+            "ComponentName": "B",
+            "LeftVertexID": 4,
+            "RightVertexID": 5,
+            "Multiplicity": 1,
+            "BranchDirection": "LEFT_BRANCH",
+            "ContourLength": 0.583693,
+            "ContourStep": 0.001
+        }
+    ],
+    "Component": {
+        "FloryHugginsInteraction": [
+            {
+                "FirstComponentName": "A",
+                "SecondComponentName": "B",
+                "FloryHugginsParameter": 100.0
+            }
+        ],
+        "SegmentAsymmetry": [
+            {
+                "ComponentName": "A",
+                "AsymmetryParameter": 1.0
+            },
+            {
+                "ComponentName": "B",
+                "AsymmetryParameter": 1.0
+            }
+        ]
+    },
+    "Solver": {
+        "DiffusionEquationSolvingMethod": "PSEUDOSPECTRAL",
+        "Ensemble": "CANONICAL",
+        "ThreadNumber": 2,
+        "Memory": {
+            "FieldMemoryLocation": "DDR",
+            "PropagatorMemoryLocation": "DDR",
+            "SolverMemoryLocation": "DDR",
+            "HistoryMemoryLocation": "DDR",
+            "AndersonMemoryLocation": "DDR"
+        },
+        "PseudospectralMethod": {
+            "ContourIntegrationAlgorithm": "OS2",
+            "AcceptedSymmetry": "Triclinic_P1",
+            "SpaceGridSize": [
+                1,
+                192,
+                192
+            ]
+        },
+        "SpectralMethod": {
+            "AcceptedSymmetry": "Line_p2",
+            "BasisFunctionNumber": 128,
+            "SpaceGridSize": [
+                32,
+                32,
+                32
+            ]
+        }
+    },
+    "Initializer": {
+        "Mode": "MODEL",
+        "UnitCell": {
+            "Length": [
+                1,
+                2.06775163,
+                2.06775162,
+                0,
+                0,
+                0
+            ]
+        },
+        "FileInitializer": {
+            "Mode": "OMEGA",
+            "Path": "phin.txt",
+            "SkipLineNumber": 1
+        },
+        "ModelInitializer": {
+            "Cylinder": [
+                {
+                    "ComponentName": "A",
+                    "Intensity": 0.2,
+                    "TopCenter": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "BottomCenter": [
+                        1.0,
+                        0.0,
+                        0.0
+                    ],
+                    "Radius": 0.2
+                },
+                {
+                    "ComponentName": "A",
+                    "Intensity": 0.2,
+                    "TopCenter": [
+                        0.0,
+                        1.0,
+                        0.0
+                    ],
+                    "BottomCenter": [
+                        1.0,
+                        1.0,
+                        0.0
+                    ],
+                    "Radius": 0.2
+                },
+                {
+                    "ComponentName": "A",
+                    "Intensity": 0.2,
+                    "TopCenter": [
+                        0.0,
+                        0.0,
+                        1.0
+                    ],
+                    "BottomCenter": [
+                        1.0,
+                        0.0,
+                        1.0
+                    ],
+                    "Radius": 0.2
+                },
+                {
+                    "ComponentName": "A",
+                    "Intensity": 0.2,
+                    "TopCenter": [
+                        0.0,
+                        1.0,
+                        1.0
+                    ],
+                    "BottomCenter": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "Radius": 0.2
+                }
+            ]
+        }
+    },
+    "_Constraint": {
+        "Switch": "CONSTRAINT_OFF",
+        "Path": "mask_ps.bin"
+    },
+    "Iteration": {
+        "MaxStep": 20000,
+        "MinStep": 10,
+        "IncompressibilityTarget": 1e-08,
+        "FieldErrorTarget": 1e-08,
+        "EtaMethod": "ETA_METHOD_CLASSIC",
+        "EtaMethodMixingCoefficient": 1.0,
+        "PotentialFieldShift": "KEEP_POTENTIAL_AVERAGE",
+        "SimpleMixing": {
+            "FieldAcceptance": 0.1,
+            "IncompressibilityCorrectionAcceptance": 0.0
+        },
+        "VariableCell": {
+            "Switch": "FORCED_OFF",
+            "StepThreshold": 20,
+            "IncompressibilityThreshold": 0.1,
+            "FieldErrorThreshold": 0.1,
+            "VariableCellAcceptance": [
+                0.5,
+                0.5,
+                0.5,
+                0.5,
+                0.5,
+                0.5
+            ],
+            "VariableCellLengthTransformMatrix": [
+                1,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                1
+            ]
+        },
+        "AndersonMixing": {
+            "Switch": "AUTO",
+            "MaxUsingHistory": 10,
+            "StepThreshold": 50,
+            "IncompressibilityThreshold": 0.02,
+            "FieldErrorThreshold": 0.02,
+            "CoeficientRescaler": 1.0,
+            "CoeficientMaxModule": 10000000000.0,
+            "FieldAcceptance": 1,
+            "VariableCellAcceptance": [
+                0.02,
+                0.02,
+                0.02,
+                0.02,
+                0.02,
+                0.02
+            ],
+            "VariableCellWeight": [
+                2.0,
+                2.0,
+                2.0,
+                2.0,
+                2.0,
+                2.0
+            ]
+        }
+    },
+    "Analyzer": {
+        "ComponentVolumeFraction": {
+            "Switch": "ANALYZER_OFF",
+            "Format": "OUTPUT_BINARY",
+            "Path": "component.bin"
+        },
+        "BlockVolumeFraction": {
+            "Switch": "ANALYZER_ON",
+            "Format": "OUTPUT_STRING",
+            "Path": "block.txt"
+        },
+        "JointVolumeFraction": {
+            "Switch": "ANALYZER_ON",
+            "Format": "OUTPUT_STRING",
+            "Path": "joint.txt"
+        },
+        "SegmentEntropy": {
+            "Switch": "ANALYZER_OFF",
+            "Path": "entropy.txt"
+        }
+    },
+    "Monitor": {
+        "Field": {
+            "Step": 10000,
+            "Path": "phout.txt"
+        },
+        "Energy": {
+            "Step": 100,
+            "Path": "printout.txt"
+        },
+        "InputRecheckStep": 20
+    },
+    "_fA_log": 0.14,
+    "_tau_log": "0.13",
+    "_ksi_log": "0.55",
+    "_phase_log": "C4",
+    "_which_type": "cpu"
+}

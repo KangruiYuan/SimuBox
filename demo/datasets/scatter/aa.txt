@@ -1,0 +1,272 @@
+TOPS instance:
+Read Input File :input_Large.json
+WARNING: An optional option at /Constraint/Switch is missing while reading options first time.
+         Default value CONSTRAINT_OFF is used.
+WARNING: An optional option at /Constraint/Path is missing while reading options first time.
+         Default value constraint.txt is used.
+CAUTION: In block definition from vertex 0 to 1 on specy No. 0 :
+         The block length cannot be divided by the step without remainder, the step has been adjusted to 0.000997012.
+         This may suppress topology reduction in some cases.
+CAUTION: In block definition from vertex 2 to 3 on specy No. 0 :
+         The block length cannot be divided by the step without remainder, the step has been adjusted to 0.000998214.
+         This may suppress topology reduction in some cases.
+CAUTION: In block definition from vertex 4 to 5 on specy No. 0 :
+         The block length cannot be divided by the step without remainder, the step has been adjusted to 0.000999474.
+         This may suppress topology reduction in some cases.
+REPORT: Level of propagators that depends only on lower level:
+******************************
+Level 0: 
+Propagator from ( 0 , 0 ) to ( 0 , 1 ) saved
+Propagator from ( 0 , 5 ) to ( 0 , 4 ) saved
+
+Level 1: 
+Propagator from ( 0 , 1 ) to ( 0 , 2 ) saved
+Propagator from ( 0 , 4 ) to ( 0 , 3 ) saved
+
+Level 2: 
+Propagator from ( 0 , 2 ) to ( 0 , 3 ) saved
+Propagator from ( 0 , 3 ) to ( 0 , 2 ) saved
+
+Level 3: 
+Propagator from ( 0 , 2 ) to ( 0 , 1 ) saved
+Propagator from ( 0 , 3 ) to ( 0 , 4 ) saved
+
+Level 4: 
+Propagator from ( 0 , 1 ) to ( 0 , 0 ) saved
+Propagator from ( 0 , 4 ) to ( 0 , 5 ) saved
+******************************
+REPORT: Generating original propagators solving sequence:
+******************************
+Propagator No. 0 :
+Component B , length = 0.164507 , ds = 0.000997012
+Initiallized by:
+Free initiallizer
+
+Propagator No. 1 :
+Component B , length = 0.583693 , ds = 0.000999474
+Initiallized by:
+Free initiallizer
+
+Propagator No. 2 :
+Component A , length = 0.07 , ds = 0.001
+Initiallized by:
+		0	: Propagator No.0 at position 0.164507 , ds = 0.000997012 order = 1
+
+Propagator No. 3 :
+Component A , length = 0.07 , ds = 0.001
+Initiallized by:
+		0	: Propagator No.1 at position 0.583693 , ds = 0.000999474 order = 1
+
+Propagator No. 4 :
+Component B , length = 0.1118 , ds = 0.000998214
+Initiallized by:
+		0	: Propagator No.2 at position 0.07 , ds = 0.001 order = 1
+
+Propagator No. 5 :
+Component B , length = 0.1118 , ds = 0.000998214
+Initiallized by:
+		0	: Propagator No.3 at position 0.07 , ds = 0.001 order = 1
+
+Propagator No. 6 :
+Component A , length = 0.07 , ds = 0.001
+Initiallized by:
+		0	: Propagator No.5 at position 0.1118 , ds = 0.000998214 order = 1
+
+Propagator No. 7 :
+Component A , length = 0.07 , ds = 0.001
+Initiallized by:
+		0	: Propagator No.4 at position 0.1118 , ds = 0.000998214 order = 1
+
+Propagator No. 8 :
+Component B , length = 0.164507 , ds = 0.000997012
+Initiallized by:
+		0	: Propagator No.6 at position 0.07 , ds = 0.001 order = 1
+
+Propagator No. 9 :
+Component B , length = 0.583693 , ds = 0.000999474
+Initiallized by:
+		0	: Propagator No.7 at position 0.07 , ds = 0.001 order = 1
+******************************
+REPORT: Generating blocks density according to original propagators:
+******************************
+Block No. 0 by component B :
+on specy No.0 , using Propagator No. 0 and No. 8
+with the start vertex of first propagator estimated by 1 time(s) and second One by 2 time(s)
+and with mutiplicity = 1 , length = 0.164507 , ds = 0.000997012
+
+Block No. 1 by component A :
+on specy No.0 , using Propagator No. 2 and No. 6
+with the start vertex of first propagator estimated by 2 time(s) and second One by 2 time(s)
+and with mutiplicity = 1 , length = 0.07 , ds = 0.001
+
+Block No. 2 by component B :
+on specy No.0 , using Propagator No. 4 and No. 5
+with the start vertex of first propagator estimated by 2 time(s) and second One by 2 time(s)
+and with mutiplicity = 1 , length = 0.1118 , ds = 0.000998214
+
+Block No. 3 by component A :
+on specy No.0 , using Propagator No. 7 and No. 3
+with the start vertex of first propagator estimated by 2 time(s) and second One by 2 time(s)
+and with mutiplicity = 1 , length = 0.07 , ds = 0.001
+
+Block No. 4 by component B :
+on specy No.0 , using Propagator No. 9 and No. 1
+with the start vertex of first propagator estimated by 2 time(s) and second One by 1 time(s)
+and with mutiplicity = 1 , length = 0.583693 , ds = 0.000999474
+******************************
+REPORT: Species from original propagators:
+******************************
+Specy No. 0 : 
+Total length is 1 , while its partition function can be calculated by:
+Propagator No. 0 and No. 8 with length of 0.164507
+******************************
+REPORT: Optimizing propagators within level:
+******************************
+Level 0, 2 propagators :
+
+Checking propagator from ( 0 , 0 ) to ( 0 , 1 ): 
+Enpty level, a new group generated for propagator from ( 0 , 0 ) to ( 0 , 1 ) 
+
+Checking propagator from ( 0 , 5 ) to ( 0 , 4 ): 
+Not classfied, a new group is generated for propagator from ( 0 , 5 ) to ( 0 , 4 ) 
+
+Level 1, 2 propagators :
+
+Checking propagator from ( 0 , 1 ) to ( 0 , 2 ): 
+Enpty level, a new group generated for propagator from ( 0 , 1 ) to ( 0 , 2 ) 
+
+Checking propagator from ( 0 , 4 ) to ( 0 , 3 ): 
+Not classfied, a new group is generated for propagator from ( 0 , 4 ) to ( 0 , 3 ) 
+
+Level 2, 2 propagators :
+
+Checking propagator from ( 0 , 2 ) to ( 0 , 3 ): 
+Enpty level, a new group generated for propagator from ( 0 , 2 ) to ( 0 , 3 ) 
+
+Checking propagator from ( 0 , 3 ) to ( 0 , 2 ): 
+Not classfied, a new group is generated for propagator from ( 0 , 3 ) to ( 0 , 2 ) 
+
+Level 3, 2 propagators :
+
+Checking propagator from ( 0 , 2 ) to ( 0 , 1 ): 
+Enpty level, a new group generated for propagator from ( 0 , 2 ) to ( 0 , 1 ) 
+
+Checking propagator from ( 0 , 3 ) to ( 0 , 4 ): 
+Not classfied, a new group is generated for propagator from ( 0 , 3 ) to ( 0 , 4 ) 
+
+Level 4, 2 propagators :
+
+Checking propagator from ( 0 , 1 ) to ( 0 , 0 ): 
+Enpty level, a new group generated for propagator from ( 0 , 1 ) to ( 0 , 0 ) 
+
+Checking propagator from ( 0 , 4 ) to ( 0 , 5 ): 
+Not classfied, a new group is generated for propagator from ( 0 , 4 ) to ( 0 , 5 ) 
+******************************
+REPORT: Generating least propagators solving sequence:
+******************************
+Propagator No. 0 :
+Component B , length = 0.164507 , ds = 0.000997012
+Initiallized by:
+Free initiallizer
+
+Propagator No. 1 :
+Component B , length = 0.583693 , ds = 0.000999474
+Initiallized by:
+Free initiallizer
+
+Propagator No. 2 :
+Component A , length = 0.07 , ds = 0.001
+Initiallized by:
+		0	: Propagator No.0 at position 0.164507 , ds = 0.000997012 order = 1
+
+Propagator No. 3 :
+Component A , length = 0.07 , ds = 0.001
+Initiallized by:
+		0	: Propagator No.1 at position 0.583693 , ds = 0.000999474 order = 1
+
+Propagator No. 4 :
+Component B , length = 0.1118 , ds = 0.000998214
+Initiallized by:
+		0	: Propagator No.2 at position 0.07 , ds = 0.001 order = 1
+
+Propagator No. 5 :
+Component B , length = 0.1118 , ds = 0.000998214
+Initiallized by:
+		0	: Propagator No.3 at position 0.07 , ds = 0.001 order = 1
+
+Propagator No. 6 :
+Component A , length = 0.07 , ds = 0.001
+Initiallized by:
+		0	: Propagator No.5 at position 0.1118 , ds = 0.000998214 order = 1
+
+Propagator No. 7 :
+Component A , length = 0.07 , ds = 0.001
+Initiallized by:
+		0	: Propagator No.4 at position 0.1118 , ds = 0.000998214 order = 1
+
+Propagator No. 8 :
+Component B , length = 0.164507 , ds = 0.000997012
+Initiallized by:
+		0	: Propagator No.6 at position 0.07 , ds = 0.001 order = 1
+
+Propagator No. 9 :
+Component B , length = 0.583693 , ds = 0.000999474
+Initiallized by:
+		0	: Propagator No.7 at position 0.07 , ds = 0.001 order = 1
+******************************
+REPORT: Generating blocks density according to least propagators:
+******************************
+Block No. 0 by component B :
+on specy No.0 , using propagator No. 0 and No. 8
+with the start vertex of first propagator estimated by 1 time(s) and second one by 2 time(s)
+and with mutiplicity = 1 , length = 0.164507 , ds = 0.000997012
+
+Block No. 1 by component A :
+on specy No.0 , using propagator No. 2 and No. 6
+with the start vertex of first propagator estimated by 2 time(s) and second one by 2 time(s)
+and with mutiplicity = 1 , length = 0.07 , ds = 0.001
+
+Block No. 2 by component B :
+on specy No.0 , using propagator No. 4 and No. 5
+with the start vertex of first propagator estimated by 2 time(s) and second one by 2 time(s)
+and with mutiplicity = 1 , length = 0.1118 , ds = 0.000998214
+
+Block No. 3 by component A :
+on specy No.0 , using propagator No. 7 and No. 3
+with the start vertex of first propagator estimated by 2 time(s) and second one by 2 time(s)
+and with mutiplicity = 1 , length = 0.07 , ds = 0.001
+
+Block No. 4 by component B :
+on specy No.0 , using propagator No. 9 and No. 1
+with the start vertex of first propagator estimated by 2 time(s) and second one by 1 time(s)
+and with mutiplicity = 1 , length = 0.583693 , ds = 0.000999474
+******************************
+REPORT: Species from least propagators:
+******************************
+Specy No. 0 : 
+Total length is 1 , while its partition function can be calculated by:
+Propagator No. 0 and No. 8 with length of 0.164507
+******************************
+REPORT: Extended xN matirx:
+0	100	1	
+100	0	1	
+1	1	0	
+REPORT: Eta coefs for ETA_METHOD_CLASSIC: 
+0.5 0.5 -50 
+REPORT: ETA_METHOD_CLASSIC is allowed since the provided xN matrix is reversible
+REPORT: Component is sorted as:
+        Component A at position 0
+        Component B at position 1
+1.00000000 6.20325489 6.20325486 0.00000000 0.00000000 0.00000000
+0.00000000 0.00000000 0.000000000.00000000 0.00000000 0.00000000
+0 :	1.167556457e+01  8.452789811e+00  4.515759717e+01 -4.193482241e+01  1.448161602e-02  4.280707736e-03
+1.00000000 6.20325489 6.20325486 0.00000000 0.00000000 0.00000000
+0.00000000 0.00000000 0.000000000.00000000 0.00000000 0.00000000
+100 :	1.167571355e+01  8.453360162e+00  4.516615482e+01 -4.194380142e+01  3.150463241e-07  4.696714332e-08
+**************************Done*****************************
+Total Elapsed Time(s): 301.08000(151.18310) Volume Fraction: 299.50000(150.25974) Volume Fraction Kernel: 245.20000(122.87438) Stress: 0.00000(0.00000) Stress Kernel: 0.00000(0.00000)
+Volume Fraction: 1.00000
+Chemical Potential: 45.16615
+1.00000000 6.20325489 6.20325486 0.00000000 0.00000000 0.00000000
+0.00000000 0.00000000 0.000000000.00000000 0.00000000 0.00000000
+167 :	1.167571355e+01  8.453360102e+00  4.516615474e+01 -4.194380129e+01  8.784508787e-09  1.683195709e-09

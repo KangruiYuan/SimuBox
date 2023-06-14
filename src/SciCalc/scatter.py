@@ -2,9 +2,9 @@
 from ..SciTools import InfoReader
 import numpy as np
 from matplotlib.ticker import AutoMinorLocator, MultipleLocator
-import torch as t
 import scipy.signal as sg
 import matplotlib.pyplot as plt
+from itertools import product
 
 class Scatter(InfoReader):
     def __init__(self, path: str, name_flag: bool = False, inverse_flag: bool = False):
@@ -18,89 +18,78 @@ class Scatter(InfoReader):
         plt.colorbar()
 
     def cal_kxyz(self, Nx, Ny, Nz, lx, ly, lz):
-        assert (Nx % 2 == 0 or Nx == 1) and Nx != 0, 'please check the x dimension!'
-        assert (Ny % 2 == 0 or Ny == 1) and Ny != 0, 'please check the y dimension!'
-        assert (Nz % 2 == 0 or Nz == 1) and Nz != 0, 'please check the z dimension!'
+        assert (Nx % 2 == 0 or Nx ==
+                1) and Nx != 0, 'please check the x dimension!'
+        assert (Ny % 2 == 0 or Ny ==
+                1) and Ny != 0, 'please check the y dimension!'
+        assert (Nz % 2 == 0 or Nz ==
+                1) and Nz != 0, 'please check the z dimension!'
 
         if -Nx / 2 + 1 > -1:
-            ti = t.arange(0, Nx / 2 + 0.5, 1)
+            ti = np.arange(0, Nx / 2 + 0.5, 1)
         elif -Nx / 2 + 1 == -1:
-            ti = t.cat([t.arange(0, Nx / 2 + 0.5, 1), t.Tensor([-1])])
+            ti = np.hstack([np.arange(0, Nx / 2 + 0.5, 1), np.array([-1])])
         else:
-            ti = t.cat([t.arange(0, Nx / 2 + 0.5, 1), t.arange(-Nx / 2 + 1, 0, 1)])
+            ti = np.hstack([np.arange(0, Nx / 2 + 0.5, 1),
+                    np.arange(-Nx / 2 + 1, 0, 1)])
 
         if -Ny / 2 + 1 > -1:
-            tj = t.arange(0, Ny / 2 + 0.5, 1)
+            tj = np.arange(0, Ny / 2 + 0.5, 1)
         elif -Ny / 2 + 1 == -1:
-            tj = t.cat([t.arange(0, Ny / 2 + 0.5, 1), t.Tensor([-1])])
+            tj = np.hstack([np.arange(0, Ny / 2 + 0.5, 1), np.array([-1])])
         else:
-            tj = t.cat([t.arange(0, Ny / 2 + 0.5, 1), t.arange(-Ny / 2 + 1, 0, 1)])
+            tj = np.hstack([np.arange(0, Ny / 2 + 0.5, 1),
+                    np.arange(-Ny / 2 + 1, 0, 1)])
 
         if Nz != 1:
             if -Nz / 2 + 1 > -1:
-                tk = t.arange(0, Nz / 2 + 0.5, 1)
+                tk = np.arange(0, Nz / 2 + 0.5, 1)
             elif -Nz / 2 + 1 == -1:
-                tk = t.cat([t.arange(0, Nz / 2 + 0.5, 1), t.Tensor([-1])])
+                tk = np.hstack([np.arange(0, Nz / 2 + 0.5, 1), np.array([-1])])
             else:
-                tk = t.cat([t.arange(0, Nz / 2 + 0.5, 1),
-                            t.arange(-Nz / 2 + 1, 0, 1)])
+                tk = np.hstack([np.arange(0, Nz / 2 + 0.5, 1),
+                            np.arange(-Nz / 2 + 1, 0, 1)])
 
-        kx = ((2 * np.pi * ti / lx) ** 2).unsqueeze(0).T
-        ky = ((2 * np.pi * tj / ly) ** 2).unsqueeze(0)
+        kx = np.expand_dims((2 * np.pi * ti / lx) ** 2, axis=0).T
+        ky = np.expand_dims((2 * np.pi * tj / ly) ** 2, axis=0)
         kxyz = kx + ky
         if Nz != 1:
-            kz = ((2 * np.pi * tk / lz) ** 2).resize_((1, 1, Nz))
-            kxyz = kxyz.unsqueeze(-1) + kz
+            kz = np.reshape((2 * np.pi * tk / lz) ** 2, (1, 1, Nz))
+            kxyz = np.expand_dims(kxyz, axis=-1) + kz
             return kxyz, ti, tj, tk
         return kxyz, ti, tj
 
-    def sacttering_peak(self, mat, cutoff: int = 30, threshold: float = 1e-12, d2: bool = False) -> tuple[list, dict]:
-        '''
-        Be careful! The x axis and z axis is inverse due to the writing method of pha!
-        '''
-        mat = t.Tensor(mat)
+    def sacttering_peak(self, mat, cutoff: int = 30, threshold: float = 1e-12) -> tuple[list, dict]:
+
         Nx, Ny, Nz = self.NxNyNz
         lx, ly, lz = self.lxlylz
 
-        if Nx != 1 and len(mat.size()) == 3:
+        if Nx != 1 and len(mat.shape) == 3:
             Nxyz = np.prod(self.NxNyNz)
             kxyz, ti, tj, tk = self.cal_kxyz(Nx, Ny, Nz, lx, ly, lz)
-            txyz = []
-            for i in range(Nx):
-                for j in range(Ny):
-                    for k in range(Nz):
-                        txyz.append([ti[i], tj[j], tk[k]])
-            txyz = t.Tensor(txyz)
+            txyz = np.asarray(list(product(ti, tj, tk)))
         else:
             Nxyz = Nx * Ny
             kxyz, ti, tj = self.cal_kxyz(Nx, Ny, Nz, lx, ly, lz)
-            txyz = []
-            for i in range(Nx):
-                for j in range(Ny):
-                    txyz.append([ti[i], tj[j]])
-            txyz = t.Tensor(txyz)
+            txyz = np.asarray(list(product(ti, tj)))
+
 
         factor = 1 / Nxyz
-        ipha = t.fft.fftn(mat)
+        ipha = np.fft.fftn(mat)
         phaNS = ipha.reshape((Nxyz, 1))
-
         kxyzNS = kxyz.reshape((Nxyz, 1))
-        kp = t.cat([kxyzNS, phaNS, txyz], dim=1)
-        if d2:
-            return kp
 
-        I = np.argsort(kp[:, 0])
-        kp = kp[I, :]
-        kpp = t.cat(
+        kpp = np.hstack(
             [
-                t.real(kp[:, 0]).reshape((Nxyz, 1)),
-                factor * t.abs(kp[:, 1] ** 2).reshape((Nxyz, 1)),
-                t.real(kp[:, 2:])
-            ], dim=1
-        )
+                np.real(kxyzNS),
+                factor * np.abs(phaNS ** 2),
+                np.real(txyz),
+            ])
+        I = np.argsort(kpp[:, 0])
+        kpp = kpp[I, :]
 
         q_Intensity = list()
-        q_Intensity.append(kpp[0, 0:2].numpy())
+        q_Intensity.append(kpp[0, 0:2])
         qidx = dict()
         qidx[0] = [(kpp[0, 2:])]
 
@@ -108,11 +97,11 @@ class Scatter(InfoReader):
             lenTmp = len(q_Intensity)
             if lenTmp > cutoff:
                 break
-            if t.abs(q_Intensity[lenTmp - 1][0] - t.abs(kp[i, 0])) > threshold:
-                q_Intensity.append(kpp[i, 0:2].numpy())
+            if np.abs(q_Intensity[lenTmp - 1][0] - np.abs(kpp[i, 0])) > threshold:
+                q_Intensity.append(kpp[i, 0:2])
                 qidx[lenTmp] = [kpp[i, 2:]]
             else:
-                q_Intensity[lenTmp - 1][1] += kpp[i, 1].numpy()
+                q_Intensity[lenTmp - 1][1] += kpp[i, 1]
                 if lenTmp - 1 not in qidx:
                     qidx[lenTmp - 1] = []
                 qidx[lenTmp - 1].append(kpp[i, 2:])
@@ -127,11 +116,11 @@ class Scatter(InfoReader):
         return q_I[1] * np.exp(-(x - q_I[0]) ** 2 / (2 * w ** 2))
 
     @staticmethod
-    def extract_idx(qidx: list[t.Tensor], index, num=5):
+    def extract_idx(qidx: list, index, num=5):
         Idx_str = []
         for i in range(num):
             cIdx = qidx[int(index[i])]
-            cIdx = [np.append(j.numpy(), 0) for j in cIdx]
+            cIdx = [np.append(j, 0) for j in cIdx]
             tmp = [np.sort(np.abs(j))[::-1] for j in cIdx]
             tmp = np.unique(tmp, axis=0)[0]
             text = ''.join(['{', *list(map(lambda x: str(int(x)), tmp)), '}'])
@@ -158,8 +147,10 @@ class Scatter(InfoReader):
         plt.ylabel('Intensity', fontsize=20)
         plt.xlabel(r'$q/R_g^{-1}$', fontsize=20)
         ax = plt.gca()
-        ax.xaxis.set_minor_locator(AutoMinorLocator(5))
-        ax.yaxis.set_minor_locator(AutoMinorLocator(5))
+        if xminor := kwargs.get('xminor',False):
+            ax.xaxis.set_minor_locator(AutoMinorLocator(xminor))
+        if yminor := kwargs.get('yminor',False):
+            ax.yaxis.set_minor_locator(AutoMinorLocator(yminor))
 
         if kwargs.get('mark', False):
             num = kwargs.get('num', 5)
@@ -183,4 +174,5 @@ class Scatter(InfoReader):
         x0, x1, y0, y1 = plt.axis()
         plt.axis((x0, x1, y0, y1 + kwargs.get('y1', 40)))
         plt.tight_layout()
+        plt.show()
         return x[peaks]
