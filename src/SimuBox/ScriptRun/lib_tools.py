@@ -4,7 +4,7 @@ from enum import Enum
 
 def mypara(start, end, step):
     temp_para = np.arange(start, end + step, step)
-    while(end < temp_para[-1]):
+    while (end < temp_para[-1]):
         temp_para = temp_para[:-1]
     if end not in np.around(temp_para, 6):
         temp_para = np.append(temp_para, end)
@@ -21,7 +21,6 @@ class Cells(Enum):
 
 
 class PhaseInit:
-
     ABC = dict(
         C2L=[
             {
@@ -191,7 +190,7 @@ class PhaseInit:
                     0.5,
                     0.5
                 ]
-        }],
+            }],
         NaCl=[
             {
                 "ComponentName": "A",
@@ -473,8 +472,8 @@ class PhaseInit:
         C6=[
             {
                 "ComponentName": "A", "Intensity": 0.2, "TopCenter": [
-                    0.0, 0.0, 0.0], "BottomCenter": [
-                    1.0, 0.0, 0.0], "Radius": 0.2}, {
+                0.0, 0.0, 0.0], "BottomCenter": [
+                1.0, 0.0, 0.0], "Radius": 0.2}, {
                 "ComponentName": "A", "Intensity": 0.2, "TopCenter": [
                     0.0, 1.0, 0.0], "BottomCenter": [
                     1.0, 1.0, 0.0], "Radius": 0.2}, {
@@ -581,6 +580,3 @@ class PhaseInit:
                     0.0, 0.66, 1.0], "BottomCenter": [
                     1.0, 0.66, 1.0], "Radius": 0.16}]
     )
-
-
-    

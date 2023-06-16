@@ -51,13 +51,20 @@ opencv-python >= 4.5.3.56
     - Landscaper
   - **phase**
     - PhaseDiagram
-- **ScriptRun**
+- ~~**ScriptRun**~~
+  
+  该模块暂不进行公开。
 
-  以下脚本仅在`GitHub`上传，并未包含在PyPI的版本中。根据不同的需求，需要对以下脚本进行特定的补充和修改。
+[//]: # (  以下脚本仅在`GitHub`上传，并未包含在PyPI的版本中。根据不同的需求，需要对以下脚本进行特定的补充和修改。)
 
-  - push_job_TOPS
-  - repush
-  - template
-  - lib_tools
-  - extract_data
+[//]: # ()
+[//]: # (  - push_job_TOPS)
+
+[//]: # (  - repush)
+
+[//]: # (  - template)
+
+[//]: # (  - lib_tools)
+
+[//]: # (  - extract_data)
 
