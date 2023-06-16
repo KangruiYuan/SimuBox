@@ -1,3 +1,4 @@
 
-from .tools import *
+from .reader import *
 from .xml import *
+from .generator import *
