@@ -18,11 +18,15 @@ class InfoReader():
                  name_flag:bool=False, 
                  inverse_flag:bool=False, 
                  scale_flag:bool=False,
-                 filenames:list = ['printout.txt', 'phout.txt', 'input.json', 'fet.txt', 'block.txt']
+                 filenames:list = ['printout.txt', 'phout.txt', 'input.json', 'fet.txt', 'block.txt'],
+                 **kwargs
                  ) -> None:
+        '''
+        scale_flag: bool, 若无lxlylz信息，设置为Ture可使其随NxNyNz进行缩放
+        inverse_flag: bool, 用于逆转lxlylz和NxNyNz的顺序，用以适应不同的密度文件写入顺序；通常情况下，gpu文件需要设置为True
+        '''
 
         self.path = path
-        
         for fn in filenames:
             setattr(self, fn.split('.')[0], os.path.join(self.path, fn))
 
@@ -30,7 +34,9 @@ class InfoReader():
         self.name_flag = name_flag
         self.inverse_flag = inverse_flag
         self.scale_flag = scale_flag
-        pass
+
+        for k, v in kwargs.items():
+            setattr(self, k, v)
 
     def read_printout(self):
         try:
@@ -48,8 +54,8 @@ class InfoReader():
         try:
             NxNyNz = open(self.phout).readline().strip().split(' ')
             NxNyNz = np.array(list(map(int, NxNyNz)), np.int32)
-            # data = pd.read_csv(self.phout, skiprows=1, header=None, delimiter=delimiter)
-            data = pd.read_csv(self.phout, skiprows=1, header=None, sep=r'[ ]+', engine='python')
+            _skip_rows = getattr(self, 'skiprows', 1)
+            data = pd.read_csv(self.phout, skiprows=_skip_rows, header=None, sep=r'[ ]+', engine='python')
             self.data = data.dropna(axis=1, how='any')
             shape = NxNyNz[1:] if NxNyNz[0] == 1 else NxNyNz
             
