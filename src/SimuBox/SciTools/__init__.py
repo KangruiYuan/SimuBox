@@ -1,4 +1,4 @@
 
 from .reader import *
-from .xml import *
+from .xmltrans import *
 from .generator import *

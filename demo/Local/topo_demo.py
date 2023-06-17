@@ -1,8 +1,9 @@
 
-from src import TopoCreater
+from src import TopoCreater, fA
 import networkx as nx
 
 tc = TopoCreater()
-tc.linear(blocks='AAABBB', fractions=[0.1,0.1,0.1,0.2,0.3,0.2])
-print(tc.edge_kinds.items())
+tc.linear(blocks='AB', fractions=[fA, 1-fA])
 tc.show_topo()
+tc.RPA()
+tc.ODT(fAs=[0.1 * i for i in range(1, 10)])

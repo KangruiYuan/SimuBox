@@ -18,7 +18,6 @@ PYPI Version: ***0.1.6***
 
 ```
 python=3.9
-pytorch=1.8.2+cu111
 pandas >= 1.4
 scipy >= 1.10.0
 matplotlib >= 3.6.2
