@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 from matplotlib.ticker import AutoMinorLocator, MultipleLocator
 import pandas as pd
-from typing import Union, Optional
+from typing import Union, Optional, List
 from cycler import cycler
 
 
@@ -105,13 +105,18 @@ class CompareJudger():
             pass
         return df
     
-    def ref_compare(self, base, others, xlabel, ylabel, ax:Optional[object]=None, horiline:bool=False, **kwargs):
+    def ref_compare(self, base, others, xlabel, ylabel:Union[List[str], str], ax:Optional[object]=None, horiline:bool=False, **kwargs):
         
         ref_labels = Labels.ref_label.copy()
         ref_labels.update(kwargs.get('labels', {}))
         
         data = self.data()
         data = data.sort_values(by=xlabel)
+        
+        if isinstance(ylabel, list):
+            data['tmp'] = np.sum([data[i] for i in ylabel], axis=0)
+            print(f'请为标签{"+".join(ylabel)}指定一个名称')
+            ylabel = 'tmp'
         
         plt.figure(figsize=kwargs.get('figsize', (9, 6.5)))
         if not ax:
@@ -174,13 +179,19 @@ class CompareJudger():
         if save := kwargs.get('save', False):
             plt.savefig(save, dpi=300)
 
-    def abs_compare(self, phases: Union[list, str], xlabel, ylabel, **kwargs):
+    def abs_compare(self, phases: Union[list, str], xlabel, ylabel:Union[str, List[str]], **kwargs):
         
         abs_labels = Labels.abs_label.copy()
         abs_labels.update(kwargs.get('labels', {}))
 
         data = self.data()
         data = data.sort_values(by=xlabel)
+        
+        if isinstance(ylabel, list):
+            data['tmp'] = np.sum([data[i] for i in ylabel], axis=0)
+            print(f'请为标签{"+".join(ylabel)}指定一个名称')
+            ylabel = 'tmp'
+            
         
         plt.figure(figsize=kwargs.get('figsize', (9, 6.5)))
         ax = plt.gca()

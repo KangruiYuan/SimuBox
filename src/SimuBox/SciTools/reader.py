@@ -18,7 +18,7 @@ class InfoReader():
                  name_flag:bool=False, 
                  inverse_flag:bool=False, 
                  scale_flag:bool=False,
-                 filenames:list = ['printout.txt', 'phout.txt', 'input.json', 'fet.txt', 'block.txt'],
+                 filenames:list = ['printout.txt', 'phout.txt', 'input.json', 'fet.txt', 'block.txt', 'joint.txt'],
                  **kwargs
                  ) -> None:
         '''
@@ -49,54 +49,49 @@ class InfoReader():
         if self.inverse_flag: self.lxlylz = self.lxlylz[::-1]
         if self.scale_flag:
             self.lxlylz = self.lxlylz * self.NxNyNz / self.NxNyNz.min()
-
-    def read_phout(self, label=['A', 'B', 'C']):
+            
+    def read_phi(self, filename=''):
         try:
-            NxNyNz = open(self.phout).readline().strip().split(' ')
+            NxNyNz = open(filename).readline().strip().split(' ')
             NxNyNz = np.array(list(map(int, NxNyNz)), np.int32)
             _skip_rows = getattr(self, 'skiprows', 1)
-            data = pd.read_csv(self.phout, skiprows=_skip_rows, header=None, sep=r'[ ]+', engine='python')
-            self.data = data.dropna(axis=1, how='any')
+            data = pd.read_csv(filename, skiprows=_skip_rows, header=None, sep=r'[ ]+', engine='python')
+            self.__dict__[os.path.basename(filename).split('.')[0] + "_data"] = data.dropna(axis=1, how='any')
             shape = NxNyNz[1:] if NxNyNz[0] == 1 else NxNyNz
-            
             if self.inverse_flag:
                 self.NxNyNz = NxNyNz[::-1]
             else:
                 self.NxNyNz = NxNyNz
-                
             self.shape = shape
+            return True
+        except FileNotFoundError:
+            print(f'File {filename} not found')
+            return False
+
+    def read_phout(self, label=['A', 'B', 'C']):
+
+        if self.read_phi(self.phout):
             if self.name_flag:
-                for i in range(len(self.data.columns) // 2):
-                    self.__dict__['phi'+label[i]] = self.data[i].values.reshape(shape)
-                for i in range(len(self.data.columns)  // 2, len(self.data.columns)):
-                    self.__dict__['omega'+label[i - len(data.columns) // 2]] = self.data[i].values.reshape(shape)
+                for i in range(len(self.phout_data.columns) // 2):
+                    self.__dict__['phi'+label[i]] = self.data[i].values.reshape(self.shape)
+                for i in range(len(self.phout_data.columns)  // 2, len(self.phout_data.columns)):
+                    self.__dict__['omega'+label[i - len(self.data.columns) // 2]] = self.data[i].values.reshape(self.shape)
             else:
-                for i in range(len(self.data.columns)):
+                for i in range(len(self.phout_data.columns)):
                     self.__dict__[
-                        "phi"+str(i)] = self.data[i].values.reshape(shape)
-        except FileNotFoundError:
-            print('phout file not found')
-            
-    
+                        "phi"+str(i)] = self.phout_data[i].values.reshape(self.shape)
+
     def read_block(self):
-        try:
-            NxNyNz = open(self.block).readline().strip().split(' ')
-            NxNyNz = np.array(list(map(int, NxNyNz)), np.int32)
-            data = pd.read_csv(self.block, skiprows=1, header=None, sep=' ')
-            self.data = data.dropna(axis=1, how='any')
-            shape = NxNyNz[1:] if NxNyNz[0] == 1 else NxNyNz
-
-            if self.inverse_flag:
-                self.NxNyNz = NxNyNz[::-1]
-            else:
-                self.NxNyNz = NxNyNz
-
-            self.shape = shape
-            for i in range(len(self.data.columns)):
+        if self.read_phi(self.block):
+            for i in range(len(self.block_data.columns)):
                 self.__dict__[
-                    "block"+str(i)] = self.data[i].values.reshape(shape)
-        except FileNotFoundError:
-            print("block file not found")
+                    "block"+str(i)] = self.block_data[i].values.reshape(self.shape)
+            
+    def read_joint(self):
+        if self.read_phi(self.joint):
+            for i in range(len(self.joint_data.columns)):
+                self.__dict__[
+                    "joint"+str(i)] = self.joint_data[i].values.reshape(self.shape)
 
 
     def read_json(self):
@@ -132,6 +127,9 @@ class InfoReader():
         self.read_phout()
         self.read_printout()
         self.read_json()
+        self.read_block()
+        self.read_joint()
+        self.dim = np.sum(self.NxNyNz != 1)
         
         
     def coordsMap(self, lxlylz=None, NxNyNz = None):

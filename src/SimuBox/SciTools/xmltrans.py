@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 import re
 from itertools import product
+import xml
 
 class XmlTransformer():
     
