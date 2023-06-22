@@ -42,7 +42,10 @@ class InfoReader():
         try:
             lxlylz = open(self.printout, 'r').readlines(
             )[-3].strip().split(' ')
-            self.lxlylz = np.array(list(map(float, lxlylz[:3])))
+            
+            self.lxlylz_extend = np.array(list(map(float, lxlylz)))
+            self.lxlylz = self.lxlylz_extend[:3]
+            
         except FileNotFoundError:
             self.lxlylz = np.array([1, 1, 1])
         

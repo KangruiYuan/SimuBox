@@ -61,7 +61,7 @@ class IsoSurf(InfoReader):
         
         if isinstance(phi, str):
             vol = [getattr(self, phi)]
-        elif isinstance(phi, list):
+        elif isinstance(phi, list) and isinstance(phi[0], str):
             vol = [getattr(self, _phi) for _phi in phi]
         
         fig, axes = plt.subplots(1, len(vol), figsize=(4*len(vol), 3.5))

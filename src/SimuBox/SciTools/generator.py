@@ -9,6 +9,8 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 from typing import Union, Dict, List, Tuple
 from collections import Counter, defaultdict
+from collections import OrderedDict
+import json
 
 __all__ = ['TopoCreater','fA','fB','x']
 
@@ -38,7 +40,7 @@ class TopoCreater(nx.DiGraph):
             print(s)
 
     @staticmethod
-    def stats(blocks):
+    def stats(blocks, multiplier=1):
         """
         >>> tp = TopoCreater()
         >>> print(tp.stats({'A':3, 'a':5}))
@@ -46,16 +48,20 @@ class TopoCreater(nx.DiGraph):
         """
 
         if isinstance(blocks, str):
-            return Counter(blocks.upper())
+            res = Counter(blocks.upper())
         elif isinstance(blocks, list):
-            return Counter(list(map(lambda x:x.upper(), blocks)))
+            res = Counter(list(map(lambda x:x.upper(), blocks)))
         elif isinstance(blocks, dict):
             res = defaultdict(int)
             for k,v in blocks.items():
                 res[k.upper()] += v
-            return Counter(res)
+            res = Counter(res)
         else:
             raise ValueError(f"Blocks type {type(blocks)} is not supported!")
+        
+        for k,v in res.items():
+            res[k] = v*multiplier
+        return res
 
     def add_di_edge(self, pairs:Tuple[int,int], fraction, name, **kwargs):
         self.add_edge(*pairs, fraction=fraction, name=name, **kwargs)
@@ -114,10 +120,59 @@ class TopoCreater(nx.DiGraph):
         else:
             raise NotImplementedError(method)
         self.get_info()
+        
+    def star(self,
+             blocks: Union[str, List[str]],
+             fractions: List[float] = [],
+             arm: int = 5,
+             head: bool = True,
+             method='auto',
+             **kwargs):
+
+        self.clear()
+        self.type = 'star'
+        blocks_info = self.stats(blocks, arm)
+        if not head: blocks = blocks[::-1]
+
+        self.init_nodes(sum(blocks_info.values()) + 1)
+        if method == 'auto' and len(fractions) == 0:
+            fraction = np.around(1/sum(blocks_info.values()), 3)
+            for a in range(arm):
+                for i, b in enumerate(blocks):
+                    idx_head = a * len(blocks) + i if i != 0 else 0
+                    idx_tail = a * len(blocks) + i + 1
+                    self.add_di_edge((idx_head, idx_tail), fraction=fraction, name='_'.join([b, str(idx_tail)]), kind=b)
+                
+        elif method == 'manual' or len(fractions) != 0:
+            if len(fractions)*5 != sum(blocks_info.values()):
+                raise ValueError(f"Fractions for blocks (length={len(fractions)}*{arm}={len(fractions) * arm}) is not right!")
+            if round(sum(fractions)*arm, 3) != 1:
+                raise ValueError(f"Fractions do not sum to one, value={round(sum(fractions)*arm, 3)}")
+            for a in range(arm):
+                for i, (b, f) in enumerate(zip(blocks, fractions)):
+                    idx_head = a * len(blocks) + i if i != 0 else 0
+                    idx_tail = a * len(blocks) + i + 1
+                    self.add_di_edge((idx_head, idx_tail), fraction=f, name='_'.join([b, str(idx_tail)]), kind=b, minlen=f)
+        else:
+            raise NotImplementedError(method)
+        self.get_info()
+
+    def fromJson(self, path):
+        with open(path, mode='r') as fp:
+                data = json.load(fp, object_pairs_hook=OrderedDict)
+        blocks_data = data['Block']
+        fractions = []
+        fake_edges = []
+        real_edges = []
+        egdes_kinds = []
+        for block in blocks_data:
+            raise NotImplementedError
+      
 
     @staticmethod
     def count_nums(layers, branch):
         return sum([branch ** i for i in range(layers)])
+    
     def dendrimer(self,
               Ablock_layer: int = 1,
               Bblock_layer: int = 1,
@@ -184,7 +239,7 @@ class TopoCreater(nx.DiGraph):
 
     def show_topo(
             self,
-            colorlist=[ 'r','b','g','blueviolet','cyan'],
+            colorlist=['r','b','g','blueviolet','cyan'],
             node_size=200,
             node_color='gray',
             pos=None,
@@ -226,6 +281,7 @@ class TopoCreater(nx.DiGraph):
         plt.show()
         if save_path:
             plt.savefig(save_path)
+            
     @classmethod
     def h(cls, f, x):
         return 2 / (x ** 2) * (f * x + sym.exp(-f * x) - 1)
@@ -312,17 +368,23 @@ class TopoCreater(nx.DiGraph):
             sym.print_latex(self.final_func)
 
     def ODT(self,
-            fAs:Union[List[float], np.ndarray],
+            fAs:Union[List[float], np.ndarray] = np.arange(0.1,1.0,0.1),
             paint:bool=True,
+            symbol = fA,
             **kwargs
             ):
-        global fA, x
+        global x
         xN = []
         _lim = kwargs.get('lim',(0,100))
         for i in fAs:
-            func = self.final_func.evalf(subs={fA: i})
+            func = self.final_func.evalf(subs={symbol: i})
             func = sym.lambdify(x, func, 'scipy')
             xN.append(opt.fminbound(func, *_lim, full_output=True)[1])
+        
+        if len(np.unique(xN)) == 1:
+            print(f'ODT is {xN[0]}')
+            return
+            
         if paint:
             fig, ax = plt.subplots(figsize=kwargs.get('figsize',(8,6)))
             ax.plot(fAs, xN, 'r-', lw=2)
