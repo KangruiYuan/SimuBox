@@ -159,15 +159,30 @@ class TopoCreater(nx.DiGraph):
 
     def fromJson(self, path):
         with open(path, mode='r') as fp:
-                data = json.load(fp, object_pairs_hook=OrderedDict)
-        blocks_data = data['Block']
-        fractions = []
-        fake_edges = []
-        real_edges = []
-        egdes_kinds = []
-        for block in blocks_data:
-            raise NotImplementedError
-      
+            data = json.load(fp, object_pairs_hook=OrderedDict)
+        topo_mat = []
+        for block in data['Block']:
+            id1 = block['LeftVertexID']
+            id2 = block['RightVertexID']
+            mul = block['Multiplicity']
+            if mul > 1:
+                raise NotImplementedError(f"Mehthod for multiplicity larger thar {mul} is not supported.")
+            if block['BranchDirection'] == 'LEFT_BRANCH':
+                direction = 0
+                id_branch = id1
+            elif block['BranchDirection'] == 'RIGHT_BRANCH':
+                direction = 1
+                id_branch = id2
+            id1, id2 = (id1, id2) if id1 < id2 else (id2, id1)
+            fraction = block['ContourLength']
+            kind = block['ComponentName']
+            topo_mat.append([id1, id2, mul, direction, id_branch, fraction, kind])
+        topo_mat = np.array(topo_mat, dtype=object)
+        node_num = np.max(topo_mat[:,:2]) +1
+        self.init_nodes(node_num)
+        for tp in topo_mat:
+            self.add_di_edge(tp[:2], fraction=tp[-2], kind=tp[-1], name='_'.join([tp[-1], str(max(tp[:2]))]))
+        self.get_info()
 
     @staticmethod
     def count_nums(layers, branch):
@@ -244,7 +259,7 @@ class TopoCreater(nx.DiGraph):
             node_color='gray',
             pos=None,
             figsize=(10,10),
-            save_path=None):
+            save_path=None, **kwargs):
 
         fig, ax = plt.subplots(figsize=figsize)
         if pos is None:
@@ -276,7 +291,7 @@ class TopoCreater(nx.DiGraph):
             font_size=12,
             font_family='sans-serif',
             ax=ax)
-        ax.legend()
+        ax.legend(loc=kwargs.get('loc', 'best'), frameon=False)
         plt.axis('on')
         plt.show()
         if save_path:
