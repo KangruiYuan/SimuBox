@@ -8,12 +8,15 @@ from collections import defaultdict
 from scipy.spatial import Voronoi, voronoi_plot_2d
 from tqdm import tqdm
 from ..SciTools import InfoReader
+from itertools import product
+from typing import Union, Tuple, Optional
+from PIL import Image
 
 __all__ = ['VoronoiCell']
 
 class VoronoiCell(InfoReader):
 
-    def __init__(self, path, name_flag:bool=False, inverse_flag:bool=False) -> None:
+    def __init__(self, path="", name_flag:bool=False, inverse_flag:bool=False) -> None:
         super().__init__(path, inverse_flag=inverse_flag, name_flag=name_flag)
         pass
 
@@ -82,27 +85,6 @@ class VoronoiCell(InfoReader):
             j = i
         return res
 
-    # def genMask(self):
-    #     phase = self.info.phase
-    #     maskMat = np.zeros(shape=self.size)
-        
-    #     if phase == 'C6':
-    #         for i in range(maskMat.shape[0]):
-    #             for j in range(maskMat.shape[1]):
-    #                 if self.pnpoly(TYPE.C6_coords, (i, j)):
-    #                     maskMat[i][j] = 1
-    #     elif phase in ['C4', 'Crect']:
-    #         maskMat[34:97, 34:97] = 1
-    #     elif phase == 'L':
-    #         maskMat[:, 64:97] = 1
-        
-    #     self.maskMat = maskMat
-        
-    # def saveMask(self, path="./phin_with_mask.txt"):
-    #     self.info.data[self.info.data.shape[1]] = self.maskMat.flatten()
-    #     np.savetxt(path, self.info.data.values, fmt="%.6f",
-    #                delimiter=" ", header=' '.join(list(map(str, self.info.NxNyNz))), comments="")
-    
     @staticmethod
     def prolongation(ori_mat, lx, ly):
         positions_period = np.empty(shape=[0, 2])
@@ -223,6 +205,83 @@ class VoronoiCell(InfoReader):
         plt.xlim(xmin=0, xmax=self.lxlylz[1])
         plt.ylim(ymin=0, ymax=self.lxlylz[2])
         plt.show()
+
+    @staticmethod
+    def additive(points, arr, weights):
+        dis = np.linalg.norm(points - arr, axis=1) - weights
+        return dis
+
+    @staticmethod
+    def power(points, arr, weights):
+        dis = np.linalg.norm(points - arr + np.arange(len(points))[:,np.newaxis], axis=1)**2 - weights
+        return dis
+
+    def weighted_voronoi_diagrams(self,
+                                 points: Union[list, np.ndarray],
+                                 weights: Optional[Union[float, int, list, np.ndarray]] = 0 ,
+                                 method='additive',
+                                 size: Tuple = (500, 500),
+                                 colors:str ='linear',
+                                 color_mode:str = 'L',
+                                             **kwargs):
+        """
+        Args:
+            points:
+            weights:
+            size:
+            colors:
+            mode:
+            **kwargs:
+
+        Returns:
+
+        """
+        image = Image.new(color_mode, size)
+        putpixel = image.putpixel
+        imgx, imgy = image.size
+        if isinstance(points, list):
+            points = np.array(points)
+
+        if isinstance(weights, (list, np.ndarray)):
+            weights = np.array(weights)
+        elif isinstance(weights, (int, float)):
+            pass
+        else:
+            raise ValueError(f"Weights must be an array")
+
+        if isinstance(colors, str):
+            if color_mode == 'RGB':
+                colors = np.random.randint(0, 255, size=(len(points), 3))
+                colors = list(map(tuple, colors))
+            elif color_mode == 'L':
+                if colors == 'linear':
+                    colors = np.linspace(0, 255, len(points), dtype=int).tolist()
+                elif colors == 'random':
+                    colors = np.random.randint(0, 255, size=(len(points)), dtype=int).tolist()
+
+        arrs = np.array(list(product(range(imgx), range(imgy))), dtype=int)
+
+        func = getattr(self, method)
+        for arr in arrs:
+            dis = func(points, arr, weights)
+            min_idx = np.argmin(dis)
+            putpixel(arr, colors[min_idx])
+        plot = kwargs.get('plot', 'imshow')
+        im = np.array(image)
+        plt.figure(figsize=kwargs.get('figsize', (8, 8)))
+        plt.scatter(points[:, 0], points[:, 1], s=max(size) * 0.1, c='white')
+        if plot == 'imshow':
+            if color_mode == 'L':
+                plt.imshow(im, 'gray')
+            elif color_mode == 'RGB':
+                plt.imshow(im)
+        elif plot == 'vertices':
+            if color_mode == 'RGB':
+                im = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
+            canny = cv2.Canny(im, threshold1=40, threshold2=80, apertureSize=5)
+            plt.imshow(canny, 'gray')
+        plt.show()
+        return image
         
                 
 class TYPE():
