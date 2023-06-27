@@ -12,11 +12,120 @@ from collections import Counter, defaultdict
 from collections import OrderedDict
 import json
 
-__all__ = ['TopoCreater','fA','fB','x']
+__all__ = ['TopoCreater','fA','fB','x', 'Joint']
 
 fA = Symbol('fA', real=True, postive=True)
 fB = Symbol('fB', real=True, postive=True)
 x = Symbol('x', real=True, postive=True)
+
+
+class Joint():
+    count = 0
+    def __init__(self, _id, new:bool = False):
+
+        if new: Joint.count = 0
+        self.id = _id
+        self.count_id = Joint.count
+        self.connection = []
+        Joint.count += 1
+
+    def __str__(self):
+        return f"id={self.id};count_id={self.count_id}"
+
+    def __hash__(self):
+        return hash(str(self))
+
+    def __contains__(self, item):
+        return item in self.connection
+
+    def add(self, joint) -> None:
+        """
+        >>> tp_1 = Joint(id=0)
+        >>> tp_2 = Joint(id=1)
+        >>> tp_1.add(tp_2)
+        >>> tp_2 in tp_1
+        True
+        >>> tp_1 not in tp_2
+        False
+        """
+
+        if isinstance(joint, Joint):
+            joint = [joint]
+        for j in joint:
+            if self in j and j in self:
+                continue
+            if self not in j:
+                j.connection.append(self)
+            if j not in self:
+                self.connection.append(j)
+
+
+    def search_by_count_id(self, count_id):
+        _log = set()
+        q = []
+        q.append(self)
+        while q:
+            joint = q.pop()
+            _id = joint.id
+            _count_id = joint.count_id
+            if _count_id not in _log:
+                _log.add(_count_id)
+                if _count_id == count_id:
+                    return joint
+                else:
+                    q.extend(joint.connection)
+            else:
+                continue
+        print(f"Joint with count id = {count_id} do not exist!")
+
+    def stats_connection(self, verbose=True):
+        print("format: id(count_id)")
+        exp_log = set()
+        q = []
+        q.append(self)
+        res = defaultdict(list)
+        while q:
+            joint = q.pop()
+            _id = joint.id
+            _count_id = joint.count_id
+            for child in joint.connection:
+                child_id = child.id
+                child_count_id = child.count_id
+                exp = f"{_id}({_count_id})-{child_id}({child_count_id})"
+                exp_inv = f"{child_id}({child_count_id})-{_id}({_count_id})"
+                if exp not in exp_log or exp_inv not in exp_log:
+                    res[tuple(sorted((_id, child_id)))].append((_count_id, child_count_id))
+                    exp_log.add(exp)
+                    exp_log.add(exp_inv)
+                    if verbose:
+                        print(exp)
+                    q.append(child)
+                else:
+                    continue
+        return res
+
+    def attach_by_id(self, _id, other_id):
+        _log = set()
+        q = []
+        q.append(self)
+        while q:
+            joint = q.pop()
+            tmp_id = joint.id
+            _count_id = joint.count_id
+            if _count_id not in _log:
+                _log.add(_count_id)
+                for child in joint.connection:
+                    if child.count_id not in _log:
+                        q.append(child)
+                if _id == tmp_id:
+                    tmp_joint = Joint(_id = other_id)
+                    joint.add(tmp_joint)
+            else:
+                continue
+    @property
+    def joint_num(self):
+        return Joint.count
+
 
 class TopoCreater(nx.DiGraph):
 
@@ -157,7 +266,8 @@ class TopoCreater(nx.DiGraph):
             raise NotImplementedError(method)
         self.get_info()
 
-    def fromJson(self, path):
+    @classmethod
+    def parseJson(cls, path:str) -> np.ndarray:
         with open(path, mode='r') as fp:
             data = json.load(fp, object_pairs_hook=OrderedDict)
         topo_mat = []
@@ -165,8 +275,8 @@ class TopoCreater(nx.DiGraph):
             id1 = block['LeftVertexID']
             id2 = block['RightVertexID']
             mul = block['Multiplicity']
-            if mul > 1:
-                raise NotImplementedError(f"Mehthod for multiplicity larger thar {mul} is not supported.")
+            # if mul > 1:
+            #     raise NotImplementedError(f"Mehthod for multiplicity larger thar {mul} is not supported.")
             if block['BranchDirection'] == 'LEFT_BRANCH':
                 direction = 0
                 id_branch = id1
@@ -178,10 +288,30 @@ class TopoCreater(nx.DiGraph):
             kind = block['ComponentName']
             topo_mat.append([id1, id2, mul, direction, id_branch, fraction, kind])
         topo_mat = np.array(topo_mat, dtype=object)
-        node_num = np.max(topo_mat[:,:2]) +1
+        return topo_mat
+
+    def fromJson(self, path:str, **kwargs):
+        topo_mat = self.parseJson(path)
+        edges_info = defaultdict(dict)
+        count = 1
+        for i, t in enumerate(topo_mat):
+            core_id = t[t[3]]
+            branch_id = t[1 - t[3]]
+            branch_mul = t[2]
+            edges_info[tuple(sorted((core_id, branch_id)))] = {'fraction': t[-2], 'kind': t[-1],
+                                                               'name': '_'.join([t[-1], str(count)])}
+            if i == 0:
+                joint = Joint(_id=core_id, new=True)
+            for j in range(branch_mul):
+                joint.attach_by_id(_id=core_id, other_id=branch_id)
+            count += 1
+        connections = joint.stats_connection(verbose=kwargs.get('verbose', True))
+        node_num = joint.joint_num
         self.init_nodes(node_num)
-        for tp in topo_mat:
-            self.add_di_edge(tp[:2], fraction=tp[-2], kind=tp[-1], name='_'.join([tp[-1], str(max(tp[:2]))]))
+
+        for k,v in connections.items():
+            for e in v:
+                self.add_di_edge(e, **edges_info[k])
         self.get_info()
 
     @staticmethod

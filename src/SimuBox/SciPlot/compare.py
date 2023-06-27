@@ -91,8 +91,8 @@ class CompareJudger():
         self.div = div
         self.acc = acc
         pass
-    
-    # @lazyproperty
+
+
     def data(self, subset=['lx', 'ly', 'lz', 'phase', 'freeE'], **kwargs):
         df = pd.read_csv(self.path)
         df = df.dropna(axis=0)
@@ -103,6 +103,13 @@ class CompareJudger():
             df['chiN'] = df['chiN']/self.div
         except KeyError:
             pass
+        funcs = kwargs.get('funcs', None)
+        if funcs is not None:
+            if isinstance(funcs, list):
+                for func in funcs:
+                    df = func(df)
+            else:
+                df = funcs(df)
         return df
     
     def ref_compare(self, base, others, xlabel, ylabel:Union[List[str], str], ax:Optional[object]=None, horiline:bool=False, **kwargs):

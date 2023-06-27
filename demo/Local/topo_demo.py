@@ -18,5 +18,5 @@ import os
 # tc.ODT()
 
 tc = TopoCreater()
-tc.fromJson(os.path.join(os.path.dirname(__file__), '../datasets/Topo/input.json'))
-tc.show_topo()
+tc.fromJson(os.path.join(os.path.dirname(__file__), '../datasets/Topo/input_star.json'))
+tc.show_topo(colorlist=['b','r'])

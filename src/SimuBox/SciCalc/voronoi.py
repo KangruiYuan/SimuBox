@@ -262,7 +262,7 @@ class VoronoiCell(InfoReader):
         arrs = np.array(list(product(range(imgx), range(imgy))), dtype=int)
 
         func = getattr(self, method)
-        for arr in arrs:
+        for arr in tqdm(arrs):
             dis = func(points, arr, weights)
             min_idx = np.argmin(dis)
             putpixel(arr, colors[min_idx])
