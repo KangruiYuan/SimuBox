@@ -5,11 +5,8 @@ import pyvista as pv
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
-from typing import Dict, Tuple, Sequence, List, Union
-from pyface.qt import qt_api
-qt_api = 'pyside6'
+from typing import List, Union
 from mayavi import mlab
-# from mayavi.mlab import *
 
 class IsoSurf(InfoReader):
 
