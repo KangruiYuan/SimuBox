@@ -9,16 +9,17 @@ from pandas.errors import ParserError
 
 __all__ = ['InfoReader']
 
+
 class InfoReader():
     """
     读取结构信息
     """
 
-    def __init__(self, path, 
-                 name_flag:bool=False, 
-                 inverse_flag:bool=False, 
-                 scale_flag:bool=False,
-                 filenames:list = ['printout.txt', 'phout.txt', 'input.json', 'fet.txt', 'block.txt', 'joint.txt'],
+    def __init__(self, path,
+                 name_flag: bool = False,
+                 inverse_flag: bool = False,
+                 scale_flag: bool = False,
+                 filenames=None,
                  **kwargs
                  ) -> None:
         '''
@@ -26,6 +27,8 @@ class InfoReader():
         inverse_flag: bool, 用于逆转lxlylz和NxNyNz的顺序，用以适应不同的密度文件写入顺序；通常情况下，gpu文件需要设置为True
         '''
 
+        if filenames is None:
+            filenames = ['printout.txt', 'phout.txt', 'input.json', 'fet.txt', 'block.txt', 'joint.txt']
         self.path = path
         for fn in filenames:
             setattr(self, fn.split('.')[0], os.path.join(self.path, fn))
@@ -42,17 +45,17 @@ class InfoReader():
         try:
             lxlylz = open(self.printout, 'r').readlines(
             )[-3].strip().split(' ')
-            
+
             self.lxlylz_extend = np.array(list(map(float, lxlylz)))
             self.lxlylz = self.lxlylz_extend[:3]
-            
+
         except FileNotFoundError:
             self.lxlylz = np.array([1, 1, 1])
-        
+
         if self.inverse_flag: self.lxlylz = self.lxlylz[::-1]
         if self.scale_flag:
             self.lxlylz = self.lxlylz * self.NxNyNz / self.NxNyNz.min()
-            
+
     def read_phi(self, filename=''):
         try:
             NxNyNz = open(filename).readline().strip().split(' ')
@@ -71,31 +74,33 @@ class InfoReader():
             print(f'File {filename} not found')
             return False
 
-    def read_phout(self, label=['A', 'B', 'C']):
+    def read_phout(self, label=None):
 
+        if label is None:
+            label = ['A', 'B', 'C']
         if self.read_phi(self.phout):
             if self.name_flag:
                 for i in range(len(self.phout_data.columns) // 2):
-                    self.__dict__['phi'+label[i]] = self.data[i].values.reshape(self.shape)
-                for i in range(len(self.phout_data.columns)  // 2, len(self.phout_data.columns)):
-                    self.__dict__['omega'+label[i - len(self.data.columns) // 2]] = self.data[i].values.reshape(self.shape)
+                    self.__dict__['phi' + label[i]] = self.data[i].values.reshape(self.shape)
+                for i in range(len(self.phout_data.columns) // 2, len(self.phout_data.columns)):
+                    self.__dict__['omega' + label[i - len(self.data.columns) // 2]] = self.data[i].values.reshape(
+                        self.shape)
             else:
                 for i in range(len(self.phout_data.columns)):
                     self.__dict__[
-                        "phi"+str(i)] = self.phout_data[i].values.reshape(self.shape)
+                        "phi" + str(i)] = self.phout_data[i].values.reshape(self.shape)
 
     def read_block(self):
         if self.read_phi(self.block):
             for i in range(len(self.block_data.columns)):
                 self.__dict__[
-                    "block"+str(i)] = self.block_data[i].values.reshape(self.shape)
-            
+                    "block" + str(i)] = self.block_data[i].values.reshape(self.shape)
+
     def read_joint(self):
         if self.read_phi(self.joint):
             for i in range(len(self.joint_data.columns)):
                 self.__dict__[
-                    "joint"+str(i)] = self.joint_data[i].values.reshape(self.shape)
-
+                    "joint" + str(i)] = self.joint_data[i].values.reshape(self.shape)
 
     def read_json(self):
         try:
@@ -103,7 +108,7 @@ class InfoReader():
                 self.jsonData = json.load(fp, object_pairs_hook=OrderedDict)
         except FileNotFoundError:
             return
-    
+
     def read_fet(self):
         try:
             with open(self.fet, mode='r') as fp:
@@ -114,17 +119,16 @@ class InfoReader():
             self.dataDict = dataDict
         except FileNotFoundError:
             return
-    
+
     def show(self, phi, asp=None):
         plt.figure()
         if asp is None:
             try:
-                asp = self.lxlylz[2]/self.lxlylz[1]
+                asp = self.lxlylz[2] / self.lxlylz[1]
             except AttributeError:
                 asp = 1
         plt.imshow(phi, interpolation='spline16', aspect=asp)
         plt.show()
-        
 
     def collect(self):
         self.read_phout()
@@ -133,18 +137,17 @@ class InfoReader():
         self.read_block()
         self.read_joint()
         self.dim = np.sum(self.NxNyNz != 1)
-        
-        
-    def coordsMap(self, lxlylz=None, NxNyNz = None):
+
+    def coordsMap(self, lxlylz=None, NxNyNz=None):
         lxlylz = self.lxlylz.copy() if not any(lxlylz) else lxlylz
         NxNyNz = self.NxNyNz.copy() if not any(NxNyNz) else NxNyNz
         lx_seq = np.linspace(0, lxlylz[2], NxNyNz[2])
-        ly_seq = np.linspace(0, lxlylz[1], NxNyNz[1])   
+        ly_seq = np.linspace(0, lxlylz[1], NxNyNz[1])
         X, Y = np.meshgrid(lx_seq, ly_seq)
         return X, Y
-    
-    def tile(self, mat, lxlylz=None, NxNyNz = None, expand=(3, 3)):
-        
+
+    def tile(self, mat, lxlylz=None, NxNyNz=None, expand=(3, 3)):
+
         assert len(mat.shape) == 2
         phiA = np.tile(mat, expand)
         lxlylz = self.lxlylz.copy() if not lxlylz else lxlylz
@@ -154,7 +157,3 @@ class InfoReader():
         NxNyNz[1] *= expand[0]
         NxNyNz[2] *= expand[1]
         return phiA, lxlylz, NxNyNz
-    
-
-
-    

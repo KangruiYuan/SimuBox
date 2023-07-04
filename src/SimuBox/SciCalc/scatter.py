@@ -1,4 +1,3 @@
-
 from ..SciTools import InfoReader
 import numpy as np
 from matplotlib.ticker import AutoMinorLocator, MultipleLocator
@@ -6,18 +5,21 @@ import scipy.signal as sg
 import matplotlib.pyplot as plt
 from itertools import product
 
+
 class Scatter(InfoReader):
     def __init__(self, path: str, name_flag: bool = False, inverse_flag: bool = False):
 
         super().__init__(path, inverse_flag=inverse_flag, name_flag=name_flag)
 
     @staticmethod
-    def showPic(pic):
+    def showpic(pic):
         plt.figure()
-        plt.imshow(pic, cmap='gray')
+        plt.imshow(pic, cmap='gray', interpolation='spline16')
         plt.colorbar()
+        plt.show()
 
-    def cal_kxyz(self, Nx, Ny, Nz, lx, ly, lz):
+    @staticmethod
+    def cal_kxyz(Nx, Ny, Nz, lx, ly, lz):
         assert (Nx % 2 == 0 or Nx ==
                 1) and Nx != 0, 'please check the x dimension!'
         assert (Ny % 2 == 0 or Ny ==
@@ -31,7 +33,7 @@ class Scatter(InfoReader):
             ti = np.hstack([np.arange(0, Nx / 2 + 0.5, 1), np.array([-1])])
         else:
             ti = np.hstack([np.arange(0, Nx / 2 + 0.5, 1),
-                    np.arange(-Nx / 2 + 1, 0, 1)])
+                            np.arange(-Nx / 2 + 1, 0, 1)])
 
         if -Ny / 2 + 1 > -1:
             tj = np.arange(0, Ny / 2 + 0.5, 1)
@@ -39,7 +41,7 @@ class Scatter(InfoReader):
             tj = np.hstack([np.arange(0, Ny / 2 + 0.5, 1), np.array([-1])])
         else:
             tj = np.hstack([np.arange(0, Ny / 2 + 0.5, 1),
-                    np.arange(-Ny / 2 + 1, 0, 1)])
+                            np.arange(-Ny / 2 + 1, 0, 1)])
 
         if Nz != 1:
             if -Nz / 2 + 1 > -1:
@@ -48,7 +50,7 @@ class Scatter(InfoReader):
                 tk = np.hstack([np.arange(0, Nz / 2 + 0.5, 1), np.array([-1])])
             else:
                 tk = np.hstack([np.arange(0, Nz / 2 + 0.5, 1),
-                            np.arange(-Nz / 2 + 1, 0, 1)])
+                                np.arange(-Nz / 2 + 1, 0, 1)])
 
         kx = np.expand_dims((2 * np.pi * ti / lx) ** 2, axis=0).T
         ky = np.expand_dims((2 * np.pi * tj / ly) ** 2, axis=0)
@@ -59,7 +61,7 @@ class Scatter(InfoReader):
             return kxyz, ti, tj, tk
         return kxyz, ti, tj
 
-    def sacttering_peak(self, mat, cutoff: int = 30, threshold: float = 1e-12) -> tuple[list, dict]:
+    def sacttering_peak(self, mat, cutoff: int = 30, threshold: float = 1e-12):
 
         Nx, Ny, Nz = self.NxNyNz
         lx, ly, lz = self.lxlylz
@@ -73,7 +75,6 @@ class Scatter(InfoReader):
             kxyz, ti, tj = self.cal_kxyz(Nx, Ny, Nz, lx, ly, lz)
             txyz = np.asarray(list(product(ti, tj)))
 
-
         factor = 1 / Nxyz
         ipha = np.fft.fftn(mat)
         phaNS = ipha.reshape((Nxyz, 1))
@@ -85,8 +86,8 @@ class Scatter(InfoReader):
                 factor * np.abs(phaNS ** 2),
                 np.real(txyz),
             ])
-        I = np.argsort(kpp[:, 0])
-        kpp = kpp[I, :]
+        kpp_sort_idx = np.argsort(kpp[:, 0])
+        kpp = kpp[kpp_sort_idx, :]
 
         q_Intensity = list()
         q_Intensity.append(kpp[0, 0:2])
@@ -147,9 +148,9 @@ class Scatter(InfoReader):
         plt.ylabel('Intensity', fontsize=20)
         plt.xlabel(r'$q/R_g^{-1}$', fontsize=20)
         ax = plt.gca()
-        if xminor := kwargs.get('xminor',False):
+        if xminor := kwargs.get('xminor', False):
             ax.xaxis.set_minor_locator(AutoMinorLocator(xminor))
-        if yminor := kwargs.get('yminor',False):
+        if yminor := kwargs.get('yminor', False):
             ax.yaxis.set_minor_locator(AutoMinorLocator(yminor))
 
         if kwargs.get('mark', False):

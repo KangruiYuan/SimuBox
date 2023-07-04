@@ -1,6 +1,5 @@
 
 from src import TopoCreater, fA
-import networkx as nx
 import os
 
 # linear block

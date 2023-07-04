@@ -6,6 +6,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 from typing import Dict, Tuple, Sequence, List, Union
+from pyface.qt import qt_api
+qt_api = 'pyside6'
+from mayavi import mlab
+# from mayavi.mlab import *
 
 class IsoSurf(InfoReader):
 
@@ -28,6 +32,8 @@ class IsoSurf(InfoReader):
                   0:lxlylz[1]:complex(0, NxNyNz[1]),
                   0:lxlylz[2]:complex(0, NxNyNz[2])]
 
+        # print(x.shape, y.shape, z.shape, vol.shape)
+
         if backend == 'vista':
             grid = pv.StructuredGrid(x, y, z)
             grid["vol"] = vol.flatten()
@@ -48,21 +54,30 @@ class IsoSurf(InfoReader):
                        )
             p.show()
         elif backend == 'mpl':
-            assert type(level) == float, "等值面应为浮点数"
+            if isinstance(level, list) and len(level) == 1:
+                level = level[0]
+            assert isinstance(level, (float, int)), "等值面应为数值"
             verts, faces, _, _ = marching_cubes(
                 vol, level, spacing=(1, 1, 1))
             fig = plt.figure()
             ax = fig.add_subplot(111, projection='3d')
             ax.plot_trisurf(verts[:, 0], verts[:, 1], faces, verts[:, 2], lw=1)
             plt.show()
-            
+        elif backend == 'mayavi':
+            vol = vol.T
+            self.mayavi_contour3d(x, y, z, vol, level, **kwargs)
 
+    @mlab.show
+    def mayavi_contour3d(self, x, y, z, vol, level, **kwargs):
+        mlab.contour3d(x, y, z, vol, contours=level, transparent=kwargs.get('transparent', True))
     def iso2D(self, phi:Union[str, np.ndarray, List[str]], **kwargs):
         
         if isinstance(phi, str):
             vol = [getattr(self, phi)]
-        elif isinstance(phi, list) and isinstance(phi[0], str):
-            vol = [getattr(self, _phi) for _phi in phi]
+        elif isinstance(phi, list):
+            if isinstance(phi[0], str):
+                vol = [getattr(self, _phi) for _phi in phi]
+
         
         fig, axes = plt.subplots(1, len(vol), figsize=(4*len(vol), 3.5))
         if len(vol) == 1:

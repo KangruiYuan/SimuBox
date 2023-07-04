@@ -1,45 +1,48 @@
-
 import os
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.ticker import AutoMinorLocator, MultipleLocator
 import pandas as pd
-from numpy.polynomial import Chebyshev as T
+from numpy.polynomial import Chebyshev
 from scipy.io import loadmat
 
+
 class PhaseDiagram():
-    
+
     def __init__(self, xlabel, ylabel,
-                    color_dict = {
-                        'C4': 'r',
-                        'Crect': 'dodgerblue',
-                        'L': 'deeppink',
-                        'DG': 'orange',
-                        'iHPa': 'blue',
-                        'SG': 'magenta',
-                        'SC': 'goldenrod',
-                        'C6': 'tan',
-                        'C3': 'm',
-                        'HCP': 'crimson',
-                        'FCC': 'yellowgreen',
-                        'PL': 'darkorchid',
-                        'BCC': 'limegreen', 
-                        'sdgn': 'teal',
-                        'O70': 'crimson',
-                        'unknown': 'k',
-                        'Disorder': 'y'
-                    },
-                    label_dict = {
-                        'tau': r'$\tau$',
-                        'ksi': r'$\xi$',
-                        'volH': r'$\phi_{\rm{H}}$',
-                        'fA': r'$f_{\rm{A}}$',
-                        'fA': r'$f_{\rm{A}}$',
-                        'chiN': r'$\chi \rm{N}$'
-                    },
-                    **kwargs
-                    ) -> None:
-        
+                 color_dict=None,
+                 label_dict=None,
+                 **kwargs
+                 ) -> None:
+
+        if label_dict is None:
+            label_dict = {
+                'tau': r'$\tau$',
+                'ksi': r'$\xi$',
+                'volH': r'$\phi_{\rm{H}}$',
+                'fA': r'$f_{\rm{A}}$',
+                'chiN': r'$\chi \rm{N}$'
+            }
+        if color_dict is None:
+            color_dict = {
+                'C4': 'r',
+                'Crect': 'dodgerblue',
+                'L': 'deeppink',
+                'DG': 'orange',
+                'iHPa': 'blue',
+                'SG': 'magenta',
+                'SC': 'goldenrod',
+                'C6': 'tan',
+                'C3': 'm',
+                'HCP': 'crimson',
+                'FCC': 'yellowgreen',
+                'PL': 'darkorchid',
+                'BCC': 'limegreen',
+                'sdgn': 'teal',
+                'O70': 'crimson',
+                'unknown': 'k',
+                'Disorder': 'y'
+            }
         self.color_dict = color_dict
         self.color_dict.update(kwargs.get('color', {}))
         self.label_dict = label_dict
@@ -47,7 +50,7 @@ class PhaseDiagram():
         self.xlabel = xlabel
         self.ylabel = ylabel
         pass
-    
+
     def query_point(self, df, xval=None, yval=None, **kwargs):
         res = df.copy()
         if xval:
@@ -58,11 +61,13 @@ class PhaseDiagram():
         for key, val in query_dict.items():
             res = res[res[key] == val]
         return res
-    
-    def query(self, df:pd.DataFrame, query_dict={}, **kwargs):
+
+    def query(self, df: pd.DataFrame, query_dict=None, **kwargs):
+        if query_dict is None:
+            query_dict = {}
         if len(query_dict) == 0: return df
         pass
-    
+
     @staticmethod
     def checkin(phase, candidates):
         if len(phase) == 0: return False
@@ -80,29 +85,29 @@ class PhaseDiagram():
         df = pd.read_csv(path)
         if dropset:
             df = df.drop_duplicates(subset=dropset)
-        df['lylz'] = np.around(df['ly']/df['lz'], acc)
-        df['lxly'] = np.around(df['lx']/df['ly'], acc)
+        df['lylz'] = np.around(df['ly'] / df['lz'], acc)
+        df['lxly'] = np.around(df['lx'] / df['ly'], acc)
         try:
-            df[div_var] = df[div_var]/div
+            df[div_var] = df[div_var] / div
         except KeyError:
             pass
         return df
 
     def compare(self,
-                path:str,
-                plot:bool=True,
-                acc:int=3,
+                path: str,
+                plot: bool = True,
+                acc: int = 3,
                 **kwargs):
-        
+
         df = self.data(path=path, acc=acc)
         print(f"Include phase: {set(df['phase'].values)}")
-        
+
         plot_dict = dict()
         y_set = np.sort(df[self.ylabel].unique())
         x_set = np.sort(df[self.xlabel].unique())
 
         exclude = kwargs.get('exclude', [])
-        
+
         mat = np.zeros((len(y_set), len(x_set)), dtype=object)
         for i, y in enumerate(y_set):
             for j, x in enumerate(x_set):
@@ -114,10 +119,10 @@ class PhaseDiagram():
                 freeE = min_data['freeE'].min()
                 min_label = min_data['phase'].unique()
                 lxly = min_data['lxly'].unique()
-                lylx = np.around(1/lxly, acc)
+                lylx = np.around(1 / lxly, acc)
                 lylz = min_data['lylz'].unique()
-                lzly = np.around(1/lylz, acc)
-                
+                lzly = np.around(1 / lylz, acc)
+
                 if self.checkin(exclude, min_label):
                     phase = min_label[0]
                 elif 'L' in min_label:
@@ -129,15 +134,15 @@ class PhaseDiagram():
                         phase = 'Crect'
                 elif len(min_label) == 1:
                     if self.checkin(['C6', 'C3'], min_label):
-                        if lylz == np.around(np.sqrt(3), acc) or lzly == np.around(1/np.sqrt(3), acc):
+                        if lylz == np.around(np.sqrt(3), acc) or lzly == np.around(1 / np.sqrt(3), acc):
                             phase = min_label[0]
                     elif self.checkin(['iHPa'], min_label):
-                        if lxly == np.around(np.sqrt(3), acc) or lylx == np.around(1/np.sqrt(3), acc):
+                        if lxly == np.around(np.sqrt(3), acc) or lylx == np.around(1 / np.sqrt(3), acc):
                             phase = 'iHPa'
-                        elif lylz == np.around(np.sqrt(2), acc) or  lxly == 1:
+                        elif lylz == np.around(np.sqrt(2), acc) or lxly == 1:
                             phase = 'SC'
                     elif 'PL' in min_label:
-                        if lxly == np.around(np.sqrt(3), acc) or lylx == np.around(1/np.sqrt(3), acc):
+                        if lxly == np.around(np.sqrt(3), acc) or lylx == np.around(1 / np.sqrt(3), acc):
                             phase = 'PL'
                     elif self.checkin(['L', 'Disorder', 'O70'], min_label):
                         phase = min_label[0]
@@ -148,13 +153,13 @@ class PhaseDiagram():
                         phase = '_'.join([phase, min_label[0]])
                 mat[i][j] = [phase, x, y, freeE]
                 if phase in plot_dict:
-                    for attr, val in zip([self.xlabel, self.ylabel, 'freeE', 'lylz', 'lxly'], [x, y, freeE, lylz, lxly]):
+                    for attr, val in zip([self.xlabel, self.ylabel, 'freeE', 'lylz', 'lxly'],
+                                         [x, y, freeE, lylz, lxly]):
                         plot_dict[phase][attr].append(val)
                 else:
                     plot_dict[phase] = {self.xlabel: [x], self.ylabel: [y], 'freeE': [
                         freeE], 'lylz': [lylz], 'lxly': [lxly]}
-                
-        
+
         if plot:
             fig, ax = plt.subplots(1, 1, figsize=(8, 6))
             for key, value in plot_dict.items():
@@ -169,7 +174,7 @@ class PhaseDiagram():
             ax.yaxis.set_minor_locator(AutoMinorLocator(5))
             ax.set_xlabel(self.label_dict.get(self.xlabel, self.xlabel),
                           fontdict={'size': 20})
-            ax.set_ylabel(self.label_dict.get(self.ylabel, self.ylabel), 
+            ax.set_ylabel(self.label_dict.get(self.ylabel, self.ylabel),
                           fontdict={'size': 20})
             ax.legend(frameon=False, loc='upper left',
                       bbox_to_anchor=(0.98, 0.8))
@@ -177,7 +182,7 @@ class PhaseDiagram():
             return df, plot_dict, mat, fig, ax
         else:
             return df, plot_dict, mat
-    
+
     @staticmethod
     def cross_point(x1, y1, x2, y2, x3, y3, x4, y4):
         b1 = (y2 - y1) * x1 + (x1 - x2) * y1
@@ -186,7 +191,7 @@ class PhaseDiagram():
         D1 = b2 * (x2 - x1) - b1 * (x4 - x3)
         D2 = b2 * (y2 - y1) - b1 * (y4 - y3)
         return (D1 / D, D2 / D)
-    
+
     @staticmethod
     def de_unknown(mat):
         for i in range(mat.shape[0]):
@@ -196,18 +201,18 @@ class PhaseDiagram():
                 except:
                     continue
         return mat
-        
+
     def scan(self,
              folder,
-             ann_dict, 
+             ann_dict,
              **kwargs):
         filelist = os.listdir(folder)
-        fig, ax = plt.subplots(figsize=kwargs.get('figsize', (8,6)))
+        fig, ax = plt.subplots(figsize=kwargs.get('figsize', (8, 6)))
         skip = kwargs.get('skip', [])
         extract = kwargs.get('extract', [])
         inverse_lst = kwargs.get('inverse', [])
         deunknown = kwargs.get('deunknown', [])
-        
+
         for filename in filelist:
             if not filename.endswith('.csv'):
                 continue
@@ -219,20 +224,20 @@ class PhaseDiagram():
                 continue
             else:
                 tmp_data, _, tmp_mat = self.compare(
-                    path=os.path.join(folder, filename),  plot=False, acc=tmp_dict.get('acc',2))
-            
-            if tmp_name in deunknown or deunknown =='All':
+                    path=os.path.join(folder, filename), plot=False, acc=tmp_dict.get('acc', 2))
+
+            if tmp_name in deunknown or deunknown == 'All':
                 tmp_mat = self.de_unknown(tmp_mat)
-            
+
             if tmp_name in extract:
                 tmp_xys = self.extract_edge(
-                    tmp_mat, 
+                    tmp_mat,
                     which=tmp_dict.get('which', 'C4'),
                     mode=tmp_dict.get('mode', 'middle'),
                     factor=tmp_dict.get('factor', 0.5))
             else:
-                tmp_xys =  self.boundary(tmp_data, tmp_mat, mode=['hori', 'ver'])
-            
+                tmp_xys = self.boundary(tmp_data, tmp_mat, mode=['hori', 'ver'])
+
             if tmp_name in inverse_lst:
                 tmp_xys = tmp_xys[np.argsort(tmp_xys[:, 1])]
                 self.draw_line(
@@ -240,11 +245,11 @@ class PhaseDiagram():
             else:
                 tmp_xys = tmp_xys[np.argsort(tmp_xys[:, 0])]
                 self.draw_line(tmp_xys, ax=ax, tmp_ann_dict=tmp_dict)
-            
+
         if phase_name := ann_dict.get('phase_name', False):
             for key, value in phase_name.items():
                 ax.text(value[0], value[1], key, fontsize=20, color="k")
-                
+
         phase_name_arrow = ann_dict.get('phase_name_with_arrow', False)
         if phase_name_arrow:
             for key, value in phase_name_arrow.items():
@@ -257,15 +262,14 @@ class PhaseDiagram():
                                             connectionstyle="arc3",
                                             color='k',
                                             lw=2))
-        
+
         save_path = kwargs.get('path', '')
         if mat_path := kwargs.get('mat_path', None):
             wrongline = loadmat(mat_path)['origin_wrong']
-            self.draw_line(wrongline, ax=ax, 
+            self.draw_line(wrongline, ax=ax,
                            tmp_ann_dict=kwargs.get('mat', {
                                'adde': 0.001, 'ls': ':', 'shrinks': 7, 'alpha': 0.5}))
-        
-            
+
         plt.margins(0)
         ax.xaxis.set_minor_locator(AutoMinorLocator(5))
         ax.yaxis.set_minor_locator(AutoMinorLocator(5))
@@ -277,9 +281,10 @@ class PhaseDiagram():
 
         if save_path:
             plt.savefig(save_path, dpi=200)
-        
-    
-    def boundary(self, df, mat, mode=['ver', 'hori']):
+
+    def boundary(self, df, mat, mode=None):
+        if mode is None:
+            mode = ['ver', 'hori']
         xys = []
         for i in range(mat.shape[0]):
             for j in range(mat.shape[1]):
@@ -294,39 +299,45 @@ class PhaseDiagram():
                         if point1[0] == point3[0] or 'unknown' in point1[0] or 'unknown' in point3[0]:
                             continue
                         point2 = df[(df.phase == point1[0]) & (
-                            df[self.xlabel] == point3[1]) & (df[self.ylabel] == point3[2])]
+                                df[self.xlabel] == point3[1]) & (df[self.ylabel] == point3[2])]
                         if len(point2) == 0:
                             continue
                         point4 = df[(df.phase == point3[0]) & (
-                            df[self.xlabel] == point1[1]) & (df[self.ylabel] == point1[2])]
+                                df[self.xlabel] == point1[1]) & (df[self.ylabel] == point1[2])]
                         if len(point4) == 0:
                             continue
 
                         if 'hori' in mode:
                             if i == ii:
-                                x0, _ = self.cross_point(point1[1], point1[3], point2[self.xlabel].values[0], point2.freeE.values[0],
-                                                          point3[1], point3[3], point4[self.xlabel].values[0], point4.freeE.values[0])
+                                x0, _ = self.cross_point(point1[1], point1[3], point2[self.xlabel].values[0],
+                                                         point2.freeE.values[0],
+                                                         point3[1], point3[3], point4[self.xlabel].values[0],
+                                                         point4.freeE.values[0])
                                 if [x0, point1[2]] not in xys:
                                     xys.append([x0, point1[2]])
                         if 'ver' in mode:
                             if j == jj:
-                                x0, _ = self.cross_point(point1[2], point1[3], point2[self.ylabel].values[0], point2.freeE.values[0],
-                                                          point3[2], point3[3], point4[self.ylabel].values[0], point4.freeE.values[0])
+                                x0, _ = self.cross_point(point1[2], point1[3], point2[self.ylabel].values[0],
+                                                         point2.freeE.values[0],
+                                                         point3[2], point3[3], point4[self.ylabel].values[0],
+                                                         point4.freeE.values[0])
                                 if [point1[1], x0] not in xys:
                                     xys.append([point1[1], x0])
                     except BaseException:
                         continue
         return np.array(xys)
-    
+
     @staticmethod
-    def draw_line(xys, ax=None, fig=None, tmp_ann_dict={}, inverse=False):
-       
+    def draw_line(xys, ax=None, tmp_ann_dict=None, inverse=False):
+
+        if tmp_ann_dict is None:
+            tmp_ann_dict = {}
         if cuts := tmp_ann_dict.get('cuts', None):
             xys = xys[cuts:]
         if cute := tmp_ann_dict.get('cute', None):
             xys = xys[:cute]
-            
-        if inverse:    
+
+        if inverse:
             xs = xys[:, 1].copy()
             ys = xys[:, 0].copy()
         else:
@@ -334,11 +345,11 @@ class PhaseDiagram():
             ys = xys[:, 1].copy()
 
         try:
-            coefs = T.fit(xs, ys, tmp_ann_dict.get('order', 3))
+            coefs = Chebyshev.fit(xs, ys, tmp_ann_dict.get('order', 3))
         except BaseException:
             print(xs, ys)
             return
-        
+
         new_x = np.linspace(
             xs.min() - tmp_ann_dict.get('adds', 0),
             xs.max() + tmp_ann_dict.get('adde', 0),
@@ -351,17 +362,17 @@ class PhaseDiagram():
         if shrinke := tmp_ann_dict.get('shrinke', None):
             new_x = new_x[:shrinke]
             new_y = new_y[:shrinke]
-        
+
         if inverse:
             new_x, new_y = new_y, new_x
-        
+
         if ax:
             ax.plot(new_x, new_y, c='k', lw=3,
-                    ls=tmp_ann_dict.get('ls', '-'), 
+                    ls=tmp_ann_dict.get('ls', '-'),
                     alpha=tmp_ann_dict.get('alpha', 1))
         else:
             plt.plot(new_x, new_y, c='k', lw=3)
-    
+
     @staticmethod
     def extract_edge(mat, which='Disorder', mode='middle', factor=0.5):
         edge_data = []
@@ -370,19 +381,19 @@ class PhaseDiagram():
             tmp_co = tmp_co[tmp_co != 0]
             for ro in range(1, len(tmp_co)):
                 try:
-                    if tmp_co[ro][0] != which and tmp_co[ro-1][0] == which:
+                    if tmp_co[ro][0] != which and tmp_co[ro - 1][0] == which:
                         if mode == 'middle':
                             edge_data.append(
                                 [
-                                tmp_co[ro][1] * factor + tmp_co[ro-1][1] * (1-factor),
-                                tmp_co[ro][2] * factor + tmp_co[ro-1][2] * (1-factor)
+                                    tmp_co[ro][1] * factor + tmp_co[ro - 1][1] * (1 - factor),
+                                    tmp_co[ro][2] * factor + tmp_co[ro - 1][2] * (1 - factor)
                                 ])
                         elif mode == 'down':
-                            edge_data.append([tmp_co[ro-1][1],
-                                            tmp_co[ro-1][2]])
+                            edge_data.append([tmp_co[ro - 1][1],
+                                              tmp_co[ro - 1][2]])
                         elif mode == 'up':
                             edge_data.append([tmp_co[ro][1],
-                                            tmp_co[ro][2]])
+                                              tmp_co[ro][2]])
                         break
                     else:
                         continue
@@ -390,17 +401,3 @@ class PhaseDiagram():
                     continue
         edge_data = np.array(edge_data)
         return edge_data
-
-    
-                
-                
-                
-        
-        
-        
-        
-        
-        
-        
-        
-
