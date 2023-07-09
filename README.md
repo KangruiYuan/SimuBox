@@ -1,6 +1,12 @@
 
 # *SimuBox* for science calculation
 
+[![Static Badge](https://img.shields.io/badge/GitHub-SimuBox-7C8EFF?logo=github)](https://github.com/KangruiYuan/SimuBox.git)
+[![Static Badge](https://img.shields.io/badge/PyPI-SimuBox-B39CD0?logo=pypi)](https://pypi.org/project/SimuBox/)
+![Static Badge](https://img.shields.io/badge/python-version_3.8%2B-blue?logo=python&logoColor=white)
+[![Static Badge](https://img.shields.io/badge/DOI-doi.org%2F10.1002%2Fchem.202301043-purple)](https://doi.org/10.1002/chem.202301043)
+
+
 ## 愿景
 
 > 生活的全部意义在于无穷地探索尚未知道的东西，在于不断地增加更多的知识。 —— 左拉 《萌芽》
@@ -9,7 +15,7 @@
 
 ## 版本管理
 
-以下的版本号仅作相对参考，~~我本人对版本是没啥概念的🤣~~
+以下的版本号仅作相对参考。
 
 `GitHub`仓库版本: ***0.1.11***
 

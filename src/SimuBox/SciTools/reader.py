@@ -23,15 +23,41 @@ class InfoReader():
                  **kwargs
                  ) -> None:
         '''
-        scale_flag: bool, 若无lxlylz信息，设置为Ture可使其随NxNyNz进行缩放
-        inverse_flag: bool, 用于逆转lxlylz和NxNyNz的顺序，用以适应不同的密度文件写入顺序；通常情况下，gpu文件需要设置为True
+        @param path: 
+        @param name_flag: 
+        @param inverse_flag: bool, 用于逆转lxlylz和NxNyNz的顺序，用以适应不同的密度文件写入顺序；通常情况下，gpu文件需要设置为True
+        @param scale_flag: bool, 若无lxlylz信息，设置为Ture可使其随NxNyNz进行缩放
+        @param filenames: 
+        @param kwargs: 
         '''
 
-        if filenames is None:
-            filenames = ['printout.txt', 'phout.txt', 'input.json', 'fet.txt', 'block.txt', 'joint.txt']
+        self.dataDict = None
+        self.fet = None
+        self.joint_data = None
+        self.joint = None
+        self.input = None
+        self.block_data = None
+        self.block = None
+        self.printout = None
+        self.lxlylz = None
+        self.NxNyNz = None
+        self.data = None
+        self.phout_data = None
+        self.phout = None
         self.path = path
-        for fn in filenames:
-            setattr(self, fn.split('.')[0], os.path.join(self.path, fn))
+
+        if filenames is None:
+            filenames = {
+                'printout': 'printout.txt',
+                'phout': 'phout.txt',
+                'input': 'input.json',
+                'fet': 'fet.txt',
+                'block': 'block.txt',
+                'joint': 'joint.txt'
+
+            }
+        for k, v in filenames.items():
+            setattr(self, k, os.path.join(self.path, v))
 
         self.freeE_re = re.compile('[.0-9e+-]+')
         self.name_flag = name_flag
