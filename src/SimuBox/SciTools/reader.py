@@ -32,6 +32,7 @@ class PHOUT:
     data: np.float32
     NxNyNz: Optional[np.int16] = None
     lxlylz: Optional[np.float32] = None
+    shape: Optional[np.int16] = None
 
 
 class Reader:
