@@ -9,7 +9,7 @@ from itertools import combinations
 from pathlib import Path
 from typing import Any
 
-from Utils import Options
+from src import Options
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-n", "--name", default="Default", type=str)

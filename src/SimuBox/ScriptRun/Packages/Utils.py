@@ -48,6 +48,8 @@ class Options:
     name: str = "WORKING_DIR"
     workdir: Path = filedir / name
 
+    json_name: str = "input.json"
+
     cell: bool = True
     anderson: bool = True
     ergodic: bool = True
@@ -57,11 +59,13 @@ class Options:
     combine_paradict: OrderedDict[str, list[Any]] = OrderedDict()
 
     init_phin: list[str] = []
+    gpuTOPS_require: list[str] = []
+    gpuSCFT_require: list[str] = []
 
     worker: dict[str, str] = dict(
-        cpuTOPS=r"srun --partition=intel_2080ti,amd_3090,intel_Xeon --cpus-per-task=2 /home/share/TOPS2020/TOPS2020 -j -i=input.json >aa.txt 2>&1 &",
-        gpuSCFT=r"srun --partition=intel_2080,intel_2080ti,amd_3090 --nodes=1 --gpus=1 /home/share/scft2022 >aa.txt 2>&1 &",
-        gpuTOPS=r"srun --gpus=rtx_3090:1 --cpus-per-gpu=1 --partition=amd_3090 --gpus=1 -w gpu04 /home/share/TOPS2020/TOPS_device -j -i=input.json > aa.txt 2>&1 &",
+        cpuTOPS=f"srun --partition=intel_2080ti,amd_3090,intel_Xeon --cpus-per-task=2 /home/share/TOPS2020/TOPS2020 -j -i={json_name} >aa.txt 2>&1 &",
+        gpuSCFT=f"srun --partition=intel_2080,intel_2080ti,amd_3090 --nodes=1 --gpus=1 /home/share/scft2022 -i={json_name} >aa.txt 2>&1 &",
+        gpuTOPS=f"srun --gpus=rtx_3090:1 --cpus-per-gpu=1 --partition=amd_3090 --gpus=1 -w gpu04 /home/share/TOPS2020/TOPS_device -j -i={json_name} > aa.txt 2>&1 &",
     )
 
     which: WHICH = WHICH.cpuTOPS
@@ -78,7 +82,7 @@ class SCFTManager:
     def editParams(cls, paramNameList: list[str], paramValueList: list[Any]):
         assert len(paramValueList) == len(paramValueList)
 
-        with open("input.json", mode="r") as fp:
+        with open(cls.opts.json_name, mode="r") as fp:
             input_dict = json.load(fp, object_pairs_hook=OrderedDict)
 
         if "Scripts" not in input_dict:
@@ -97,7 +101,7 @@ class SCFTManager:
         else:
             input_dict["Iteration"]["AndersonMixing"]["Switch"] = "FORCED_OFF"
 
-        with open("input.json", "w") as f:
+        with open(cls.opts.json_name, "w") as f:
             json.dump(input_dict, f, indent=4, separators=(",", ": "))
 
     @classmethod
@@ -176,8 +180,8 @@ class SCFTManager:
 
     @classmethod
     def pushJob(cls, res):
-        if "input.json" not in os.listdir(cls.opts.filedir):
-            print("ERROR: input.json not found.")
+        if cls.opts.json_name not in os.listdir(cls.opts.filedir):
+            print(f"ERROR: {cls.opts.json_name} not found.")
             return
 
         if not os.path.exists(cls.opts.workdir):
@@ -195,7 +199,7 @@ class SCFTManager:
                 dirPath = os.path.join(cls.opts.workdir, dirName)
                 print(f"Dealing: {dirPath}")
                 os.makedirs(dirPath)
-                shutil.copy2("input.json", dirPath)
+                shutil.copy2(cls.opts.json_name, dirPath)
 
                 idx = list(paramNameList).index("phase")
                 phase = paramValueArray[idx]
@@ -211,9 +215,18 @@ class SCFTManager:
                 os.chdir(dirPath)
                 cls.editParams(paramNameList, paramValueArray)
 
-                _ = sp.Popen(
-                    cls.opts.worker[cls.opts.which], shell=True, stdout=sp.PIPE
-                )
+                if phase in cls.opts.gpuSCFT_require:
+                    _ = sp.Popen(
+                        cls.opts.worker[WHICH.gpuSCFT], shell=True, stdout=sp.PIPE
+                    )
+                elif phase in cls.opts.gpuTOPS_require:
+                    _ = sp.Popen(
+                        cls.opts.worker[WHICH.gpuTOPS], shell=True, stdout=sp.PIPE
+                    )
+                else:
+                    _ = sp.Popen(
+                        cls.opts.worker[cls.opts.which], shell=True, stdout=sp.PIPE
+                    )
 
             os.chdir(cls.opts.filedir)
 

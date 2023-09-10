@@ -1,9 +1,9 @@
 from collections import OrderedDict
 
-from Agent import BABCB
-from Utils import SCFTManager, Options, arange, WHICH
+from src import BABCB, SCFTManager, Options, arange, WHICH
 
 opts = Options()
+opts.json_name = "BABCB.json"
 opts.cell = True
 opts.anderson = True
 opts.ergodic = True
