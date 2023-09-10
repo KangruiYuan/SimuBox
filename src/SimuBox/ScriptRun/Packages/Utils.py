@@ -8,7 +8,7 @@ from enum import Enum
 from itertools import product
 from pathlib import Path
 from typing import Any, Callable, Union
-
+from functools import cached_property
 import numpy as np
 
 
@@ -62,11 +62,11 @@ class Options:
     gpuTOPS_require: list[str] = []
     gpuSCFT_require: list[str] = []
 
-    worker: dict[str, str] = dict(
-        cpuTOPS=f"srun --partition=intel_2080ti,amd_3090,intel_Xeon --cpus-per-task=2 /home/share/TOPS2020/TOPS2020 -j -i={json_name} >aa.txt 2>&1 &",
-        gpuSCFT=f"srun --partition=intel_2080,intel_2080ti,amd_3090 --nodes=1 --gpus=1 /home/share/scft2022 -i={json_name} >aa.txt 2>&1 &",
-        gpuTOPS=f"srun --gpus=rtx_3090:1 --cpus-per-gpu=1 --partition=amd_3090 --gpus=1 -w gpu04 /home/share/TOPS2020/TOPS_device -j -i={json_name} > aa.txt 2>&1 &",
-    )
+    # worker: dict[str, str] = dict(
+    #     cpuTOPS=f"srun --partition=intel_2080ti,amd_3090,intel_Xeon --cpus-per-task=2 /home/share/TOPS2020/TOPS2020 -j -i={json_name} >aa.txt 2>&1 &",
+    #     gpuSCFT=f"srun --partition=intel_2080,intel_2080ti,amd_3090 --nodes=1 --gpus=1 /home/share/scft2022 -i={json_name} >aa.txt 2>&1 &",
+    #     gpuTOPS=f"srun --gpus=rtx_3090:1 --cpus-per-gpu=1 --partition=amd_3090 --gpus=1 -w gpu04 /home/share/TOPS2020/TOPS_device -j -i={json_name} > aa.txt 2>&1 &",
+    # )
 
     which: WHICH = WHICH.cpuTOPS
 
@@ -74,6 +74,13 @@ class Options:
 
     para_file: str = "param_list.txt"
 
+    @cached_property
+    def worker(self):
+        return dict(
+        cpuTOPS=f"srun --partition=intel_2080ti,amd_3090,intel_Xeon --cpus-per-task=2 /home/share/TOPS2020/TOPS2020 -j -i={self.json_name} >aa.txt 2>&1 &",
+        gpuSCFT=f"srun --partition=intel_2080,intel_2080ti,amd_3090 --nodes=1 --gpus=1 /home/share/scft2022 -i={self.json_name} >aa.txt 2>&1 &",
+        gpuTOPS=f"srun --gpus=rtx_3090:1 --cpus-per-gpu=1 --partition=amd_3090 --gpus=1 -w gpu04 /home/share/TOPS2020/TOPS_device -j -i={self.json_name} > aa.txt 2>&1 &",
+    )
 
 class SCFTManager:
     opts: Options

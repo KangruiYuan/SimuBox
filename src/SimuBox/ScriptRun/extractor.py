@@ -8,13 +8,13 @@ from collections import ChainMap, OrderedDict, defaultdict
 from itertools import combinations
 from pathlib import Path
 from typing import Any
-
-from src import Options
+from push_job_TOPS import opts
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-n", "--name", default="Default", type=str)
 parser.add_argument("-t", "--terminal", default="WORKING_DIR", type=str)
 parser.add_argument("-w", "--where", default="", type=str)
+parser.add_argument("-a", "--all", action='store_true', default=False)
 args = parser.parse_args()
 
 cmd_lxlylz = "tail -3 printout.txt | head -1"
@@ -22,11 +22,13 @@ cmd_freeE_MaxC = "tail -1 printout.txt | head -1"
 lxlylz_re = re.compile("[.0-9]+(?!e)")
 freeE_re = re.compile("[.0-9e+-]+")
 
-current_directory = Path.cwd() / args.terminal
-subdirectories = [item for item in current_directory.iterdir() if item.is_dir()]
+parent_folder = Path.cwd()
+working_directory = parent_folder / args.terminal
+subdirectories = [item for item in working_directory.iterdir() if item.is_dir()]
+
 
 if args.name == "Default":
-    extract_name = (Path.cwd() / current_directory.name).with_suffix(".csv")
+    extract_name = (parent_folder / parent_folder.name).with_suffix(".csv")
 else:
     extract_name = Path.cwd() / args.name
     if not extract_name.name.endswith(".csv"):
@@ -92,12 +94,14 @@ def stats_component(json_dict: dict):
 columns: set[str] = set()
 datas: list[dict[str, Any]] = []
 
+desp = "REPUSH" if args.all else "WRONG"
+
 for subdir in subdirectories:
     os.chdir(subdir)
-    if not check_files(files=["printout.txt", "input.json"]):
+    if not check_files(files=["printout.txt", opts.json_name]):
         print(str(subdir).center(50, "*"))
         continue
-    with open("input.json", mode="r") as fp:
+    with open(opts.json_name, mode="r") as fp:
         json_data = json.load(fp, object_pairs_hook=OrderedDict)
 
     stats_res = stats_component(json_data)
@@ -169,10 +173,12 @@ for subdir in subdirectories:
         )
         data.update(cont)
     columns = columns.union(set(data.keys()))
-    if check_result(data):
+
+    if check_result(data) and not args.all:
         datas.append(data.copy())
     else:
-        print("WRONG: {}".format(subdir))
+        if not args.all:
+            print(f"{desp}: {subdir}")
         wrong_list.append(
             {
                 "path": subdir,
@@ -196,52 +202,53 @@ def RepushOrDelete(wrongList):
     if len(wrongList) == 0:
         print("Everything is ok~ Have a good time!")
         return
-    mode = input("Delete(d) or Repush(r)?(d/r/[pass])") or "pass"
-    if mode == "r":
-        repush = input("Continue(c) or Start over again(s)?([c]/s)") or "c"
+    mode = input("Delete(d) / Continue(c) / Repush(r)?(d/c/r/[pass])") or "pass"
+    if mode == "c":
         for i in wrongList:
             tmp_path = i["path"]
             os.chdir(tmp_path)
-            with open("input.json", mode="r") as fp:
+            with open(opts.json_name, mode="r") as fp:
                 json_base = json.load(fp, object_pairs_hook=OrderedDict)
             new_type = args.where or i["type"]
-            if repush == "c":
-                json_base["Scripts"]["cal_type"] = new_type
-                json_base["Iteration"]["MaxStep"] = i["step"]
-                json_base["Initializer"]["UnitCell"]["Length"] = i["lxlylz"]
-                if os.path.isfile("phout.txt"):
-                    sp.call("mv phout.txt phin.txt", shell=True, stdout=sp.PIPE)
-                    json_base["Initializer"]["Mode"] = "FILE"
-                    json_base["Initializer"]["FileInitializer"] = {
-                        "Mode": "OMEGA",
-                        "Path": "phin.txt",
-                        "SkipLineNumber": 1 if i["type"] == "cpu" else 2,
-                    }
-                    json_base["Iteration"]["AndersonMixing"]["Switch"] = "AUTO"
+            json_base["Scripts"]["cal_type"] = new_type if os.path.isfile("phout.txt") else "cpu"
+            json_base["Iteration"]["MaxStep"] = i["step"]
+            json_base["Initializer"]["UnitCell"]["Length"] = i["lxlylz"]
+            if os.path.isfile("phout.txt"):
+                sp.call("cp phout.txt phin.txt", shell=True, stdout=sp.PIPE)
+                json_base["Initializer"]["Mode"] = "FILE"
+                json_base["Initializer"]["FileInitializer"] = {
+                    "Mode": "OMEGA",
+                    "Path": "phin.txt",
+                    "SkipLineNumber": 1 if i["type"] == "cpu" else 2,
+                }
+                json_base["Iteration"]["AndersonMixing"]["Switch"] = "AUTO"
 
-                with open("input.json", "w") as f:
+                with open(opts.json_name, "w") as f:
                     json.dump(json_base, f, indent=4, separators=(",", ": "))
 
-                if new_type == "gpu" and os.path.isfile("phout.txt"):
-                    job = sp.Popen(
-                        Options.worker["gpuSCFT"], shell=True, stdout=sp.PIPE
-                    )
-                else:
-                    job = sp.Popen(
-                        Options.worker["cpuTOPS"], shell=True, stdout=sp.PIPE
-                    )
-                print("{pid}:{path}".format(pid=job.pid, path=tmp_path))
-            elif repush == "s":
-                if new_type == "gpu":
-                    job = sp.Popen(
-                        Options.worker["gpuSCFT"], shell=True, stdout=sp.PIPE
-                    )
-                else:
-                    job = sp.Popen(
-                        Options.worker["cpuTOPS"], shell=True, stdout=sp.PIPE
-                    )
-                print("{pid}:{path}".format(pid=job.pid, path=tmp_path))
-
+            if json_base["Scripts"]["cal_type"] == "gpu":
+                job = sp.Popen(
+                    opts.worker["gpuSCFT"], shell=True, stdout=sp.PIPE
+                )
+            else:
+                job = sp.Popen(
+                    opts.worker["cpuTOPS"], shell=True, stdout=sp.PIPE
+                )
+            print("{pid}:{path}".format(pid=job.pid, path=tmp_path))
+    elif mode == "r":
+        for i in wrongList:
+            tmp_path = i["path"]
+            os.chdir(tmp_path)
+            new_type = args.where or i["type"]
+            if new_type == "gpu":
+                job = sp.Popen(
+                    opts.worker["gpuSCFT"], shell=True, stdout=sp.PIPE
+                )
+            else:
+                job = sp.Popen(
+                    opts.worker["cpuTOPS"], shell=True, stdout=sp.PIPE
+                )
+            print("{pid}:{path}".format(pid=job.pid, path=tmp_path))
     elif mode == "d":
         for i in wrongList:
             tmp_path = str(i["path"])

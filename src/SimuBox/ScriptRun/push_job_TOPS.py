@@ -1,9 +1,15 @@
 from collections import OrderedDict
 
-from src import BABCB, SCFTManager, Options, arange, WHICH
+try:
+    from SCFTRunner import BABCB, SCFTManager, Options, arange, WHICH
+except ImportError:
+    from src import BABCB, SCFTManager, Options, arange, WHICH
+
+import platform
+
 
 opts = Options()
-opts.json_name = "BABCB.json"
+# opts.json_name = "BABCB.json"
 opts.cell = True
 opts.anderson = True
 opts.ergodic = True
@@ -19,6 +25,8 @@ opts.init_phin = ["DG", "NaCl", "CsCl"]
 opts.which = WHICH.cpuTOPS
 SCFTManager.opts = opts
 
-SCFTManager.ParamsLog()
-res = SCFTManager.readParamsArray()
-# SCFTManager.pushJob(res)
+if __name__ == "__main__":
+    SCFTManager.ParamsLog()
+    res = SCFTManager.readParamsArray()
+    if platform.system() == "Linux":
+        SCFTManager.pushJob(res)
