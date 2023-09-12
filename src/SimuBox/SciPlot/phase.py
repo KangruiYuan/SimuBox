@@ -1,19 +1,45 @@
 import os
-import numpy as np
+from dataclasses import dataclass
+from enum import Enum
+from pathlib import Path
+from typing import Optional, Union
+
 import matplotlib.pyplot as plt
-from matplotlib.ticker import AutoMinorLocator, MultipleLocator
+import numpy as np
 import pandas as pd
+from matplotlib.figure import Figure
+from matplotlib.ticker import AutoMinorLocator, MultipleLocator
 from numpy.polynomial import Chebyshev
 from scipy.io import loadmat
-from pathlib import Path
-from typing import Union
+
+
+@dataclass()
+class CompareResult:
+    df: pd.DataFrame
+    plot_dict: dict
+    mat: np.ndarray
+    fig: Optional[Figure] = None
+    ax: Optional[plt.Axes] = None
+
+
+class DetectionMode(str, Enum):
+    HORIZONTAL = "hori"
+    VERTICAL = "vert"
+    BOTH = "both"
+
+
+@dataclass()
+class PointInfo:
+    phase: str
+    x: float
+    y: float
+    freeEnergy: float
 
 
 class PhaseDiagram:
     def __init__(
-        self, xlabel, ylabel, color_dict=None, label_dict=None, **kwargs
+        self, xlabel: str, ylabel: str, color_dict: Optional[dict] = None, label_dict: Optional[dict] = None, **kwargs
     ) -> None:
-
         if label_dict is None:
             label_dict = {
                 "tau": r"$\tau$",
@@ -50,23 +76,23 @@ class PhaseDiagram:
         self.ylabel = ylabel
         pass
 
-    def query_point(self, df, xval=None, yval=None, **kwargs):
+    def query_point(
+        self,
+        df: pd.DataFrame,
+        xval: Optional[Union[float, str, int]] = None,
+        yval: Optional[Union[float, str, int]] = None,
+        **kwargs,
+    ):
         res = df.copy()
+        columns = res.columns
         if xval:
             res = res[res[self.xlabel] == xval]
         if yval:
             res = res[res[self.ylabel] == yval]
-        query_dict = kwargs.get("query_dict", {})
-        for key, val in query_dict.items():
-            res = res[res[key] == val]
+        for key, val in kwargs.items():
+            if key in columns:
+                res = res[res[key] == val]
         return res
-
-    def query(self, df: pd.DataFrame, query_dict=None, **kwargs):
-        if query_dict is None:
-            query_dict = {}
-        if len(query_dict) == 0:
-            return df
-        pass
 
     @staticmethod
     def checkin(phase, candidates):
@@ -94,10 +120,7 @@ class PhaseDiagram:
             pass
         return df
 
-    def compare(
-        self, path: Union[str, Path], plot: bool = True, acc: int = 3, **kwargs
-    ):
-
+    def compare(self, path: Union[str, Path], plot: bool = True, acc: int = 3, **kwargs):
         df = self.data(path=path, acc=acc)
         print(f"Include phase: {set(df['phase'].values)}")
 
@@ -107,7 +130,7 @@ class PhaseDiagram:
 
         exclude = kwargs.get("exclude", [])
 
-        mat = np.zeros((len(y_set), len(x_set)), dtype=object)
+        mat = np.zeros((len(y_set), len(x_set)), dtype=PointInfo)
         for i, y in enumerate(y_set):
             for j, x in enumerate(x_set):
                 phase = "unknown"
@@ -133,32 +156,25 @@ class PhaseDiagram:
                         phase = "Crect"
                 elif len(min_label) == 1:
                     if self.checkin(["C6", "C3"], min_label):
-                        if lylz == np.around(np.sqrt(3), acc) or lzly == np.around(
-                            1 / np.sqrt(3), acc
-                        ):
+                        if lylz == np.around(np.sqrt(3), acc) or lzly == np.around(1 / np.sqrt(3), acc):
                             phase = min_label[0]
                     elif self.checkin(["iHPa"], min_label):
-                        if lxly == np.around(np.sqrt(3), acc) or lylx == np.around(
-                            1 / np.sqrt(3), acc
-                        ):
+                        if lxly == np.around(np.sqrt(3), acc) or lylx == np.around(1 / np.sqrt(3), acc):
                             phase = "iHPa"
                         elif lylz == np.around(np.sqrt(2), acc) or lxly == 1:
                             phase = "SC"
                     elif "PL" in min_label:
-                        if lxly == np.around(np.sqrt(3), acc) or lylx == np.around(
-                            1 / np.sqrt(3), acc
-                        ):
+                        if lxly == np.around(np.sqrt(3), acc) or lylx == np.around(1 / np.sqrt(3), acc):
                             phase = "PL"
                     elif self.checkin(["L", "Disorder", "O70"], min_label):
                         phase = min_label[0]
-                    elif self.checkin(
-                        ["SC", "SG", "DG", "BCC", "FCC", "sdgn"], min_label
-                    ):
+                    elif self.checkin(["SC", "SG", "DG", "BCC", "FCC", "sdgn"], min_label):
                         if lxly == 1 and lylz == 1:
                             phase = min_label[0]
                     else:
                         phase = "_".join([phase, min_label[0]])
-                mat[i][j] = [phase, x, y, freeE]
+                # mat[i][j] = [phase, x, y, freeE]
+                mat[i][j] = PointInfo(phase=phase, x=x, y=y, freeEnergy=freeE)
                 if phase in plot_dict:
                     for attr, val in zip(
                         [self.xlabel, self.ylabel, "freeE", "lylz", "lxly"],
@@ -174,30 +190,29 @@ class PhaseDiagram:
                         "lxly": [lxly],
                     }
 
+        comp_res = CompareResult(df=df, plot_dict=plot_dict, mat=mat)
+
         if plot:
             fig, ax = plt.subplots(1, 1, figsize=(8, 6))
             for key, value in plot_dict.items():
                 ax.scatter(
                     value[self.xlabel],
                     value[self.ylabel],
-                    c=self.color_dict[key],
+                    c=self.color_dict.get(key, "k"),
                     label=key,
                 )
             ax.tick_params(top="on", right="on", which="both")
             ax.tick_params(which="both", width=2, length=4, direction="in")
             ax.xaxis.set_minor_locator(AutoMinorLocator(5))
             ax.yaxis.set_minor_locator(AutoMinorLocator(5))
-            ax.set_xlabel(
-                self.label_dict.get(self.xlabel, self.xlabel), fontdict={"size": 20}
-            )
-            ax.set_ylabel(
-                self.label_dict.get(self.ylabel, self.ylabel), fontdict={"size": 20}
-            )
+            ax.set_xlabel(self.label_dict.get(self.xlabel, self.xlabel), fontdict={"size": 20})
+            ax.set_ylabel(self.label_dict.get(self.ylabel, self.ylabel), fontdict={"size": 20})
             ax.legend(frameon=False, loc="upper left", bbox_to_anchor=(0.98, 0.8))
             fig.tight_layout()
-            return df, plot_dict, mat, fig, ax
-        else:
-            return df, plot_dict, mat
+            comp_res.fig = fig
+            comp_res.ax = ax
+
+        return comp_res
 
     @staticmethod
     def cross_point(x1, y1, x2, y2, x3, y3, x4, y4):
@@ -209,14 +224,13 @@ class PhaseDiagram:
         return (D1 / D, D2 / D)
 
     @staticmethod
-    def de_unknown(mat):
+    def de_unknown(comp_res: CompareResult):
+        mat = comp_res.mat
         for i in range(mat.shape[0]):
             for j in range(mat.shape[1]):
-                try:
-                    mat[i][j][0] = mat[i][j][0].lstrip("unknown_")
-                except:
-                    continue
-        return mat
+                mat[i][j].phase = mat[i][j].phase.lstrip("unknown_")
+        comp_res.mat = mat
+        return comp_res
 
     def scan(self, folder: Union[str, Path], ann_dict: dict, **kwargs):
         if isinstance(folder, str):
@@ -241,17 +255,16 @@ class PhaseDiagram:
                 print("Skip...")
                 continue
             else:
-                tmp_data, _, tmp_mat = self.compare(
-                    path=filename, plot=False, acc=tmp_dict.get("acc", 2)
-                )
+                comp_res = self.compare(path=filename, plot=False, acc=tmp_dict.get("acc", 2))
 
             if tmp_name in deunknown or deunknown == "All":
-                tmp_mat = self.de_unknown(tmp_mat)
+                comp_res = self.de_unknown(comp_res)
 
             if tmp_name in extract:
-                tmp_xys = self.extract_edge(tmp_mat, **tmp_dict)
+                tmp_xys = self.extract_edge(comp_res.mat, **tmp_dict)
             else:
-                tmp_xys = self.boundary(tmp_data, tmp_mat, mode=["hori", "ver"])
+                # tmp_xys = self.boundary(comp_res.df, comp_res.mat, mode=["hori", "ver"])
+                tmp_xys = self.boundary_detect(comp_res)
 
             if tmp_name in inverse_lst:
                 tmp_xys = tmp_xys[np.argsort(tmp_xys[:, 1])]
@@ -275,9 +288,7 @@ class PhaseDiagram:
                     weight="bold",
                     color="k",
                     fontsize=20,
-                    arrowprops=dict(
-                        arrowstyle="->", connectionstyle="arc3", color="k", lw=2
-                    ),
+                    arrowprops=dict(arrowstyle="->", connectionstyle="arc3", color="k", lw=2),
                 )
 
         save_path = kwargs.get("path", "")
@@ -286,9 +297,7 @@ class PhaseDiagram:
             self.draw_line(
                 wrongline,
                 ax=ax,
-                tmp_ann_dict=kwargs.get(
-                    "mat", {"adde": 0.001, "ls": ":", "shrinks": 7, "alpha": 0.5}
-                ),
+                tmp_ann_dict=kwargs.get("mat", {"adde": 0.001, "ls": ":", "shrinks": 7, "alpha": 0.5}),
             )
 
         plt.margins(0)
@@ -304,76 +313,86 @@ class PhaseDiagram:
         if save_path:
             plt.savefig(save_path, dpi=200)
 
-    def boundary(self, df, mat, mode=None):
-        if mode is None:
-            mode = ["ver", "hori"]
+    def boundary_detect(self, comp_res: CompareResult, mode: DetectionMode = DetectionMode.BOTH):
         xys = []
-        for i in range(mat.shape[0]):
-            for j in range(mat.shape[1]):
-                point1 = mat[i][j]
-                for k, w in zip([-1, 0, 1, 0], [0, 1, 0, -1]):
-                    ii = i + k
-                    jj = j + w
-                    if (i == 0 and ii == -1) or (j == 0 and jj == -1):
+        mat = comp_res.mat.copy()
+        df = comp_res.df.copy()
+        if mode == DetectionMode.BOTH or mode == DetectionMode.HORIZONTAL:
+            for idx in range(mat.shape[0]):
+                line = mat[idx]
+                line = line[line != 0]
+                for ele_idx in range(len(line) - 1):
+                    ele_left_1: PointInfo = line[ele_idx]
+                    ele_right_1: PointInfo = line[ele_idx + 1]
+                    if (
+                        ele_left_1.phase == ele_right_1.phase
+                        or ("unknown" in ele_left_1.phase)
+                        or ("unknown" in ele_right_1.phase)
+                    ):
                         continue
-                    try:
-                        point3 = mat[ii][jj]
-                        if (
-                            point1[0] == point3[0]
-                            or "unknown" in point1[0]
-                            or "unknown" in point3[0]
-                        ):
-                            continue
-                        point2 = df[
-                            (df.phase == point1[0])
-                            & (df[self.xlabel] == point3[1])
-                            & (df[self.ylabel] == point3[2])
-                        ]
-                        if len(point2) == 0:
-                            continue
-                        point4 = df[
-                            (df.phase == point3[0])
-                            & (df[self.xlabel] == point1[1])
-                            & (df[self.ylabel] == point1[2])
-                        ]
-                        if len(point4) == 0:
-                            continue
 
-                        if "hori" in mode:
-                            if i == ii:
-                                x0, _ = self.cross_point(
-                                    point1[1],
-                                    point1[3],
-                                    point2[self.xlabel].values[0],
-                                    point2.freeE.values[0],
-                                    point3[1],
-                                    point3[3],
-                                    point4[self.xlabel].values[0],
-                                    point4.freeE.values[0],
-                                )
-                                if [x0, point1[2]] not in xys:
-                                    xys.append([x0, point1[2]])
-                        if "ver" in mode:
-                            if j == jj:
-                                x0, _ = self.cross_point(
-                                    point1[2],
-                                    point1[3],
-                                    point2[self.ylabel].values[0],
-                                    point2.freeE.values[0],
-                                    point3[2],
-                                    point3[3],
-                                    point4[self.ylabel].values[0],
-                                    point4.freeE.values[0],
-                                )
-                                if [point1[1], x0] not in xys:
-                                    xys.append([point1[1], x0])
-                    except BaseException:
+                    ele_left_2: pd.DataFrame = self.query_point(
+                        df=df, xval=ele_left_1.x, yval=ele_left_1.y, phase=ele_right_1.phase
+                    )
+                    ele_right_2: pd.DataFrame = self.query_point(
+                        df=df, xval=ele_right_1.x, yval=ele_right_1.y, phase=ele_left_1.phase
+                    )
+
+                    if len(ele_left_2) != 1 or len(ele_right_2) != 1:
                         continue
+                    x0, _ = self.cross_point(
+                        ele_left_1.x,
+                        ele_left_1.freeEnergy,
+                        ele_right_2[self.xlabel].values[0],
+                        ele_right_2.freeE.values[0],
+                        ele_right_1.x,
+                        ele_right_1.freeEnergy,
+                        ele_left_2[self.xlabel].values[0],
+                        ele_left_2.freeE.values[0],
+                    )
+                    if [x0, ele_left_1.y] not in xys:
+                        xys.append([x0, ele_left_1.y])
+        if mode == DetectionMode.BOTH or mode == DetectionMode.VERTICAL:
+            for idx in range(mat.shape[1]):
+                line = mat[:, idx]
+                line = line[line != 0]
+                for ele_idx in range(len(line) - 1):
+                    ele_left_1: PointInfo = line[ele_idx]
+                    ele_right_1: PointInfo = line[ele_idx + 1]
+                    if (
+                        ele_left_1.phase == ele_right_1.phase
+                        or ("unknown" in ele_left_1.phase)
+                        or ("unknown" in ele_right_1.phase)
+                    ):
+                        continue
+
+                    ele_left_2: pd.DataFrame = self.query_point(
+                        df=df, xval=ele_left_1.x, yval=ele_left_1.y, phase=ele_right_1.phase
+                    )
+                    ele_right_2: pd.DataFrame = self.query_point(
+                        df=df, xval=ele_right_1.x, yval=ele_right_1.y, phase=ele_left_1.phase
+                    )
+
+                    if len(ele_left_2) != 1 or len(ele_right_2) != 1:
+                        continue
+
+                    y0, _ = self.cross_point(
+                        ele_left_1.y,
+                        ele_left_1.freeEnergy,
+                        ele_right_2[self.ylabel].values[0],
+                        ele_right_2.freeE.values[0],
+                        ele_right_1.y,
+                        ele_right_1.freeEnergy,
+                        ele_left_2[self.ylabel].values[0],
+                        ele_left_2.freeE.values[0],
+                    )
+                    if [ele_left_1.x, y0] not in xys:
+                        xys.append([ele_left_1.x, y0])
+
         return np.array(xys)
 
     @staticmethod
     def draw_line(xys, ax=None, tmp_ann_dict=None, inverse: bool = False):
-
         if tmp_ann_dict is None:
             tmp_ann_dict = {}
         if cuts := tmp_ann_dict.get("cuts", None):
@@ -426,38 +445,23 @@ class PhaseDiagram:
     @staticmethod
     def extract_edge(
         mat: np.ndarray,
-        which: str = "Disorder",
-        mode: str = "middle",
         factor: float = 0.5,
-        transpose: bool = False,
+        axis: int = 1,
         **kwargs,
     ):
-        if transpose:
-            mat = mat.transpose()
         edge_data = []
-        for co in range(mat.shape[1]):
-            tmp_co = mat[:, co]
-            tmp_co = tmp_co[tmp_co != 0]
-            for ro in range(1, len(tmp_co)):
-                try:
-                    if tmp_co[ro][0] != which and tmp_co[ro - 1][0] == which:
-                        if mode == "middle":
-                            edge_data.append(
-                                [
-                                    tmp_co[ro][1] * factor
-                                    + tmp_co[ro - 1][1] * (1 - factor),
-                                    tmp_co[ro][2] * factor
-                                    + tmp_co[ro - 1][2] * (1 - factor),
-                                ]
-                            )
-                        elif mode == "down":
-                            edge_data.append([tmp_co[ro - 1][1], tmp_co[ro - 1][2]])
-                        elif mode == "up":
-                            edge_data.append([tmp_co[ro][1], tmp_co[ro][2]])
-                        break
-                    else:
-                        continue
-                except BaseException:
+        assert axis <= 1
+        # var_label = 'y' if axis else 'x'
+        # const_label = 'x' if axis else 'y'
+        for col_idx in range(mat.shape[axis]):
+            col = mat[:, col_idx] if axis else mat[col_idx, :]
+            col = col[col != 0]
+            for ele_idx in range(len(col) - 1):
+                ele_1 = col[ele_idx]
+                ele_2 = col[ele_idx + 1]
+                if ele_1.phase == ele_2.phase:
                     continue
+                edge_data.append([ele_1.x * factor + ele_2.x * (1 - factor), ele_1.y * factor + ele_2.y * (1 - factor)])
+
         edge_data = np.array(edge_data)
         return edge_data
