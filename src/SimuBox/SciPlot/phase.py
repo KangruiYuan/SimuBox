@@ -1,80 +1,69 @@
-import os
-from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Optional, Union
+from typing import Any, Optional, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from matplotlib.figure import Figure
+
 from matplotlib.ticker import AutoMinorLocator, MultipleLocator
 from numpy.polynomial import Chebyshev
 from scipy.io import loadmat
+from ..Utils import generate_colors
+from collections import defaultdict
 
+PHASE_PLOT_CONFIG = {
+    "font.family": "Times New Roman",
+    "font.serif": ["SimSun"],
+    "font.size": 16,
+    "mathtext.fontset": "stix",
+    "axes.unicode_minus": False,
+    "xtick.direction": "in",
+    "ytick.direction": "in",
+    "xtick.top": True,
+    "ytick.right": True,
+    "xtick.major.width": 3,
+    "xtick.minor.width": 3,
+    "xtick.major.size": 10,
+    "xtick.minor.size": 5,
+    "ytick.major.width": 3,
+    "ytick.minor.width": 3,
+    "ytick.major.size": 10,
+    "ytick.minor.size": 5,
+    "xtick.labelsize": "medium",
+    "ytick.labelsize": "medium",
+    "axes.linewidth": 3,
+    "legend.frameon": False,
+    "legend.fontsize": "medium",
+}
 
-@dataclass()
-class CompareResult:
-    df: pd.DataFrame
-    plot_dict: dict
-    mat: np.ndarray
-    fig: Optional[Figure] = None
-    ax: Optional[plt.Axes] = None
-
-
-class DetectionMode(str, Enum):
-    HORIZONTAL = "hori"
-    VERTICAL = "vert"
-    BOTH = "both"
-
-
-@dataclass()
-class PointInfo:
-    phase: str
-    x: float
-    y: float
-    freeEnergy: float
+plt.rcParams.update(PHASE_PLOT_CONFIG)
 
 
 class PhaseDiagram:
     def __init__(
-        self, xlabel: str, ylabel: str, color_dict: Optional[dict] = None, label_dict: Optional[dict] = None, **kwargs
+        self,
+        path: Union[str, Path],
+        xlabel: str,
+        ylabel: str,
+        colors: Optional[dict] = None,
+        labels: Optional[dict] = None,
+        **kwargs,
     ) -> None:
-        if label_dict is None:
-            label_dict = {
+        self.path = Path(path)
+        self.colors = colors if colors is not None else {}
+        self.labels = (
+            labels
+            if labels is not None
+            else {
                 "tau": r"$\tau$",
                 "ksi": r"$\xi$",
-                "volH": r"$\phi_{\rm{H}}$",
                 "fA": r"$f_{\rm{A}}$",
                 "chiN": r"$\chi \rm{N}$",
             }
-        if color_dict is None:
-            color_dict = {
-                "C4": "r",
-                "Crect": "dodgerblue",
-                "L": "deeppink",
-                "DG": "orange",
-                "iHPa": "blue",
-                "SG": "magenta",
-                "SC": "goldenrod",
-                "C6": "tan",
-                "C3": "m",
-                "HCP": "crimson",
-                "FCC": "yellowgreen",
-                "PL": "darkorchid",
-                "BCC": "limegreen",
-                "sdgn": "teal",
-                "O70": "crimson",
-                "unknown": "k",
-                "Disorder": "y",
-            }
-        self.color_dict = color_dict
-        self.color_dict.update(kwargs.get("color", {}))
-        self.label_dict = label_dict
-        self.label_dict.update(kwargs.get("label", {}))
+        )
         self.xlabel = xlabel
         self.ylabel = ylabel
-        pass
 
     def query_point(
         self,
@@ -95,7 +84,7 @@ class PhaseDiagram:
         return res
 
     @staticmethod
-    def checkin(phase, candidates):
+    def checkin(phase: list, candidates: list):
         if len(phase) == 0:
             return False
         for i in phase:
@@ -103,7 +92,7 @@ class PhaseDiagram:
                 return True
         return False
 
-    def data(self, path, **kwargs):
+    def data(self, path: Path, **kwargs):
         dropset = kwargs.get("dropset", ["lx", "ly", "lz", "phase", "freeE"])
         div = kwargs.get("div", 1)
         div_var = kwargs.get("div_var", "chiN")
@@ -120,7 +109,21 @@ class PhaseDiagram:
             pass
         return df
 
-    def compare(self, path: Union[str, Path], plot: bool = True, acc: int = 3, **kwargs):
+    def compare(
+        self,
+        name: Optional[str] = None,
+        path: Optional[Union[str, Path]] = None,
+        plot: bool = True,
+        acc: int = 3,
+        **kwargs,
+    ):
+        if path is None:
+            assert name is not None
+            path = (self.path / name).with_suffix(".csv")
+        else:
+            if not isinstance(path, Path):
+                path = Path(path)
+
         df = self.data(path=path, acc=acc)
         print(f"Include phase: {set(df['phase'].values)}")
 
@@ -156,24 +159,31 @@ class PhaseDiagram:
                         phase = "Crect"
                 elif len(min_label) == 1:
                     if self.checkin(["C6", "C3"], min_label):
-                        if lylz == np.around(np.sqrt(3), acc) or lzly == np.around(1 / np.sqrt(3), acc):
+                        if lylz == np.around(np.sqrt(3), acc) or lzly == np.around(
+                            1 / np.sqrt(3), acc
+                        ):
                             phase = min_label[0]
                     elif self.checkin(["iHPa"], min_label):
-                        if lxly == np.around(np.sqrt(3), acc) or lylx == np.around(1 / np.sqrt(3), acc):
+                        if lxly == np.around(np.sqrt(3), acc) or lylx == np.around(
+                            1 / np.sqrt(3), acc
+                        ):
                             phase = "iHPa"
                         elif lylz == np.around(np.sqrt(2), acc) or lxly == 1:
                             phase = "SC"
                     elif "PL" in min_label:
-                        if lxly == np.around(np.sqrt(3), acc) or lylx == np.around(1 / np.sqrt(3), acc):
+                        if lxly == np.around(np.sqrt(3), acc) or lylx == np.around(
+                            1 / np.sqrt(3), acc
+                        ):
                             phase = "PL"
                     elif self.checkin(["L", "Disorder", "O70"], min_label):
                         phase = min_label[0]
-                    elif self.checkin(["SC", "SG", "DG", "BCC", "FCC", "sdgn"], min_label):
+                    elif self.checkin(
+                        ["SC", "SG", "DG", "BCC", "FCC", "sdgn"], min_label
+                    ):
                         if lxly == 1 and lylz == 1:
                             phase = min_label[0]
                     else:
                         phase = "_".join([phase, min_label[0]])
-                # mat[i][j] = [phase, x, y, freeE]
                 mat[i][j] = PointInfo(phase=phase, x=x, y=y, freeEnergy=freeE)
                 if phase in plot_dict:
                     for attr, val in zip(
@@ -195,18 +205,24 @@ class PhaseDiagram:
         if plot:
             fig, ax = plt.subplots(1, 1, figsize=(8, 6))
             for key, value in plot_dict.items():
+                if key not in self.colors:
+                    self.colors[key] = generate_colors(mode="HEX")[0]
                 ax.scatter(
                     value[self.xlabel],
                     value[self.ylabel],
-                    c=self.color_dict.get(key, "k"),
+                    c=self.colors[key],
                     label=key,
                 )
             ax.tick_params(top="on", right="on", which="both")
             ax.tick_params(which="both", width=2, length=4, direction="in")
             ax.xaxis.set_minor_locator(AutoMinorLocator(5))
             ax.yaxis.set_minor_locator(AutoMinorLocator(5))
-            ax.set_xlabel(self.label_dict.get(self.xlabel, self.xlabel), fontdict={"size": 20})
-            ax.set_ylabel(self.label_dict.get(self.ylabel, self.ylabel), fontdict={"size": 20})
+            ax.set_xlabel(
+                self.labels.get(self.xlabel, self.xlabel), fontdict={"size": 20}
+            )
+            ax.set_ylabel(
+                self.labels.get(self.ylabel, self.ylabel), fontdict={"size": 20}
+            )
             ax.legend(frameon=False, loc="upper left", bbox_to_anchor=(0.98, 0.8))
             fig.tight_layout()
             comp_res.fig = fig
@@ -221,41 +237,46 @@ class PhaseDiagram:
         D = (x2 - x1) * (y4 - y3) - (x4 - x3) * (y2 - y1)
         D1 = b2 * (x2 - x1) - b1 * (x4 - x3)
         D2 = b2 * (y2 - y1) - b1 * (y4 - y3)
-        return (D1 / D, D2 / D)
+        return D1 / D, D2 / D
 
     @staticmethod
     def de_unknown(comp_res: CompareResult):
         mat = comp_res.mat
         for i in range(mat.shape[0]):
             for j in range(mat.shape[1]):
-                mat[i][j].phase = mat[i][j].phase.lstrip("unknown_")
+                try:
+                    mat[i][j].phase = mat[i][j].phase.lstrip("unknown_")
+                except AttributeError:
+                    continue
         comp_res.mat = mat
         return comp_res
 
-    def scan(self, folder: Union[str, Path], ann_dict: dict, **kwargs):
-        if isinstance(folder, str):
-            folder = Path(folder)
+    def scan(self, folder: Optional[Union[str, Path]] = None, **kwargs):
+        if folder is not None:
+            if isinstance(folder, str):
+                folder = Path(folder)
+        else:
+            folder = self.path
 
-        # filelist = os.listdir(folder)
         filelist = list(folder.glob("*.csv"))
         fig, ax = plt.subplots(figsize=kwargs.get("figsize", (8, 6)))
-        skip = kwargs.get("skip", [])
-        extract = kwargs.get("extract", [])
-        inverse_lst = kwargs.get("inverse", [])
-        deunknown = kwargs.get("deunknown", [])
+        skip: list[str] = kwargs.get("skip", [])
+        extract: list[str] = kwargs.get("extract", [])
+        inverse_lst: list[str] = kwargs.get("inverse", [])
+        deunknown: list[str] = kwargs.get("deunknown", [])
+        ann_dict: dict[str, Any] = kwargs.get("annotation", {})
 
         for filename in filelist:
-            # if not filename.endswith('.csv'):
-            #     continue
-            # tmp_name = os.path.splitext(filename)[0]
             tmp_name = filename.stem
-            tmp_dict = ann_dict.get(tmp_name, {})
+            tmp_dict: dict = ann_dict.get(tmp_name, {})
             print(tmp_name, end="\t")
             if tmp_name in skip:
                 print("Skip...")
                 continue
             else:
-                comp_res = self.compare(path=filename, plot=False, acc=tmp_dict.get("acc", 2))
+                comp_res = self.compare(
+                    path=filename, plot=False, acc=tmp_dict.get("acc", 2)
+                )
 
             if tmp_name in deunknown or deunknown == "All":
                 comp_res = self.de_unknown(comp_res)
@@ -264,14 +285,14 @@ class PhaseDiagram:
                 tmp_xys = self.extract_edge(comp_res.mat, **tmp_dict)
             else:
                 # tmp_xys = self.boundary(comp_res.df, comp_res.mat, mode=["hori", "ver"])
-                tmp_xys = self.boundary_detect(comp_res)
+                tmp_xys = self.boundary_detect(comp_res, **tmp_dict)
 
             if tmp_name in inverse_lst:
                 tmp_xys = tmp_xys[np.argsort(tmp_xys[:, 1])]
-                self.draw_line(tmp_xys, ax=ax, tmp_ann_dict=tmp_dict, inverse=True)
+                self.draw_line(tmp_xys, ax=ax, annotation=tmp_dict, inverse=True)
             else:
                 tmp_xys = tmp_xys[np.argsort(tmp_xys[:, 0])]
-                self.draw_line(tmp_xys, ax=ax, tmp_ann_dict=tmp_dict)
+                self.draw_line(tmp_xys, ax=ax, annotation=tmp_dict)
 
         if phase_name := ann_dict.get("phase_name", False):
             for key, value in phase_name.items():
@@ -288,7 +309,9 @@ class PhaseDiagram:
                     weight="bold",
                     color="k",
                     fontsize=20,
-                    arrowprops=dict(arrowstyle="->", connectionstyle="arc3", color="k", lw=2),
+                    arrowprops=dict(
+                        arrowstyle="->", connectionstyle="arc3", color="k", lw=2
+                    ),
                 )
 
         save_path = kwargs.get("path", "")
@@ -297,7 +320,9 @@ class PhaseDiagram:
             self.draw_line(
                 wrongline,
                 ax=ax,
-                tmp_ann_dict=kwargs.get("mat", {"adde": 0.001, "ls": ":", "shrinks": 7, "alpha": 0.5}),
+                annotation=kwargs.get(
+                    "mat", {"adde": 0.001, "ls": ":", "shrinks": 7, "alpha": 0.5}
+                ),
             )
 
         plt.margins(0)
@@ -305,15 +330,33 @@ class PhaseDiagram:
         ax.yaxis.set_minor_locator(AutoMinorLocator(5))
         if ymajor := kwargs.get("ymajor", 0):
             ax.yaxis.set_major_locator(MultipleLocator(ymajor))
-        ax.set_xlabel(self.label_dict[self.xlabel], fontdict={"size": 30})
-        ax.set_ylabel(self.label_dict[self.ylabel], fontdict={"size": 30})
+        ax.set_xlabel(self.labels[self.xlabel], fontdict={"size": 30})
+        ax.set_ylabel(self.labels[self.ylabel], fontdict={"size": 30})
         plt.tick_params(labelsize=20, pad=8)
         fig.tight_layout()
         plt.show()
         if save_path:
             plt.savefig(save_path, dpi=200)
 
-    def boundary_detect(self, comp_res: CompareResult, mode: DetectionMode = DetectionMode.BOTH):
+    @staticmethod
+    def check_phase(point: PointInfo, point_other: Optional[PointInfo] = None):
+        if point_other is None:
+            return not isinstance(point, PointInfo) or "unknown" in point.phase
+        else:
+            return (
+                not isinstance(point, PointInfo)
+                or "unknown" in point.phase
+                or not isinstance(point_other, PointInfo)
+                or "unknown" in point_other.phase
+                or point.phase == point_other.phase
+            )
+
+    def boundary_detect(
+        self,
+        comp_res: CompareResult,
+        mode: DetectionMode = DetectionMode.BOTH,
+        **kwargs,
+    ):
         xys = []
         mat = comp_res.mat.copy()
         df = comp_res.df.copy()
@@ -324,18 +367,19 @@ class PhaseDiagram:
                 for ele_idx in range(len(line) - 1):
                     ele_left_1: PointInfo = line[ele_idx]
                     ele_right_1: PointInfo = line[ele_idx + 1]
-                    if (
-                        ele_left_1.phase == ele_right_1.phase
-                        or ("unknown" in ele_left_1.phase)
-                        or ("unknown" in ele_right_1.phase)
-                    ):
+                    if self.check_phase(ele_left_1, ele_right_1):
                         continue
-
                     ele_left_2: pd.DataFrame = self.query_point(
-                        df=df, xval=ele_left_1.x, yval=ele_left_1.y, phase=ele_right_1.phase
+                        df=df,
+                        xval=ele_left_1.x,
+                        yval=ele_left_1.y,
+                        phase=ele_right_1.phase,
                     )
                     ele_right_2: pd.DataFrame = self.query_point(
-                        df=df, xval=ele_right_1.x, yval=ele_right_1.y, phase=ele_left_1.phase
+                        df=df,
+                        xval=ele_right_1.x,
+                        yval=ele_right_1.y,
+                        phase=ele_left_1.phase,
                     )
 
                     if len(ele_left_2) != 1 or len(ele_right_2) != 1:
@@ -359,18 +403,20 @@ class PhaseDiagram:
                 for ele_idx in range(len(line) - 1):
                     ele_left_1: PointInfo = line[ele_idx]
                     ele_right_1: PointInfo = line[ele_idx + 1]
-                    if (
-                        ele_left_1.phase == ele_right_1.phase
-                        or ("unknown" in ele_left_1.phase)
-                        or ("unknown" in ele_right_1.phase)
-                    ):
+                    if self.check_phase(ele_left_1, ele_right_1):
                         continue
 
                     ele_left_2: pd.DataFrame = self.query_point(
-                        df=df, xval=ele_left_1.x, yval=ele_left_1.y, phase=ele_right_1.phase
+                        df=df,
+                        xval=ele_left_1.x,
+                        yval=ele_left_1.y,
+                        phase=ele_right_1.phase,
                     )
                     ele_right_2: pd.DataFrame = self.query_point(
-                        df=df, xval=ele_right_1.x, yval=ele_right_1.y, phase=ele_left_1.phase
+                        df=df,
+                        xval=ele_right_1.x,
+                        yval=ele_right_1.y,
+                        phase=ele_left_1.phase,
                     )
 
                     if len(ele_left_2) != 1 or len(ele_right_2) != 1:
@@ -379,12 +425,12 @@ class PhaseDiagram:
                     y0, _ = self.cross_point(
                         ele_left_1.y,
                         ele_left_1.freeEnergy,
-                        ele_right_2[self.ylabel].values[0],
-                        ele_right_2.freeE.values[0],
+                        float(ele_right_2[self.ylabel].values),
+                        float(ele_right_2.freeE.values),
                         ele_right_1.y,
                         ele_right_1.freeEnergy,
-                        ele_left_2[self.ylabel].values[0],
-                        ele_left_2.freeE.values[0],
+                        float(ele_left_2[self.ylabel].values),
+                        float(ele_left_2.freeE.values),
                     )
                     if [ele_left_1.x, y0] not in xys:
                         xys.append([ele_left_1.x, y0])
@@ -392,12 +438,17 @@ class PhaseDiagram:
         return np.array(xys)
 
     @staticmethod
-    def draw_line(xys, ax=None, tmp_ann_dict=None, inverse: bool = False):
-        if tmp_ann_dict is None:
-            tmp_ann_dict = {}
-        if cuts := tmp_ann_dict.get("cuts", None):
+    def draw_line(
+        xys: np.ndarray,
+        ax: Optional[plt.Axes] = None,
+        annotation: Optional[dict] = None,
+        inverse: bool = False,
+    ):
+        if annotation is None:
+            annotation = {}
+        if cuts := annotation.get("cuts", None):
             xys = xys[cuts:]
-        if cute := tmp_ann_dict.get("cute", None):
+        if cute := annotation.get("cute", None):
             xys = xys[:cute]
 
         if inverse:
@@ -407,23 +458,19 @@ class PhaseDiagram:
             xs = xys[:, 0].copy()
             ys = xys[:, 1].copy()
 
-        try:
-            coefs = Chebyshev.fit(xs, ys, tmp_ann_dict.get("order", 3))
-        except BaseException:
-            print(xs, ys)
-            return
+        coefs = Chebyshev.fit(xs, ys, annotation.get("order", 3))
 
         new_x = np.linspace(
-            xs.min() - tmp_ann_dict.get("adds", 0),
-            xs.max() + tmp_ann_dict.get("adde", 0),
+            xs.min() - annotation.get("adds", 0),
+            xs.max() + annotation.get("adde", 0),
             300,
         )
         new_y = coefs(new_x)
 
-        if shrinks := tmp_ann_dict.get("shrinks", None):
+        if shrinks := annotation.get("shrinks", None):
             new_x = new_x[shrinks:]
             new_y = new_y[shrinks:]
-        if shrinke := tmp_ann_dict.get("shrinke", None):
+        if shrinke := annotation.get("shrinke", None):
             new_x = new_x[:shrinke]
             new_y = new_y[:shrinke]
 
@@ -436,15 +483,16 @@ class PhaseDiagram:
                 new_y,
                 c="k",
                 lw=3,
-                ls=tmp_ann_dict.get("ls", "-"),
-                alpha=tmp_ann_dict.get("alpha", 1),
+                ls=annotation.get("ls", "-"),
+                alpha=annotation.get("alpha", 1),
             )
         else:
             plt.plot(new_x, new_y, c="k", lw=3)
 
-    @staticmethod
     def extract_edge(
+        self,
         mat: np.ndarray,
+        mode: DetectionMode = DetectionMode.INTERP,
         factor: float = 0.5,
         axis: int = 1,
         **kwargs,
@@ -457,11 +505,57 @@ class PhaseDiagram:
             col = mat[:, col_idx] if axis else mat[col_idx, :]
             col = col[col != 0]
             for ele_idx in range(len(col) - 1):
-                ele_1 = col[ele_idx]
-                ele_2 = col[ele_idx + 1]
+                ele_1: PointInfo = col[ele_idx]
+                ele_2: PointInfo = col[ele_idx + 1]
                 if ele_1.phase == ele_2.phase:
                     continue
-                edge_data.append([ele_1.x * factor + ele_2.x * (1 - factor), ele_1.y * factor + ele_2.y * (1 - factor)])
 
-        edge_data = np.array(edge_data)
-        return edge_data
+                def calculate_intersection_point_xy_plane(point1, point2):
+                    # 提取点的坐标
+                    x1, y1, z1 = point1
+                    x2, y2, z2 = point2
+
+                    # 如果两点的z坐标相等，则直线与x-y平面平行，没有交点
+                    if z1 == z2:
+                        return [x1, y1, 0]
+
+                    # 如果两点的x坐标相等，则直线与y轴平行，交点在y轴上
+                    if x1 == x2:
+                        x_intersection = x1
+                        y_intersection = y1 + (0 - z1) / (z2 - z1) * (y2 - y1)
+                        return (x_intersection, y_intersection, 0)
+
+                    # 如果两点的y坐标相等，则直线与x轴平行，交点在x轴上
+                    if y1 == y2:
+                        x_intersection = x1 + (0 - z1) / (z2 - z1) * (x2 - x1)
+                        y_intersection = y1
+                        return (x_intersection, y_intersection, 0)
+
+                    # 计算直线的斜率
+                    slope_x = (x2 - x1) / (z2 - z1)
+                    slope_y = (y2 - y1) / (z2 - z1)
+
+                    # 计算直线与x-y平面的交点坐标
+                    x_intersection = x1 + (0 - z1) / slope_x
+                    y_intersection = y1 + (0 - z1) / slope_y
+
+                    # 返回交点的坐标
+                    return (x_intersection, y_intersection, 0)
+
+                if mode == DetectionMode.INTERP:
+                    x, y, _ = calculate_intersection_point_xy_plane(
+                        point1=(ele_1.x, ele_1.y, 0),
+                        point2=(ele_2.x, ele_2.y, ele_2.freeEnergy - ele_1.freeEnergy),
+                    )
+                    edge_data.append([x, y])
+                elif mode == DetectionMode.MIX:
+                    edge_data.append(
+                        [
+                            ele_1.x * factor + ele_2.x * (1 - factor),
+                            ele_1.y * factor + ele_2.y * (1 - factor),
+                        ]
+                    )
+                else:
+                    raise NotImplementedError(mode)
+
+        return np.array(edge_data)

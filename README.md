@@ -13,13 +13,6 @@
 
 该仓库实现了一些科学计算，尽管大部分是为了实现自己的需求，功能也相对驳杂，但依旧希望经过整理后能够帮到部分人。
 
-## 版本管理
-
-以下的版本号仅作相对参考。
-
-`GitHub`仓库版本: ***0.1.11***
-
-`PyPI` 版本: ***0.1.6***
 
 ## 联系方式
 
@@ -32,25 +25,16 @@
 
 `git clone https://github.com/KangruiYuan/SimuBox.git`
 
-最后将其配置到python环境中，如在`site-packages`目录下创建`.pth`文件，并在该文件中写入路径。
+最后将其配置到python环境中。
 
-- 方法二：通过pip下载
+- 方法二：通过pip下载 (不推荐)
 
 `pip install SimuBox`
 
-## `Requirements` 环境要求
-
-```
-python=3.9
-pandas >= 1.4
-scipy >= 1.10.0
-matplotlib >= 3.6.2
-numpy >= 1.19.5
-opencv-contrib-python >= 4.7.0.72
-opencv-python >= 4.5.3.56
-```
-其他第三方库，若无冲突可以直接使用最新版。
-
 # 使用示例
 
-示例请见[`/demo/Local/base.ipynb`](https://github.com/KangruiYuan/SimuBox/blob/main/demo/Local/base.ipynb)
+示例请见[`/demo/Local/base.ipynb`](https://github.com/KangruiYuan/SimuBox/blob/main/demo/local/base.ipynb)
+
+# 引用
+
+Yuan K, Xu Z, Li W, et al. Reexamine the emergence and stability of the square cylinder phase in block copolymers [J]. *Chem. Eur. J*., **2023**: e202301043.
