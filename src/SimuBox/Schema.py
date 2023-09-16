@@ -1,22 +1,58 @@
-from dataclasses import dataclass
+from pathlib import Path
 from typing import Union, Sequence, Optional
+
 from matplotlib.figure import Figure, Axes
 from numpy import ndarray
-from enum import Enum
 from pandas import DataFrame
-
-
+from pydantic.dataclasses import dataclass
+from enum import Enum
 NumericType = Union[int, float]
 VectorType = Sequence[NumericType]
+PathType = Union[Path, str]
+
+
+class Config:
+    arbitrary_types_allowed = True
+
+
+@dataclass(config=Config)
+class Printout:
+    box: ndarray
+    lxlylz: ndarray
+    step: int
+    freeEnergy: float
+    freeW: float
+    freeS: float
+    freeWS: float
+    freeU: float
+    inCompMax: float
+    # dimensions: list[int]
+
+
+@dataclass(config=Config)
+class Density:
+    data: ndarray
+    NxNyNz: Optional[ndarray] = None
+    lxlylz: Optional[ndarray] = None
+    shape: Optional[ndarray] = None
+
+    # reshape: Optional[dict[int, np.ndarray]] = None
+
+    @property
+    def reshaped(self):
+
+        if self.shape is None:
+            raise ValueError("shape must be specified")
+        else:
+            return [self.data[:, i].reshape(self.shape) for i in range(self.data.shape[1])]
 
 
 class ColorType(str, Enum):
-
     RGB = "RGB"
     HEX = "HEX"
 
 
-@dataclass()
+@dataclass(config=Config)
 class CompareResult:
     df: DataFrame
     plot_dict: dict

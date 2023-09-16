@@ -55,7 +55,7 @@ class XmlTransformer():
 
                 continue
             # print(root.getElementsByTagName(_tag))
-            tmp_data = tmp.firstChild.data
+            tmp_data = tmp.firstChild.read_csv
             # tmp_data = tmp_data.replace('\n', '').strip(' ')
             tmp_data = re.sub(r'[\n ]+', ' ', tmp_data)
             tmp_data = tmp_data.strip(' ')

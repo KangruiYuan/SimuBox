@@ -1,6 +1,6 @@
-from copy import deepcopy
 from decimal import Decimal
-from typing import Optional
+from pathlib import Path
+from typing import Optional, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -8,31 +8,52 @@ import pandas as pd
 from matplotlib.ticker import AutoMinorLocator, MultipleLocator
 from scipy.interpolate import griddata
 from shapely.geometry import Polygon
+from ..SciTools import Reader
+from functools import cached_property
 
+LAND_PLOT_CONFIG = {
+    "font.family": 'Times New Roman',
+    "font.size":30,
+    "mathtext.fontset": 'stix',
+    "font.serif": ['SimSun'],
+    'axes.unicode_minus': False,
+    'xtick.direction': 'out',
+    'ytick.direction': 'out',
+    'xtick.major.width': 4,
+    'xtick.minor.width': 4,
+    'xtick.major.size': 12,
+    'xtick.minor.size': 6,
+    'ytick.major.width': 4,
+    'ytick.minor.width': 4,
+    'ytick.major.size': 12,
+    'ytick.minor.size': 6,
+    'axes.linewidth': 2,
+    'legend.frameon': False,
+    'legend.fontsize': 'small',
+}
 
-class Landscaper:
-    def __init__(self, path: str, label_dict: Optional[dict] = None) -> None:
-        self.df = None
+plt.rcParams.update(LAND_PLOT_CONFIG)
+
+class Landscaper(Reader):
+    def __init__(self, path: Union[Path, str], labels: Optional[dict[str, str]] = None) -> None:
         self.path = path
-        self.label_dict = (
-            label_dict
-            if label_dict
+        self.labels = (
+            labels
+            if labels is not None
             else {"ly": r"$L_y/ R_g$", "lz": r"$L_x/ R_g$", "gamma": r"Lzy/$R_g$"}
         )
 
-    # @staticmethod
-    def read(self, **kwargs) -> pd.DataFrame:
-        df = pd.read_csv(self.path)
-        # self.df = df
-        return df
+    @cached_property
+    def data(self):
+        return self.read_csv(self.path)
 
     @staticmethod
-    def get_w_s(num, Res):
+    def get_w_s(num: np.ndarray, Res: int):
         xs = Decimal(str(num.min())).as_tuple()
         return 10 ** (-abs(xs[2]) - Res)  # type: ignore
 
     @staticmethod
-    def levels_IQ(contour_set, levels=None):
+    def levels_IQ(contour_set, levels: list[float] =None):
         # 获取等高面的信息
         if levels is None:
             levels = [0.001, 0.01]
@@ -54,19 +75,19 @@ class Landscaper:
 
     def prospect(
         self,
-        AxisOne: str = "ly",
-        AxisTwo: str = "lz",
+        AxisX: str = "ly",
+        AxisY: str = "lz",
         Vals: str = "freeE",
         precision: int = 3,
-        save: Optional[str] = None,
-        tick_num=11,
-        asp=1,
+        save: Optional[Union[Path, str]] = None,
+        tick_num: int=11,
+        asp: Union[str, float, int] =1,
         **kwargs,
     ):
-        df: pd.DataFrame = self.read(**kwargs)
+        df: pd.DataFrame = self.data
         # df: pd.DataFrame = deepcopy(df)
-        ly = np.sort(df[AxisOne].unique())
-        lz = np.sort(df[AxisTwo].unique())
+        ly = np.sort(df[AxisX].unique())
+        lz = np.sort(df[AxisY].unique())
         min_data = df[df[Vals] == df[Vals].min()]
 
         min_data = min_data.drop_duplicates(subset=["lz", "ly"])
@@ -74,14 +95,14 @@ class Landscaper:
         for idx in min_data.index:
             print(
                 "极小值点: ly: {}, lz:{}, freeE: {}".format(
-                    min_data.loc[idx, AxisOne],
-                    min_data.loc[idx, AxisTwo],
+                    min_data.loc[idx, AxisX],
+                    min_data.loc[idx, AxisY],
                     min_data.loc[idx, Vals],
                 )
             )
 
-        y_all = df[AxisOne].values.reshape(-1, 1)  # type: ignore
-        x_all = df[AxisTwo].values.reshape(-1, 1)  # type: ignore
+        y_all = df[AxisX].values.reshape(-1, 1)  # type: ignore
+        x_all = df[AxisY].values.reshape(-1, 1)  # type: ignore
         yx_all = np.hstack([y_all, x_all])
         step_ly = self.get_w_s(ly, precision)
         step_lz = self.get_w_s(lz, precision)
@@ -94,11 +115,11 @@ class Landscaper:
         )
 
         freeEMat = grid_freeE.copy()
-        print(f"free energy mat shape: {grid_freeE.shape}")
+        print(f"Free energy mat shape: {grid_freeE.shape}")
         ly = np.unique(grid_ly)
         lz = np.unique(grid_lz)
 
-        if kwargs.get("minsub", True):
+        if kwargs.get("relative", True):
             freeEMat = freeEMat - freeEMat.min()
 
         if levels := kwargs.get("levels", []):
@@ -110,7 +131,7 @@ class Landscaper:
             ticks = levels
 
         plt.figure(figsize=kwargs.get("figsize", (16, 12)))
-        cut = kwargs.get("cut", 3)
+        reverse = kwargs.get("reverse", 3)
         contourf_fig = plt.contourf(lz, ly, freeEMat, levels=levels, cmap="viridis")
         contour_fig = plt.contour(contourf_fig, colors="w", linewidths=2.5)
         self.levels_IQ(contour_fig)
@@ -120,14 +141,14 @@ class Landscaper:
             plt.clabel(
                 contour_fig,
                 fontsize=30,
-                colors=["w"] * (len(ticks) - cut) + ["k"] * cut,
+                colors=["w"] * (len(ticks) - reverse) + ["k"] * reverse,
                 fmt="%g",
             )
         else:
             plt.clabel(
                 contour_fig,
                 fontsize=30,
-                colors=["w"] * (len(ticks) - cut) + ["k"] * cut,
+                colors=["w"] * (len(ticks) - reverse) + ["k"] * reverse,
                 fmt="%g",
                 manual=manual,
                 zorder=7,
@@ -135,13 +156,13 @@ class Landscaper:
 
         shrink = kwargs.get("shrink", 1.0)
         clb = plt.colorbar(contourf_fig, ticks=ticks, shrink=shrink, pad=-0.15)
-        clb.set_ticklabels(np.around(ticks, kwargs.get("clbacc", 6)), fontsize=35)
+        clb.set_ticklabels(np.around(ticks, kwargs.get("clb_acc", 6)), fontsize=35)
         # clb.set_ylabel(r'$\Delta F/k_{\rm{B}}T$', fontsize=20)
         clb.ax.set_title(r"$\Delta F/nk_{B}T$", fontsize=40, pad=18)
         clb.ax.tick_params(which="major", width=2)
 
-        plt.xlabel(self.label_dict[AxisTwo], fontdict={"size": 45})
-        plt.ylabel(self.label_dict[AxisOne], fontdict={"size": 45})
+        plt.xlabel(self.labels[AxisY], fontdict={"size": 45})
+        plt.ylabel(self.labels[AxisX], fontdict={"size": 45})
 
         ax = plt.gca()
         if asp is not None:
@@ -165,5 +186,7 @@ class Landscaper:
         ax.yaxis.set_minor_locator(AutoMinorLocator(kwargs.get("yminor", 2)))
 
         plt.tight_layout()
+        plt.show()
         if save:
             plt.savefig(save, dpi=300)
+

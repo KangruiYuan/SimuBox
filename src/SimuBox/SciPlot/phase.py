@@ -1,16 +1,16 @@
-from enum import Enum
 from pathlib import Path
 from typing import Any, Optional, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-
 from matplotlib.ticker import AutoMinorLocator, MultipleLocator
 from numpy.polynomial import Chebyshev
 from scipy.io import loadmat
+
+from ..Schema import DetectionMode, CompareResult, PointInfo
 from ..Utils import generate_colors
-from collections import defaultdict
+from ..SciTools import Reader
 
 PHASE_PLOT_CONFIG = {
     "font.family": "Times New Roman",
@@ -40,7 +40,7 @@ PHASE_PLOT_CONFIG = {
 plt.rcParams.update(PHASE_PLOT_CONFIG)
 
 
-class PhaseDiagram:
+class PhaseDiagram(Reader):
     def __init__(
         self,
         path: Union[str, Path],
@@ -48,7 +48,6 @@ class PhaseDiagram:
         ylabel: str,
         colors: Optional[dict] = None,
         labels: Optional[dict] = None,
-        **kwargs,
     ) -> None:
         self.path = Path(path)
         self.colors = colors if colors is not None else {}
@@ -92,23 +91,6 @@ class PhaseDiagram:
                 return True
         return False
 
-    def data(self, path: Path, **kwargs):
-        dropset = kwargs.get("dropset", ["lx", "ly", "lz", "phase", "freeE"])
-        div = kwargs.get("div", 1)
-        div_var = kwargs.get("div_var", "chiN")
-        acc = kwargs.get("acc", 3)
-
-        df = pd.read_csv(path)
-        if dropset:
-            df = df.drop_duplicates(subset=dropset)
-        df["lylz"] = np.around(df["ly"] / df["lz"], acc)
-        df["lxly"] = np.around(df["lx"] / df["ly"], acc)
-        try:
-            df[div_var] = df[div_var] / div
-        except KeyError:
-            pass
-        return df
-
     def compare(
         self,
         name: Optional[str] = None,
@@ -124,7 +106,7 @@ class PhaseDiagram:
             if not isinstance(path, Path):
                 path = Path(path)
 
-        df = self.data(path=path, acc=acc)
+        df = self.read_csv(path=path, acc=acc)
         print(f"Include phase: {set(df['phase'].values)}")
 
         plot_dict = dict()
@@ -338,25 +320,46 @@ class PhaseDiagram:
         if save_path:
             plt.savefig(save_path, dpi=200)
 
-    @staticmethod
-    def check_phase(point: PointInfo, point_other: Optional[PointInfo] = None):
+    @classmethod
+    def check_phase(
+        cls,
+        point: PointInfo,
+        point_other: Optional[PointInfo] = None,
+        ignore: Optional[Union[str, list[str]]] = None,
+    ):
+        if ignore is None:
+            ignore = []
         if point_other is None:
-            return not isinstance(point, PointInfo) or "unknown" in point.phase
-        else:
             return (
                 not isinstance(point, PointInfo)
                 or "unknown" in point.phase
-                or not isinstance(point_other, PointInfo)
-                or "unknown" in point_other.phase
+                or point.phase in ignore
+            )
+        else:
+            return (
+                cls.check_phase(point=point, ignore=ignore)
+                or cls.check_phase(point=point_other, ignore=ignore)
                 or point.phase == point_other.phase
             )
+            # return (
+            #     not isinstance(point, PointInfo)
+            #     or "unknown" in point.phase
+            #     or not isinstance(point_other, PointInfo)
+            #     or "unknown" in point_other.phase
+            #     or point.phase == point_other.phase
+            #     or point.phase in ignore
+            #     or point_other.phase in ignore
+            # )
 
     def boundary_detect(
         self,
         comp_res: CompareResult,
         mode: DetectionMode = DetectionMode.BOTH,
+        ignore: Optional[Union[str, list[str]]] = None,
         **kwargs,
     ):
+        if isinstance(ignore, str):
+            ignore = [ignore]
         xys = []
         mat = comp_res.mat.copy()
         df = comp_res.df.copy()
@@ -367,7 +370,7 @@ class PhaseDiagram:
                 for ele_idx in range(len(line) - 1):
                     ele_left_1: PointInfo = line[ele_idx]
                     ele_right_1: PointInfo = line[ele_idx + 1]
-                    if self.check_phase(ele_left_1, ele_right_1):
+                    if self.check_phase(ele_left_1, ele_right_1, ignore):
                         continue
                     ele_left_2: pd.DataFrame = self.query_point(
                         df=df,
@@ -403,7 +406,7 @@ class PhaseDiagram:
                 for ele_idx in range(len(line) - 1):
                     ele_left_1: PointInfo = line[ele_idx]
                     ele_right_1: PointInfo = line[ele_idx + 1]
-                    if self.check_phase(ele_left_1, ele_right_1):
+                    if self.check_phase(ele_left_1, ele_right_1, ignore):
                         continue
 
                     ele_left_2: pd.DataFrame = self.query_point(
@@ -465,7 +468,7 @@ class PhaseDiagram:
             xs.max() + annotation.get("adde", 0),
             300,
         )
-        new_y = coefs(new_x)
+        new_y = coefs(new_x)  # type: ignore
 
         if shrinks := annotation.get("shrinks", None):
             new_x = new_x[shrinks:]
@@ -495,8 +498,11 @@ class PhaseDiagram:
         mode: DetectionMode = DetectionMode.INTERP,
         factor: float = 0.5,
         axis: int = 1,
+        ignore: Optional[Union[str, list[str]]] = None,
         **kwargs,
     ):
+        if isinstance(ignore, str):
+            ignore = [ignore]
         edge_data = []
         assert axis <= 1
         # var_label = 'y' if axis else 'x'
@@ -507,7 +513,7 @@ class PhaseDiagram:
             for ele_idx in range(len(col) - 1):
                 ele_1: PointInfo = col[ele_idx]
                 ele_2: PointInfo = col[ele_idx + 1]
-                if ele_1.phase == ele_2.phase:
+                if self.check_phase(ele_1, ele_2, ignore):
                     continue
 
                 def calculate_intersection_point_xy_plane(point1, point2):
@@ -523,13 +529,13 @@ class PhaseDiagram:
                     if x1 == x2:
                         x_intersection = x1
                         y_intersection = y1 + (0 - z1) / (z2 - z1) * (y2 - y1)
-                        return (x_intersection, y_intersection, 0)
+                        return x_intersection, y_intersection, 0
 
                     # 如果两点的y坐标相等，则直线与x轴平行，交点在x轴上
                     if y1 == y2:
                         x_intersection = x1 + (0 - z1) / (z2 - z1) * (x2 - x1)
                         y_intersection = y1
-                        return (x_intersection, y_intersection, 0)
+                        return x_intersection, y_intersection, 0
 
                     # 计算直线的斜率
                     slope_x = (x2 - x1) / (z2 - z1)
@@ -540,7 +546,7 @@ class PhaseDiagram:
                     y_intersection = y1 + (0 - z1) / slope_y
 
                     # 返回交点的坐标
-                    return (x_intersection, y_intersection, 0)
+                    return x_intersection, y_intersection, 0
 
                 if mode == DetectionMode.INTERP:
                     x, y, _ = calculate_intersection_point_xy_plane(
