@@ -37,8 +37,6 @@ PHASE_PLOT_CONFIG = {
     "legend.fontsize": "medium",
 }
 
-plt.rcParams.update(PHASE_PLOT_CONFIG)
-
 
 class PhaseDiagram(Reader):
     def __init__(

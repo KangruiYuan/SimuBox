@@ -9,34 +9,35 @@ from matplotlib.ticker import AutoMinorLocator, MultipleLocator
 from scipy.interpolate import griddata
 from shapely.geometry import Polygon
 from ..SciTools import Reader
+from ..Schema import LandscapeResult
 from functools import cached_property
 
 LAND_PLOT_CONFIG = {
-    "font.family": 'Times New Roman',
-    "font.size":30,
-    "mathtext.fontset": 'stix',
-    "font.serif": ['SimSun'],
-    'axes.unicode_minus': False,
-    'xtick.direction': 'out',
-    'ytick.direction': 'out',
-    'xtick.major.width': 4,
-    'xtick.minor.width': 4,
-    'xtick.major.size': 12,
-    'xtick.minor.size': 6,
-    'ytick.major.width': 4,
-    'ytick.minor.width': 4,
-    'ytick.major.size': 12,
-    'ytick.minor.size': 6,
-    'axes.linewidth': 2,
-    'legend.frameon': False,
-    'legend.fontsize': 'small',
+    "font.family": "Times New Roman",
+    "font.size": 30,
+    "mathtext.fontset": "stix",
+    "font.serif": ["SimSun"],
+    "axes.unicode_minus": False,
+    "xtick.direction": "out",
+    "ytick.direction": "out",
+    "xtick.major.width": 4,
+    "xtick.minor.width": 4,
+    "xtick.major.size": 12,
+    "xtick.minor.size": 6,
+    "ytick.major.width": 4,
+    "ytick.minor.width": 4,
+    "ytick.major.size": 12,
+    "ytick.minor.size": 6,
+    "axes.linewidth": 2,
+    "legend.frameon": False,
+    "legend.fontsize": "small",
 }
 
-plt.rcParams.update(LAND_PLOT_CONFIG)
 
 class Landscaper(Reader):
-    def __init__(self, path: Union[Path, str], labels: Optional[dict[str, str]] = None) -> None:
-        self.path = path
+    def __init__(self, path: Union[Path, str], labels: Optional[dict[str, str]] = None):
+        self.path = Path(path) if isinstance(path, str) else path
+        self.path_parent = self.path.parent
         self.labels = (
             labels
             if labels is not None
@@ -45,7 +46,7 @@ class Landscaper(Reader):
 
     @cached_property
     def data(self):
-        return self.read_csv(self.path)
+        return self.read_csv(self.path, subset=["ly", "lz", "freeE", "phase"])
 
     @staticmethod
     def get_w_s(num: np.ndarray, Res: int):
@@ -53,7 +54,7 @@ class Landscaper(Reader):
         return 10 ** (-abs(xs[2]) - Res)  # type: ignore
 
     @staticmethod
-    def levels_IQ(contour_set, levels: list[float] =None):
+    def levels_IQ(contour_set, levels: list[float] = None):
         # 获取等高面的信息
         if levels is None:
             levels = [0.001, 0.01]
@@ -79,9 +80,9 @@ class Landscaper(Reader):
         AxisY: str = "lz",
         Vals: str = "freeE",
         precision: int = 3,
-        save: Optional[Union[Path, str]] = None,
-        tick_num: int=11,
-        asp: Union[str, float, int] =1,
+        save: Optional[Union[Path, str, bool]] = True,
+        tick_num: int = 11,
+        asp: Union[str, float, int] = 1,
         **kwargs,
     ):
         df: pd.DataFrame = self.data
@@ -130,21 +131,14 @@ class Landscaper(Reader):
             levels = np.linspace(np.min(freeEMat), np.max(freeEMat), tick_num)
             ticks = levels
 
-        plt.figure(figsize=kwargs.get("figsize", (16, 12)))
+        fig = plt.figure(figsize=kwargs.get("figsize", (16, 12)))
+        ax = plt.gca()
         reverse = kwargs.get("reverse", 3)
         contourf_fig = plt.contourf(lz, ly, freeEMat, levels=levels, cmap="viridis")
         contour_fig = plt.contour(contourf_fig, colors="w", linewidths=2.5)
         self.levels_IQ(contour_fig)
 
-        manual = kwargs.get("manual", False)
-        if not manual:
-            plt.clabel(
-                contour_fig,
-                fontsize=30,
-                colors=["w"] * (len(ticks) - reverse) + ["k"] * reverse,
-                fmt="%g",
-            )
-        else:
+        if manual := kwargs.get("manual", []):
             plt.clabel(
                 contour_fig,
                 fontsize=30,
@@ -152,6 +146,13 @@ class Landscaper(Reader):
                 fmt="%g",
                 manual=manual,
                 zorder=7,
+            )
+        else:
+            plt.clabel(
+                contour_fig,
+                fontsize=30,
+                colors=["w"] * (len(ticks) - reverse) + ["k"] * reverse,
+                fmt="%g",
             )
 
         shrink = kwargs.get("shrink", 1.0)
@@ -164,7 +165,6 @@ class Landscaper(Reader):
         plt.xlabel(self.labels[AxisY], fontdict={"size": 45})
         plt.ylabel(self.labels[AxisX], fontdict={"size": 45})
 
-        ax = plt.gca()
         if asp is not None:
             if asp == "auto":
                 ax.set_aspect(1.0 / ax.get_data_ratio())
@@ -180,13 +180,31 @@ class Landscaper(Reader):
                     p[0], p[1], s=p[-1], c=p[-2], marker=p[2], alpha=1, zorder=6
                 )
 
-        ax.xaxis.set_major_locator(MultipleLocator(kwargs.get("xmajor", 0.2)))
-        ax.yaxis.set_major_locator(MultipleLocator(kwargs.get("ymajor", 0.2)))
-        ax.xaxis.set_minor_locator(AutoMinorLocator(kwargs.get("xminor", 2)))
-        ax.yaxis.set_minor_locator(AutoMinorLocator(kwargs.get("yminor", 2)))
+        if xmajor := kwargs.get("xmajor", 0):
+            ax.xaxis.set_major_locator(MultipleLocator(xmajor))
+        if ymajor := kwargs.get("ymajor", 0):
+            ax.xaxis.set_major_locator(MultipleLocator(ymajor))
+        if xminor := kwargs.get("xminor", 0):
+            ax.xaxis.set_minor_locator(AutoMinorLocator(xminor))
+        if yminor := kwargs.get("yminor", 0):
+            ax.yaxis.set_minor_locator(AutoMinorLocator(yminor))
 
         plt.tight_layout()
         plt.show()
         if save:
-            plt.savefig(save, dpi=300)
-
+            if isinstance(save, bool):
+                plt.savefig(str(self.path)[:-4] + ".png", dpi=300)
+            else:
+                plt.savefig(save, dpi=300)
+        return LandscapeResult(
+            freeEMat=freeEMat,
+            ly=ly,
+            lz=lz,
+            levels=levels,
+            ticks=ticks,
+            fig=fig,
+            ax=ax,
+            contourf_fig=contourf_fig,
+            contour_fig=contour_fig,
+            clb=clb,
+        )

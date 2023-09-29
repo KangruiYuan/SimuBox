@@ -8,13 +8,14 @@ from collections import ChainMap, OrderedDict, defaultdict
 from itertools import combinations
 from pathlib import Path
 from typing import Any
+
 from push_job_TOPS import opts
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-n", "--name", default="Default", type=str)
 parser.add_argument("-t", "--terminal", default="WORKING_DIR", type=str)
 parser.add_argument("-w", "--where", default="", type=str)
-parser.add_argument("-a", "--all", action='store_true', default=False)
+parser.add_argument("-a", "--all", action="store_true", default=False)
 args = parser.parse_args()
 
 cmd_lxlylz = "tail -3 printout.txt | head -1"
@@ -28,11 +29,12 @@ subdirectories = [item for item in working_directory.iterdir() if item.is_dir()]
 
 
 if args.name == "Default":
-    extract_name = (parent_folder / parent_folder.name).with_suffix(".csv")
+    extract_name = parent_folder / parent_folder.name
+    extract_name = str(extract_name) + ".csv"
 else:
     extract_name = Path.cwd() / args.name
     if not extract_name.name.endswith(".csv"):
-        extract_name = extract_name.with_suffix(".csv")
+        extract_name = str(extract_name) + ".csv"
 
 wrong_list = list()
 
@@ -210,7 +212,9 @@ def RepushOrDelete(wrongList):
             with open(opts.json_name, mode="r") as fp:
                 json_base = json.load(fp, object_pairs_hook=OrderedDict)
             new_type = args.where or i["type"]
-            json_base["Scripts"]["cal_type"] = new_type if os.path.isfile("phout.txt") else "cpu"
+            json_base["Scripts"]["cal_type"] = (
+                new_type if os.path.isfile("phout.txt") else "cpu"
+            )
             json_base["Iteration"]["MaxStep"] = i["step"]
             json_base["Initializer"]["UnitCell"]["Length"] = i["lxlylz"]
             if os.path.isfile("phout.txt"):
@@ -227,13 +231,9 @@ def RepushOrDelete(wrongList):
                     json.dump(json_base, f, indent=4, separators=(",", ": "))
 
             if json_base["Scripts"]["cal_type"] == "gpu":
-                job = sp.Popen(
-                    opts.worker["gpuSCFT"], shell=True, stdout=sp.PIPE
-                )
+                job = sp.Popen(opts.worker["gpuSCFT"], shell=True, stdout=sp.PIPE)
             else:
-                job = sp.Popen(
-                    opts.worker["cpuTOPS"], shell=True, stdout=sp.PIPE
-                )
+                job = sp.Popen(opts.worker["cpuTOPS"], shell=True, stdout=sp.PIPE)
             print("{pid}:{path}".format(pid=job.pid, path=tmp_path))
     elif mode == "r":
         for i in wrongList:
@@ -241,13 +241,9 @@ def RepushOrDelete(wrongList):
             os.chdir(tmp_path)
             new_type = args.where or i["type"]
             if new_type == "gpu":
-                job = sp.Popen(
-                    opts.worker["gpuSCFT"], shell=True, stdout=sp.PIPE
-                )
+                job = sp.Popen(opts.worker["gpuSCFT"], shell=True, stdout=sp.PIPE)
             else:
-                job = sp.Popen(
-                    opts.worker["cpuTOPS"], shell=True, stdout=sp.PIPE
-                )
+                job = sp.Popen(opts.worker["cpuTOPS"], shell=True, stdout=sp.PIPE)
             print("{pid}:{path}".format(pid=job.pid, path=tmp_path))
     elif mode == "d":
         for i in wrongList:

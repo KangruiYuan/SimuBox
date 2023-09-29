@@ -1,6 +1,7 @@
 import numpy as np
 from .Schema import NumericType, VectorType, ColorType
 from typing import Union
+import matplotlib.pyplot as plt
 
 def find_nearest_1d(array: VectorType, value: NumericType) -> NumericType:
     if not isinstance(array, np.ndarray):
@@ -16,4 +17,7 @@ def generate_colors(mode: Union[str, ColorType] = ColorType.RGB, num: int = 1):
     else:
         raise NotImplementedError(mode.value)
     return color
+
+def init_plot_config(config: dict):
+    plt.rcParams.update(config)
 

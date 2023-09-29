@@ -76,7 +76,7 @@ class Reader:
     def read_csv(cls, path: Path, **kwargs):
 
         df = pd.read_csv(path)
-        if subset := kwargs.get("subset", ["lx", "ly", "lz", "phase", "freeE"]):
+        if subset := kwargs.get("subset", ["phase", "freeE"]):
             df = df.drop_duplicates(subset=subset)
         df["lylz"] = np.around(df["ly"].values / df["lz"].values, kwargs.get("acc", 3))
         df["lxly"] = np.around(df["lx"].values / df["ly"].values, kwargs.get("acc", 3))

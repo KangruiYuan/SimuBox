@@ -1,6 +1,7 @@
 from pathlib import Path
-from typing import Union, Sequence, Optional
+from typing import Union, Sequence, Optional, Any
 
+import numpy as np
 from matplotlib.figure import Figure, Axes
 from numpy import ndarray
 from pandas import DataFrame
@@ -59,6 +60,20 @@ class CompareResult:
     mat: ndarray
     fig: Optional[Figure] = None
     ax: Optional[Axes] = None
+
+
+@dataclass(config=Config)
+class LandscapeResult:
+    freeEMat: np.ndarray
+    ly: Union[np.ndarray, list]
+    lz: Union[np.ndarray, list]
+    levels:  Union[np.ndarray, list]
+    ticks:  Union[np.ndarray, list]
+    fig: Optional[Figure] = None
+    ax: Optional[Axes] = None
+    contourf_fig: Optional[Any] = None
+    contour_fig: Optional[Any] = None
+    clb: Optional[Any] = None
 
 
 class DetectionMode(str, Enum):
