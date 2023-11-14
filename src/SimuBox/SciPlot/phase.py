@@ -506,7 +506,7 @@ class PhaseDiagram(Reader):
         # var_label = 'y' if axis else 'x'
         # const_label = 'x' if axis else 'y'
         for col_idx in range(mat.shape[axis]):
-            col = mat[:, col_idx] if axis else mat[col_idx, :]
+            col = mat[:, col_idx] if axis == 1 else mat[col_idx, :]
             col = col[col != 0]
             for ele_idx in range(len(col) - 1):
                 ele_1: PointInfo = col[ele_idx]

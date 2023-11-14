@@ -3,10 +3,10 @@ import os
 import shutil
 import subprocess as sp
 import traceback
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 from enum import Enum
 from functools import cached_property
-from itertools import product
+from itertools import chain, product
 from pathlib import Path
 from typing import Any, Callable, Union
 
@@ -93,21 +93,50 @@ class SCFTManager:
     opts: Options
 
     @classmethod
+    def collect_nodes(cls, blocks: list):
+        nodes = set(
+            chain(
+                *[(block["LeftVertexID"], block["RightVertexID"]) for block in blocks]
+            )
+        )
+        nodes = sorted(list(nodes))
+        return nodes
+
+    @classmethod
     def clean(cls, input_dict: dict):
         clean_block = []
-        max_del_id = -1
+        replace_pairs = dict()
+
         for block in input_dict["Block"]:
             if block["ContourLength"] == 0:
-                max_del_id = max(
-                    max_del_id, block["LeftVertexID"], block["RightVertexID"]
-                )
+                # 将错误节点的左节点指向右节点
+                replace_pairs[block["LeftVertexID"]] = block["RightVertexID"]
             else:
-                if max_del_id != -1:
-                    if block["LeftVertexID"] >= max_del_id:
-                        block["LeftVertexID"] -= 1
-                    if block["RightVertexID"] >= max_del_id:
-                        block["RightVertexID"] -= 1
-                clean_block.append(block)
+                # 只保留有效的嵌段
+                clean_block.append(block.copy())
+
+        # 修改有效嵌段中右节点的指向
+        # TODO: 类似并查集，实现union的优化，目前需求不大，因为嵌段非常少
+        for block in clean_block:
+            while block["RightVertexID"] in replace_pairs:
+                block["RightVertexID"] = replace_pairs[block["RightVertexID"]]
+
+        nodes = cls.collect_nodes(clean_block)
+        correct_nodes = list(range(len(nodes)))
+        idx = 0
+        # 将现有节点与正确节点对齐
+        while idx < len(nodes):
+            if nodes[idx] != correct_nodes[idx]:
+                thresh = correct_nodes[idx]
+                diff = nodes[idx] - correct_nodes[idx]
+                for block in clean_block:
+                    if block["LeftVertexID"] > thresh:
+                        block["LeftVertexID"] -= diff
+                    if block["RightVertexID"] > thresh:
+                        block["RightVertexID"] -= diff
+                nodes = cls.collect_nodes(clean_block)
+            assert nodes[idx] == correct_nodes[idx]
+            idx += 1
 
         input_dict["Block"] = clean_block
 
