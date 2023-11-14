@@ -5,6 +5,7 @@ import subprocess as sp
 import traceback
 from collections import OrderedDict
 from enum import Enum
+from functools import cached_property
 from itertools import product
 from pathlib import Path
 from typing import Any, Callable, Union
@@ -55,6 +56,8 @@ class Options:
 
     function: Callable
 
+    clean: bool = True
+
     combine_paradict: OrderedDict[str, list[Any]] = OrderedDict()
 
     init_phin: list[str] = []
@@ -90,6 +93,25 @@ class SCFTManager:
     opts: Options
 
     @classmethod
+    def clean(cls, input_dict: dict):
+        clean_block = []
+        max_del_id = -1
+        for block in input_dict["Block"]:
+            if block["ContourLength"] == 0:
+                max_del_id = max(
+                    max_del_id, block["LeftVertexID"], block["RightVertexID"]
+                )
+            else:
+                if max_del_id != -1:
+                    if block["LeftVertexID"] >= max_del_id:
+                        block["LeftVertexID"] -= 1
+                    if block["RightVertexID"] >= max_del_id:
+                        block["RightVertexID"] -= 1
+                clean_block.append(block)
+
+        input_dict["Block"] = clean_block
+
+    @classmethod
     def editParams(cls, paramNameList: list[str], paramValueList: list[Any]):
         assert len(paramValueList) == len(paramValueList)
 
@@ -101,6 +123,9 @@ class SCFTManager:
 
         for pn, pv in zip(paramNameList, paramValueList):
             cls.opts.function(pn, pv, input_dict, cls.opts)
+
+        if cls.opts.clean:
+            cls.clean(input_dict)
 
         if cls.opts.cell:
             input_dict["Iteration"]["VariableCell"]["Switch"] = "AUTO"

@@ -36,8 +36,6 @@ else:
     if not extract_name.name.endswith(".csv"):
         extract_name = str(extract_name) + ".csv"
 
-wrong_list = list()
-
 
 def check_files(files: list[str, Path]):
     for file in files:
@@ -95,12 +93,14 @@ def stats_component(json_dict: dict):
 
 columns: set[str] = set()
 datas: list[dict[str, Any]] = []
+wrong_list = list()
 
 desp = "REPUSH" if args.all else "WRONG"
 
 for subdir in subdirectories:
     os.chdir(subdir)
     if not check_files(files=["printout.txt", opts.json_name]):
+        wrong_list.append({"path": subdir})
         print(str(subdir).center(50, "*"))
         continue
     with open(opts.json_name, mode="r") as fp:
