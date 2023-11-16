@@ -3,90 +3,94 @@ import os
 import re
 from pathlib import Path
 from typing import Optional, Literal
-
+from collections import OrderedDict
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from ..Schema import Printout, Density
 
-__all__ = ["InfoReader", "Reader"]
+__all__ = ["InfoReader", "read_density", "read_printout", "read_csv", "read_json"]
 
 
-class Reader:
-    @classmethod
-    def read_printout(cls, file: Path):
-        if not file.is_file():
-            file = file / "printout.txt"
-        cont = open(file, "r").readlines()
-        box = np.array(list(map(float, cont[-3].strip().split(" "))))
-        lxlylz = box[:3]
-        uws = re.findall("[.0-9e+-]+", cont[-1])
-        uws = list(map(float, uws))
+def read_json(file: Path):
+    with open(file, mode="r") as fp:
+        dic = json.load(fp, object_pairs_hook=OrderedDict)
+    return dic
 
-        return Printout(
-            lxlylz=lxlylz,
-            box=box,
-            step=uws[0],
-            freeEnergy=uws[1],
-            freeU=uws[2],
-            freeW=uws[3],
-            freeS=uws[4],
-            freeWS=uws[3] + uws[4],
-            inCompMax=uws[-1],
+
+def read_printout(file: Path):
+    if not file.is_file():
+        file = file / "printout.txt"
+    cont = open(file, "r").readlines()
+    box = np.array(list(map(float, cont[-3].strip().split(" "))))
+    lxlylz = box[:3]
+    uws = re.findall("[.0-9e+-]+", cont[-1])
+    uws = list(map(float, uws))
+
+    return Printout(
+        lxlylz=lxlylz,
+        box=box,
+        step=uws[0],
+        freeEnergy=uws[1],
+        freeU=uws[2],
+        freeW=uws[3],
+        freeS=uws[4],
+        freeWS=uws[3] + uws[4],
+        inCompMax=uws[-1],
+    )
+
+
+def read_density(
+    file: Path, skip: Literal[0, 1, 2] = 1, NxNyNz: Optional[list[int]] = None
+):
+    """
+    for phout, component, block
+    :param file:
+    :param skip:
+    :param NxNyNz:
+    :return:
+    """
+    if not file.is_file():
+        file = file / "phout.txt"
+    cont = open(file, "r").readlines()
+
+    if NxNyNz is None:
+        if skip >= 1:
+            NxNyNz = np.array(list(map(int, cont[0].strip().split(" "))))
+        else:
+            NxNyNz = None
+
+    if skip == 2:
+        lxlylz = np.array(list(map(float, cont[1].strip().split(" "))))
+    else:
+        lxlylz = None
+
+    data = pd.read_csv(
+        file, skiprows=skip, header=None, sep=r"[ ]+", engine="python"
+    ).values
+
+    if NxNyNz is not None:
+        shape = NxNyNz[NxNyNz != 1]
+    else:
+        shape = NxNyNz
+
+    return Density(data=data, NxNyNz=NxNyNz, lxlylz=lxlylz, shape=shape)
+
+
+def read_csv(path: Path, **kwargs):
+
+    df = pd.read_csv(path)
+    if subset := kwargs.get("subset", ["phase", "freeE"]):
+        df = df.drop_duplicates(subset=subset)
+    df["lylz"] = np.around(df["ly"].values / df["lz"].values, kwargs.get("acc", 3))
+    df["lxly"] = np.around(df["lx"].values / df["ly"].values, kwargs.get("acc", 3))
+    try:
+        df[kwargs.get("var", "chiN")] = df[kwargs.get("var", "chiN")] / kwargs.get(
+            "factor", 1
         )
-
-    @classmethod
-    def read_density(
-        cls, file: Path, skip: Literal[0, 1, 2] = 1, NxNyNz: Optional[list[int]] = None
-    ):
-        """
-        for phout, component, block
-        :param file:
-        :param skip:
-        :param NxNyNz:
-        :return:
-        """
-        if not file.is_file():
-            file = file / "phout.txt"
-        cont = open(file, "r").readlines()
-
-        if NxNyNz is None:
-            if skip >= 1:
-                NxNyNz = np.array(list(map(int, cont[0].strip().split(" "))))
-            else:
-                NxNyNz = None
-
-        if skip == 2:
-            lxlylz = np.array(list(map(float, cont[1].strip().split(" "))))
-        else:
-            lxlylz = None
-
-        data = pd.read_csv(
-            file, skiprows=skip, header=None, sep=r"[ ]+", engine="python"
-        ).values
-
-        if NxNyNz is not None:
-            shape = NxNyNz[NxNyNz != 1]
-        else:
-            shape = NxNyNz
-
-        return Density(data=data, NxNyNz=NxNyNz, lxlylz=lxlylz, shape=shape)
-
-    @classmethod
-    def read_csv(cls, path: Path, **kwargs):
-
-        df = pd.read_csv(path)
-        if subset := kwargs.get("subset", ["phase", "freeE"]):
-            df = df.drop_duplicates(subset=subset)
-        df["lylz"] = np.around(df["ly"].values / df["lz"].values, kwargs.get("acc", 3))
-        df["lxly"] = np.around(df["lx"].values / df["ly"].values, kwargs.get("acc", 3))
-        try:
-            df[kwargs.get("var", "chiN")] = df[kwargs.get("var", "chiN")] / kwargs.get(
-                "factor", 1
-            )
-        except KeyError:
-            pass
-        return df
+    except KeyError:
+        pass
+    return df
 
 
 class InfoReader:

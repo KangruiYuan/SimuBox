@@ -8,7 +8,7 @@ import pandas as pd
 from matplotlib.ticker import AutoMinorLocator, MultipleLocator
 from scipy.interpolate import griddata
 from shapely.geometry import Polygon
-from ..SciTools import Reader
+from ..SciTools import read_csv
 from ..Schema import LandscapeResult
 from functools import cached_property
 
@@ -34,7 +34,7 @@ LAND_PLOT_CONFIG = {
 }
 
 
-class Landscaper(Reader):
+class Landscaper:
     def __init__(self, path: Union[Path, str], labels: Optional[dict[str, str]] = None):
         self.path = Path(path) if isinstance(path, str) else path
         self.path_parent = self.path.parent
@@ -46,7 +46,7 @@ class Landscaper(Reader):
 
     @cached_property
     def data(self):
-        return self.read_csv(self.path, subset=["ly", "lz", "freeE", "phase"])
+        return read_csv(self.path, subset=["ly", "lz", "freeE", "phase"])
 
     @staticmethod
     def get_w_s(num: np.ndarray, Res: int):

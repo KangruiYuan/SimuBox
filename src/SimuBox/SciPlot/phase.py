@@ -1,3 +1,4 @@
+from collections import ChainMap
 from pathlib import Path
 from typing import Any, Optional, Union
 
@@ -8,9 +9,9 @@ from matplotlib.ticker import AutoMinorLocator, MultipleLocator
 from numpy.polynomial import Chebyshev
 from scipy.io import loadmat
 
-from ..Schema import DetectionMode, CompareResult, PointInfo
+from ..Schema import DetectionMode, CompareResult, PointInfo, CommonLabels
 from ..Utils import generate_colors
-from ..SciTools import Reader
+from ..SciTools import read_csv
 
 PHASE_PLOT_CONFIG = {
     "font.family": "Times New Roman",
@@ -38,7 +39,7 @@ PHASE_PLOT_CONFIG = {
 }
 
 
-class PhaseDiagram(Reader):
+class PhaseDiagram:
     def __init__(
         self,
         path: Union[str, Path],
@@ -49,16 +50,7 @@ class PhaseDiagram(Reader):
     ) -> None:
         self.path = Path(path)
         self.colors = colors if colors is not None else {}
-        self.labels = (
-            labels
-            if labels is not None
-            else {
-                "tau": r"$\tau$",
-                "ksi": r"$\xi$",
-                "fA": r"$f_{\rm{A}}$",
-                "chiN": r"$\chi \rm{N}$",
-            }
-        )
+        self.labels = ChainMap(labels, CommonLabels) if labels is not None else CommonLabels
         self.xlabel = xlabel
         self.ylabel = ylabel
 
@@ -104,7 +96,7 @@ class PhaseDiagram(Reader):
             if not isinstance(path, Path):
                 path = Path(path)
 
-        df = self.read_csv(path=path, acc=acc)
+        df = read_csv(path=path, acc=acc)
         print(f"Include phase: {set(df['phase'].values)}")
 
         plot_dict = dict()
@@ -294,7 +286,7 @@ class PhaseDiagram(Reader):
                     ),
                 )
 
-        save_path = kwargs.get("path", "")
+
         if mat_path := kwargs.get("mat_path", None):
             wrongline = loadmat(mat_path)["origin_wrong"]
             self.draw_line(
@@ -310,12 +302,18 @@ class PhaseDiagram(Reader):
         ax.yaxis.set_minor_locator(AutoMinorLocator(5))
         if ymajor := kwargs.get("ymajor", 0):
             ax.yaxis.set_major_locator(MultipleLocator(ymajor))
+        if xmajor := kwargs.get("xmajor", 0):
+            ax.xaxis.set_major_locator(MultipleLocator(xmajor))
+        if xlim := kwargs.get("xlim", []):
+            plt.xlim(xlim)
+        if ylim := kwargs.get("ylim", []):
+            plt.ylim(ylim)
         ax.set_xlabel(self.labels[self.xlabel], fontdict={"size": 30})
         ax.set_ylabel(self.labels[self.ylabel], fontdict={"size": 30})
         plt.tick_params(labelsize=20, pad=8)
         fig.tight_layout()
         plt.show()
-        if save_path:
+        if save_path := kwargs.get("path", ""):
             plt.savefig(save_path, dpi=200)
 
     @classmethod

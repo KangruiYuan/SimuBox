@@ -7,7 +7,8 @@ import numpy as np
 from cycler import cycler
 from matplotlib.ticker import AutoMinorLocator, MultipleLocator
 
-from ..SciTools import Reader
+from ..SciTools import read_csv
+from ..Schema import AbsCommon, DiffCommon
 
 COMPARE_PLOT_CONFIG = {
     "font.family": "Times New Roman",
@@ -36,47 +37,6 @@ COMPARE_PLOT_CONFIG = {
 }
 
 
-class Labels:
-    abs_label = {
-        "C4": r"${\rm C}^4_{p4mm}$",
-        "C6": r"${\rm C}^6_{p6mm}$",
-        "Crect": r"${\rm C}^2_{p2mm}$",
-        "C3": r"${\rm C}^3_{p3m1}$",
-        "freeE": r"$\rm{F} / \rm{nk_B T}$",
-        "freeAB": r"$\rm{U} / \rm{nk_B T}$",
-        "freeWS": r"$\rm{-TS} / \rm{nk_B T}$",
-        "bridge": r"$v_B$",
-        "width": r"$\bar{w}$",
-        "ksi": r"$\xi$",
-        "tau": r"$\tau$",
-        "chiN": r"$\chi N$",
-        "ly": r"$L_x/R_g$",
-        "lz": r"$L_y/R_g$",
-        "gamma_B": r"$\gamma _{\rm B}$",
-        "phi_AB": r"$\phi _{\rm AB}$",
-    }
-
-    ref_label = {
-        "C4": r"${\rm C}^4_{p4mm}$",
-        "C6": r"${\rm C}^6_{p6mm}$",
-        "Crect": r"${\rm C}^2_{p2mm}$",
-        "C3": r"$\rm{C}^3_{p3m1}$",
-        "freeE": r"$\Delta F / nk_B T$",
-        "freeAB": r"$\Delta U / nk_B T$",
-        "freeWS": r"$-T\Delta S / nk_B T$",
-        "width": r"${\rm \Delta} \bar{w_I}$",
-        "lylz": "Lx/Ly",
-        "bridge": r"$\Delta v_B$",
-        "chiN": r"$\chi N$",
-        "ksi": r"$\xi$",
-        "tau": r"$\tau$",
-        "gamma_B": r"$\gamma _{\rm B}$",
-        "phi_AB": r"$\phi _{\rm AB}$",
-        "freeAB1": r"$\rm A/B_1$",
-        "freeAB2": r"$\rm A/B_2$",
-    }
-
-
 _STYLE_REF = cycler(
     color=list("rbm")
     + [
@@ -96,13 +56,13 @@ _STYLE_ABS = cycler(
 ) + cycler(marker=list("osXvP*D><p"))
 
 
-class CompareJudger(Reader):
+class CompareJudger:
     def __init__(self, path: Union[str, Path], div: Union[int, float] = 1, **kwargs):
         self.path = path if isinstance(path, Path) else Path(path)
         self.div = div
-        self.ref_labels = deepcopy(Labels.ref_label)
+        self.ref_labels = deepcopy(DiffCommon)
         self.ref_labels.update(kwargs.get("ref_labels", {}))
-        self.abs_labels = deepcopy(Labels.ref_label)
+        self.abs_labels = deepcopy(AbsCommon)
         self.abs_labels.update(kwargs.get("abs_labels", {}))
 
     def ref_compare(
@@ -116,7 +76,7 @@ class CompareJudger(Reader):
         **kwargs,
     ):
 
-        data = self.read_csv(self.path, **kwargs)
+        data = read_csv(self.path, **kwargs)
         data = data.sort_values(by=xlabel)
 
         if isinstance(ylabel, list):
@@ -221,7 +181,7 @@ class CompareJudger(Reader):
         **kwargs,
     ):
 
-        data = self.read_csv(self.path, **kwargs)
+        data = read_csv(self.path, **kwargs)
         data = data.sort_values(by=xlabel)
 
         if isinstance(ylabel, list):
@@ -310,7 +270,7 @@ class CompareJudger(Reader):
             ax.plot(
                 o_xticks,
                 o_yticks - base_yticks_mask,
-                label=Labels.ref_label[yl],
+                label=DiffCommon[yl],
                 lw=2.5,
                 markersize=8,
                 alpha=1.0,
