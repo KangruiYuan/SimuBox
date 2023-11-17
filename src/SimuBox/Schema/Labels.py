@@ -16,7 +16,12 @@ CommonLabels: dict[str, str] = {
     "C6": r"${\rm C}^6_{p6mm}$",
     "Crect": r"${\rm C}^2_{p2mm}$",
     "C3": r"${\rm C}^3_{p3m1}$",
+    "iHPa": r"${\rm iHP^a}"
 }
+
+ABCExtend = ChainMap({
+    "Crect": r"${\rm C}^2_{c2mm}$",
+}, CommonLabels)
 
 AbsLabels = {
     "freeE": r"$\rm{F} / \rm{nk_B T}$",

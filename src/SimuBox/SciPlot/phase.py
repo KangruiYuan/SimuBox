@@ -266,19 +266,19 @@ class PhaseDiagram:
                 tmp_xys = tmp_xys[np.argsort(tmp_xys[:, 0])]
                 self.draw_line(tmp_xys, ax=ax, annotation=tmp_dict)
 
-        if phase_name := ann_dict.get("phase_name", False):
-            for key, value in phase_name.items():
-                ax.text(value[0], value[1], key, fontsize=20, color="k")
+        if phase_name := ann_dict.get("phase_name", ()):
+            for name, _x, _y in phase_name:
+                ax.text(_x, _y, name, fontsize=20, color="k")
 
-        if phase_name_arrow := ann_dict.get("phase_name_with_arrow", {}):
-            for key, value in phase_name_arrow.items():
+        if phase_name_arrow := ann_dict.get("phase_name_arrow", ()):
+            for name, _x, _y, _text_x, _text_y in phase_name_arrow:
                 ax.annotate(
-                    key,
-                    xy=value[:2],
+                    name,
+                    xy=(_x, _y),
                     xycoords="data",
-                    xytext=value[2:4],
+                    xytext=(_text_x, _text_y),
                     textcoords="data",
-                    weight="bold",
+                    # weight="bold",
                     color="k",
                     fontsize=20,
                     arrowprops=dict(
