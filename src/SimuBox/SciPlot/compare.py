@@ -1,14 +1,16 @@
 from copy import deepcopy
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional, Union, Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
 from cycler import cycler
-from matplotlib.ticker import AutoMinorLocator, MultipleLocator
+
+from collections import ChainMap
 
 from ..SciTools import read_csv
 from ..Schema import AbsCommon, DiffCommon
+from .PlotUtils import plot_trans, plot_legend, plot_locators, plot_savefig
 
 COMPARE_PLOT_CONFIG = {
     "font.family": "Times New Roman",
@@ -57,21 +59,30 @@ _STYLE_ABS = cycler(
 
 
 class CompareJudger:
-    def __init__(self, path: Union[str, Path], div: Union[int, float] = 1, **kwargs):
+    def __init__(
+        self,
+        path: Union[str, Path],
+        div: Union[int, float] = 1,
+        diff_labels: Optional[dict[str, str]] = None,
+        abs_labels: Optional[dict[str, str]] = None,
+        **kwargs,
+    ):
         self.path = path if isinstance(path, Path) else Path(path)
         self.div = div
-        self.ref_labels = deepcopy(DiffCommon)
-        self.ref_labels.update(kwargs.get("ref_labels", {}))
-        self.abs_labels = deepcopy(AbsCommon)
-        self.abs_labels.update(kwargs.get("abs_labels", {}))
+        self.diff_labels = (
+            ChainMap(diff_labels, DiffCommon) if diff_labels is not None else DiffCommon
+        )
+        self.abs_labels = (
+            ChainMap(abs_labels, AbsCommon) if abs_labels is not None else AbsCommon
+        )
 
-    def ref_compare(
+    def diff_comparison(
         self,
         base: str,
         others: Union[str, list[str]],
         xlabel: str,
         ylabel: Union[str, list[str]],
-        horiline: bool = True,
+        horiline: Literal["all", "mask", None] = "all",
         save: Optional[Union[Path, str, bool]] = True,
         **kwargs,
     ):
@@ -98,7 +109,7 @@ class CompareJudger:
             if others != "others":
                 others = [others]
             else:
-                others = set(data['phase'])
+                others = set(data["phase"])
                 others.remove(base)
 
         for o in others:
@@ -112,30 +123,34 @@ class CompareJudger:
             inverse_mask = np.in1d(base_xticks, o_xticks)
             base_xticks_mask = base_xticks[inverse_mask]
             base_yticks_mask = base_yticks[inverse_mask]
-            try:
-                ax.plot(
-                    o_xticks,
-                    o_yticks - base_yticks_mask,
-                    label=self.ref_labels.get(o, o),
-                    lw=2.5,
-                    markersize=8,
-                    alpha=1.0,
-                )
-            except ValueError as ve:
-                print("Phase:", o)
-                print(o_xticks)
-                print(base_xticks_mask)
-                raise ve
+            ax.plot(
+                o_xticks,
+                o_yticks - base_yticks_mask,
+                label=self.diff_labels.get(o, o),
+                lw=2.5,
+                markersize=8,
+                alpha=1.0,
+            )
 
         if horiline:
-            rest = data[data["phase"] != base]
-            rest_xticks = rest[xlabel].unique()
-            mask = np.in1d(base_xticks, rest_xticks)
-            base_xticks_mask = base_xticks[mask]
+            if horiline == "all":
+                horiline_xticks = base_xticks
+                horiline_yticks = [0] * len(base_xticks)
+            elif horiline == "mask":
+                rest = data[data["phase"] != base]
+                rest_xticks = rest[xlabel].unique()
+                mask = np.in1d(base_xticks, rest_xticks)
+                horiline_xticks = base_xticks[mask]
+                horiline_yticks = np.zeros_like(horiline_xticks)
+            else:
+                raise NotImplementedError(
+                    f"Not implemented method for horiline: {horiline}"
+                )
+
             ax.plot(
-                base_xticks_mask,
-                np.zeros_like(base_xticks_mask),
-                label=self.ref_labels.get(base, base),
+                horiline_xticks,
+                horiline_yticks,
+                label=self.diff_labels.get(base, base),
                 lw=2.5,
                 c="k",
                 marker="o",
@@ -143,46 +158,39 @@ class CompareJudger:
                 alpha=0.8,
             )
 
-        if trans := kwargs.get("trans"):
-            for t in trans:
-                ax.axvline(x=t, c="k", alpha=0.5, ls="--", lw=2.5)
-        if xminor := kwargs.get("xminor", 5):
-            ax.xaxis.set_minor_locator(AutoMinorLocator(xminor))
-        if yminor := kwargs.get("yminor", 5):
-            ax.yaxis.set_minor_locator(AutoMinorLocator(yminor))
-        if xmain := kwargs.get("xmain", False):
-            ax.yaxis.set_major_locator(MultipleLocator(xmain))
-        if ymain := kwargs.get("ymain", False):
-            ax.yaxis.set_major_locator(MultipleLocator(ymain))
+        plot_trans(**kwargs)
+        plot_locators(**kwargs)
+        plot_legend(**kwargs)
 
         plt.tick_params(axis="both", labelsize=25, pad=8)
-        plt.ylabel(self.ref_labels.get(ylabel, ylabel), fontsize=30)
-        plt.xlabel(self.ref_labels.get(xlabel, xlabel), fontsize=30)
-        if loc := kwargs.get("legend", "in"):
-            if loc == "in":
-                plt.legend(fontsize=25, loc="best")
-            elif loc == "out":
-                plt.legend(fontsize=25, loc="upper left", bbox_to_anchor=(1, 1))
-        plt.margins(*kwargs.get("margin", (0.15, 0.15)))
-        plt.tight_layout()
-        plt.show()
-        if save:
-            if isinstance(save, bool):
-                plt.savefig(str(self.path)[:-4] + ".png", dpi=300)
-            else:
-                plt.savefig(save, dpi=300)
+        plt.ylabel(self.diff_labels.get(ylabel, ylabel), fontsize=30)
+        plt.xlabel(self.diff_labels.get(xlabel, xlabel), fontsize=30)
 
-    def abs_compare(
+        if margin := kwargs.get("margin", (0.15, 0.15)):
+            plt.margins(*margin)
+        plt.tight_layout()
+        plot_savefig(self, prefix="diff", suffix=ylabel)
+        plt.show()
+
+    def abs_comparison(
         self,
-        phases: Union[list[str], str],
         xlabel: str,
         ylabel: Union[str, list[str]],
+        phases: Optional[Union[list[str], str]] = None,
         save: Optional[Union[Path, str, bool]] = True,
         **kwargs,
     ):
 
         data = read_csv(self.path, **kwargs)
         data = data.sort_values(by=xlabel)
+
+        phases = (
+            phases
+            if phases is not None
+            else data[kwargs.get("phase_col", "phase")].unique()
+        )
+        phases = [phases] if isinstance(phases, str) else phases
+        print(f"当前考虑的phase为：{phases}")
 
         if isinstance(ylabel, list):
             y_name = kwargs.get("y_name", "") or "TMP"
@@ -193,8 +201,6 @@ class CompareJudger:
         plt.figure(figsize=kwargs.get("figsize", (9, 6.5)))
         ax = plt.gca()
         ax.set_prop_cycle(_STYLE_ABS)
-
-        phases = [phases] if isinstance(phases, str) else phases
 
         for p in phases:
             tmp = data[data.phase == p]
@@ -209,28 +215,17 @@ class CompareJudger:
         plt.xlabel(self.abs_labels.get(xlabel, xlabel), fontsize=30)
         plt.ylabel(self.abs_labels.get(ylabel, ylabel), fontsize=30)
         plt.tick_params(axis="both", labelsize=25, pad=8)
-        if xminor := kwargs.get("xminor", 5):
-            ax.xaxis.set_minor_locator(AutoMinorLocator(xminor))
-        if yminor := kwargs.get("yminor", 5):
-            ax.yaxis.set_minor_locator(AutoMinorLocator(yminor))
-        if xmain := kwargs.get("xmain", False):
-            ax.yaxis.set_major_locator(MultipleLocator(xmain))
-        if ymain := kwargs.get("ymain", False):
-            ax.yaxis.set_major_locator(MultipleLocator(ymain))
-        if trans := kwargs.get("trans"):
-            for i in trans:
-                plt.axvline(x=i, c="k", alpha=0.5, ls="--", lw=2.5)
 
-        if kwargs.get("legend", True):
-            plt.legend(fontsize=25, loc="upper left", bbox_to_anchor=(0.98, 0.8))
+        plot_trans(**kwargs)
+        plot_locators(**kwargs)
+        plot_legend(**kwargs)
 
-        plt.margins(*kwargs.get("margin", (0.15, 0.15)))
+        if margin := kwargs.get("margin", (0.15, 0.15)):
+            plt.margins(*margin)
+
         plt.tight_layout()
-        if save:
-            if isinstance(save, bool):
-                plt.savefig(str(self.path)[:-4] + ".png", dpi=300)
-            else:
-                plt.savefig(save, dpi=300)
+        plot_savefig(self, prefix="abs", suffix=ylabel)
+        plt.show()
 
     def multi_target_ref(
         self,
@@ -242,7 +237,7 @@ class CompareJudger:
         save: Optional[Union[Path, str, bool]] = True,
         **kwargs,
     ):
-        data = self.read_csv(self.path, **kwargs)
+        data = read_csv(self.path, **kwargs)
         data = data.sort_values(by=xlabel)
 
         plt.figure(figsize=kwargs.get("figsize", (9, 6.5)))
@@ -282,8 +277,8 @@ class CompareJudger:
         ax.xaxis.set_major_locator(MultipleLocator(kwargs.get("xmain", 5)))
         plt.tick_params(axis="both", labelsize=25, pad=8)
         plt.tick_params(axis="both", labelsize=25)
-        plt.ylabel(self.ref_labels.get(ylabel_name, ylabel_name), fontsize=30)
-        plt.xlabel(self.ref_labels.get(xlabel, xlabel), fontsize=30)
+        plt.ylabel(self.diff_labels.get(ylabel_name, ylabel_name), fontsize=30)
+        plt.xlabel(self.diff_labels.get(xlabel, xlabel), fontsize=30)
 
         if kwargs.get("legend", True):
             plt.legend(fontsize=25)
@@ -294,3 +289,4 @@ class CompareJudger:
                 plt.savefig(str(self.path)[:-4] + ".png", dpi=300)
             else:
                 plt.savefig(save, dpi=300)
+        plt.show()

@@ -40,5 +40,6 @@ DiffLabels = {
     "freeAB2": r"$\rm A/B_2$",
 }
 
+
 AbsCommon = ChainMap(CommonLabels, AbsLabels)
 DiffCommon = ChainMap(CommonLabels, DiffLabels)

@@ -7,12 +7,12 @@ import subprocess as sp
 from collections import ChainMap, OrderedDict, defaultdict
 from itertools import combinations
 from pathlib import Path
-from typing import Any
+from typing import Any, Union
 
 from push_job_TOPS import opts
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-n", "--name", default="Default", type=str)
+parser.add_argument("-n", "--name", default="", type=str)
 parser.add_argument("-t", "--terminal", default="WORKING_DIR", type=str)
 parser.add_argument("-w", "--where", default="", type=str)
 parser.add_argument("-a", "--all", action="store_true", default=False)
@@ -28,16 +28,16 @@ working_directory = parent_folder / args.terminal
 subdirectories = [item for item in working_directory.iterdir() if item.is_dir()]
 
 
-if args.name == "Default":
-    extract_name = parent_folder / parent_folder.name
-    extract_name = str(extract_name) + ".csv"
-else:
-    extract_name = Path.cwd() / args.name
-    if not extract_name.name.endswith(".csv"):
-        extract_name = str(extract_name) + ".csv"
+output_csv_name = args.name or parent_folder.name
+output_csv_path = parent_folder / output_csv_name
+if output_csv_path.suffix != ".csv":
+    output_csv_path = output_csv_path.with_suffix(".csv")
 
 
-def check_files(files: list[str, Path]):
+wrong_list = list()
+
+
+def check_files(files: list[Union[str, Path]]):
     for file in files:
         if not os.path.isfile(file):
             print(f"Absent: {file}")
@@ -93,14 +93,12 @@ def stats_component(json_dict: dict):
 
 columns: set[str] = set()
 datas: list[dict[str, Any]] = []
-wrong_list = list()
 
 desp = "REPUSH" if args.all else "WRONG"
 
 for subdir in subdirectories:
     os.chdir(subdir)
     if not check_files(files=["printout.txt", opts.json_name]):
-        wrong_list.append({"path": subdir})
         print(str(subdir).center(50, "*"))
         continue
     with open(opts.json_name, mode="r") as fp:
@@ -192,7 +190,7 @@ for subdir in subdirectories:
             }
         )
 
-with open(extract_name, "w", newline="") as csvfile:
+with open(output_csv_path, "w", newline="") as csvfile:
     writer = csv.writer(csvfile)
     columns_list: list = sorted(list(columns))
     writer.writerow(columns_list)

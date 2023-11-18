@@ -18,6 +18,5 @@ def generate_colors(mode: Union[str, ColorType] = ColorType.RGB, num: int = 1):
         raise NotImplementedError(mode.value)
     return color
 
-def init_plot_config(config: dict):
-    plt.rcParams.update(config)
+
 
