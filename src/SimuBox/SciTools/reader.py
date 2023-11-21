@@ -3,7 +3,7 @@ import os
 import re
 from collections import OrderedDict
 from pathlib import Path
-from typing import Optional, Iterable
+from typing import Optional, Iterable, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -65,14 +65,13 @@ def read_density(file: PathType, parse_N: bool = True, parse_L: bool = False, **
         lxlylz = np.array(list(map(float, cont[skip].strip().split(" "))))
         skip += 1
     else:
-        lxlylz = kwargs.get("lxlylz", [1, 1, 1])
+        lxlylz = kwargs.get("lxlylz", np.array([1, 1, 1]))
 
-    data = pd.read_csv(
-        file, skiprows=skip, header=None, sep=r"[ ]+", engine="python"
-    )
+    data = pd.read_csv(file, skiprows=skip, header=None, sep=r"[ ]+", engine="python")
 
     if NxNyNz is not None:
         shape = NxNyNz[NxNyNz != 1]
+        lxlylz = lxlylz[NxNyNz != 1]
     else:
         shape = kwargs.get("shape", NxNyNz)
 
@@ -94,16 +93,30 @@ def read_csv(path: PathType, **kwargs):
         pass
     return df
 
-def parse_density(density: Density, target:Optional[int] = 0, permute: Optional[Iterable[int]] = None):
+
+def parse_density(
+    density: Density,
+    target: Optional[Union[int, Iterable[int]]] = 0,
+    permute: Optional[Iterable[int]] = None,
+    **kwargs,
+):
     assert density.shape is not None, "需要指定shape属性"
-    shape = np.array(density.shape)
+    shape = density.shape.copy()
+    lxlylz = density.lxlylz.copy()
     if permute is None:
         permute = np.arange(len(shape))
     else:
         permute = np.array(permute)
         assert len(permute) == len(shape), "length of permute and shape mismatch"
     shape = shape[permute]
-    return density.data[target].values.reshape(shape)
+    lxlylz = lxlylz[permute]
+    if isinstance(target, int):
+        return density.data[target].values.reshape(shape), shape, lxlylz
+    elif isinstance(target, Iterable):
+        return [density.data[t].values.reshape(shape) for t in target], shape, lxlylz
+    else:
+        raise TypeError("Check the type for param: target")
+
 
 class InfoReader:
     """

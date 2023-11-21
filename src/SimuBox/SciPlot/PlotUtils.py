@@ -70,6 +70,8 @@ def plot_savefig(
 ):
     if save == "auto" and hasattr(obj, 'path'):
         path = Path(obj.path)
+        # if not path.is_dir():
+        #     path = path.parent
         stem = path.stem
         stem = prefix + "_" + stem if prefix else stem
         stem = stem + "_" + suffix if suffix else stem
