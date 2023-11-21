@@ -234,13 +234,12 @@ class CompareJudger:
         xlabel: str,
         ylabels: Union[str, list[str]],
         ylabel_name: str,
-        save: Optional[Union[Path, str, bool]] = True,
         **kwargs,
     ):
         data = read_csv(self.path, **kwargs)
         data = data.sort_values(by=xlabel)
 
-        plt.figure(figsize=kwargs.get("figsize", (9, 6.5)))
+        plt.figure(figsize=kwargs.get("figsize", (8, 6)))
         ax = plt.gca()
         ax.set_prop_cycle(_STYLE_REF)
 
@@ -271,22 +270,19 @@ class CompareJudger:
                 alpha=1.0,
             )
 
-        ax.xaxis.set_minor_locator(AutoMinorLocator(5))
-        ax.yaxis.set_minor_locator(AutoMinorLocator(5))
-        plt.axhline(y=0, c="k", ls=":", lw=4, alpha=0.5)
-        ax.xaxis.set_major_locator(MultipleLocator(kwargs.get("xmain", 5)))
+        plot_trans(**kwargs)
+        plot_locators(**kwargs)
+        plot_legend(**kwargs)
+
+
         plt.tick_params(axis="both", labelsize=25, pad=8)
         plt.tick_params(axis="both", labelsize=25)
         plt.ylabel(self.diff_labels.get(ylabel_name, ylabel_name), fontsize=30)
         plt.xlabel(self.diff_labels.get(xlabel, xlabel), fontsize=30)
 
-        if kwargs.get("legend", True):
-            plt.legend(fontsize=25)
-        plt.margins(*kwargs.get("margin", (0.15, 0.15)))
+        if margin := kwargs.get("margin", (0.15, 0.15)):
+            plt.margins(*margin)
+
         plt.tight_layout()
-        if save:
-            if isinstance(save, bool):
-                plt.savefig(str(self.path)[:-4] + ".png", dpi=300)
-            else:
-                plt.savefig(save, dpi=300)
+        plot_savefig(self, prefix="multi", suffix=ylabel_name, **kwargs)
         plt.show()
