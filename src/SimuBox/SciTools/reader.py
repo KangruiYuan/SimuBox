@@ -1,24 +1,26 @@
 import json
 import os
 import re
-from pathlib import Path
-from typing import Optional, Literal
 from collections import OrderedDict
+from pathlib import Path
+from typing import Optional, Iterable
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from ..Schema import Printout, Density
 
-__all__ = ["InfoReader", "read_density", "read_printout", "read_csv", "read_json"]
+from ..Schema import Printout, Density, PathType
 
 
-def read_json(file: Path):
+def read_json(file: PathType):
     with open(file, mode="r") as fp:
         dic = json.load(fp, object_pairs_hook=OrderedDict)
     return dic
 
 
-def read_printout(file: Path):
+def read_printout(file: PathType):
+    if isinstance(file, str):
+        file = Path(file)
     if not file.is_file():
         file = file / "printout.txt"
     cont = open(file, "r").readlines()
@@ -40,44 +42,44 @@ def read_printout(file: Path):
     )
 
 
-def read_density(
-    file: Path, skip: Literal[0, 1, 2] = 1, NxNyNz: Optional[list[int]] = None
-):
+def read_density(file: PathType, parse_N: bool = True, parse_L: bool = False, **kwargs):
     """
     for phout, component, block
     :param file:
-    :param skip:
-    :param NxNyNz:
     :return:
     """
+    if isinstance(file, str):
+        file = Path(file)
     if not file.is_file():
         file = file / "phout.txt"
     cont = open(file, "r").readlines()
 
-    if NxNyNz is None:
-        if skip >= 1:
-            NxNyNz = np.array(list(map(int, cont[0].strip().split(" "))))
-        else:
-            NxNyNz = None
-
-    if skip == 2:
-        lxlylz = np.array(list(map(float, cont[1].strip().split(" "))))
+    skip = 0
+    if parse_N:
+        NxNyNz = np.array(list(map(int, cont[skip].strip().split(" "))))
+        skip += 1
     else:
-        lxlylz = None
+        NxNyNz = kwargs.get("NxNyNz")
+
+    if parse_L:
+        lxlylz = np.array(list(map(float, cont[skip].strip().split(" "))))
+        skip += 1
+    else:
+        lxlylz = kwargs.get("lxlylz", [1, 1, 1])
 
     data = pd.read_csv(
         file, skiprows=skip, header=None, sep=r"[ ]+", engine="python"
-    ).values
+    )
 
     if NxNyNz is not None:
         shape = NxNyNz[NxNyNz != 1]
     else:
-        shape = NxNyNz
+        shape = kwargs.get("shape", NxNyNz)
 
     return Density(data=data, NxNyNz=NxNyNz, lxlylz=lxlylz, shape=shape)
 
 
-def read_csv(path: Path, **kwargs):
+def read_csv(path: PathType, **kwargs):
 
     df = pd.read_csv(path)
     if subset := kwargs.get("subset", ["phase", "freeE"]):
@@ -92,6 +94,16 @@ def read_csv(path: Path, **kwargs):
         pass
     return df
 
+def parse_density(density: Density, target:Optional[int] = 0, permute: Optional[Iterable[int]] = None):
+    assert density.shape is not None, "需要指定shape属性"
+    shape = np.array(density.shape)
+    if permute is None:
+        permute = np.arange(len(shape))
+    else:
+        permute = np.array(permute)
+        assert len(permute) == len(shape), "length of permute and shape mismatch"
+    shape = shape[permute]
+    return density.data[target].values.reshape(shape)
 
 class InfoReader:
     """

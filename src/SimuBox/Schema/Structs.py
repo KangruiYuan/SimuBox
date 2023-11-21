@@ -1,10 +1,10 @@
 
-from pydantic import BaseModel
-from typing import Optional, Union, Any
-
+from typing import Optional, Any
 import numpy as np
 import pandas as pd
 from matplotlib.figure import Figure, Axes
+from pydantic import BaseModel
+
 
 class ExtendedModel(BaseModel):
     class Config:
@@ -24,19 +24,10 @@ class Printout(ExtendedModel):
 
 class Density(ExtendedModel):
 
-    data: np.ndarray
+    data: pd.DataFrame
     NxNyNz: Optional[np.ndarray] = None
     lxlylz: Optional[np.ndarray] = None
     shape: Optional[np.ndarray] = None
-
-    @property
-    def reshaped(self):
-
-        if self.shape is None:
-            raise ValueError("shape must be specified")
-        else:
-            return [self.data[:, i].reshape(self.shape) for i in range(self.data.shape[1])]
-
 
 class CompareResult(ExtendedModel):
     df: pd.DataFrame
@@ -47,10 +38,10 @@ class CompareResult(ExtendedModel):
 
 class LandscapeResult(ExtendedModel):
     freeEMat: np.ndarray
-    ly: Union[np.ndarray, list]
-    lz: Union[np.ndarray, list]
-    levels:  Union[np.ndarray, list]
-    ticks:  Union[np.ndarray, list]
+    ly: np.ndarray
+    lz: np.ndarray
+    levels:  np.ndarray
+    ticks:  np.ndarray
     fig: Optional[Figure] = None
     ax: Optional[Axes] = None
     contourf_fig: Optional[Any] = None

@@ -7,25 +7,22 @@ import pyvista as pv
 from mayavi import mlab
 from skimage.measure import marching_cubes
 
-from ..SciTools import InfoReader
 
+class IsoSurf():
 
-class IsoSurf(InfoReader):
-    def __int__(self, path, **kwargs):
-        super().__init__(path, **kwargs)
-
+    @classmethod
     def iso3D(
-        self,
+        cls,
         phi: Union[str, np.ndarray],
         level: Union[float, List[float]] = 0.5,
         backend: str = "vista",
         **kwargs,
     ):
-        assert self.dim == 3, f"数据应该是3维，目前为{self.dim}维"
+        assert cls.dim == 3, f"数据应该是3维，目前为{cls.dim}维"
 
-        vol: np.ndarray = getattr(self, phi) if isinstance(phi, str) else phi
-        lxlylz = getattr(self, "lxlylz")
-        NxNyNz = getattr(self, "NxNyNz")
+        vol: np.ndarray = getattr(cls, phi) if isinstance(phi, str) else phi
+        lxlylz = getattr(cls, "lxlylz")
+        NxNyNz = getattr(cls, "NxNyNz")
 
         x, y, z = np.mgrid[
             0 : lxlylz[0] : complex(0, NxNyNz[0]),
@@ -66,7 +63,7 @@ class IsoSurf(InfoReader):
             plt.show()
         elif backend == "mayavi":
             vol = vol.T
-            self.mayavi_contour3d(x, y, z, vol, level, **kwargs)
+            cls.mayavi_contour3d(x, y, z, vol, level, **kwargs)
 
     @mlab.show
     def mayavi_contour3d(self, x, y, z, vol, level, **kwargs):
