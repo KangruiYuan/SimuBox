@@ -25,7 +25,13 @@ ABCExtend = ChainMap({
 
 AbsLabels = {
     "freeE": r"$\rm{F} / \rm{nk_B T}$",
-    "freeAB": r"$\rm{U} / \rm{nk_B T}$",
+    "freeAB_sum": r"$\rm{U} / \rm{nk_B T}$",
+    "freeAB": r"$\rm{U_{AB}} / \rm{nk_B T}$",
+    "freeBA": r"$\rm{U_{AB}} / \rm{nk_B T}$",
+    "freeAC": r"$\rm{U_{AC}} / \rm{nk_B T}$",
+    "freeCA": r"$\rm{U_{AC}} / \rm{nk_B T}$",
+    "freeBC": r"$\rm{U_{BC}} / \rm{nk_B T}$",
+    "freeCB": r"$\rm{U_{BC}} / \rm{nk_B T}$",
     "freeWS": r"$\rm{-TS} / \rm{nk_B T}$",
     "bridge": r"$v_B$",
 
@@ -33,7 +39,13 @@ AbsLabels = {
 
 DiffLabels = {
     "freeE": r"$\Delta \rm{F} / \rm{nk_B T}$",
-    "freeAB": r"$\Delta \rm{U} / \rm{nk_B T}$",
+    "freeAB_sum": r"$\Delta \rm{U} / \rm{nk_B T}$",
+    "freeAB": r"$\Delta \rm{U_{AB}} / \rm{nk_B T}$",
+    "freeBA": r"$\Delta \rm{U_{AB}} / \rm{nk_B T}$",
+    "freeAC": r"$\Delta \rm{U_{AC}} / \rm{nk_B T}$",
+    "freeCA": r"$\Delta \rm{U_{AC}} / \rm{nk_B T}$",
+    "freeBC": r"$\Delta \rm{U_{BC}} / \rm{nk_B T}$",
+    "freeCB": r"$\Delta \rm{U_{BC}} / \rm{nk_B T}$",
     "freeWS": r"$\rm{-T} \Delta \rm{S} / \rm{nk_B T}$",
     "bridge": r"$\Delta v_B$",
     "freeAB1": r"$\rm A/B_1$",

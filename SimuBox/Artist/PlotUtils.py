@@ -3,7 +3,8 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 from typing import Optional
 from matplotlib.ticker import AutoMinorLocator, MultipleLocator
-from ..Schema import PathType
+from ..Schema import PathType, ColorType
+from typing import Union
 
 def init_plot_config(config: dict):
     plt.rcParams.update(config)
