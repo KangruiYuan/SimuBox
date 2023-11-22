@@ -33,7 +33,7 @@
 
 # 使用示例
 
-示例请见[`/demo/Local/base.ipynb`](https://github.com/KangruiYuan/SimuBox/blob/main/demo/local/base.ipynb)
+示例请见[`/demo/Local/base.ipynb`](https://github.com/KangruiYuan/SimuBox/blob/main/demo/demo.ipynb)
 
 # 引用
 

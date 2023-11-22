@@ -1,4 +1,4 @@
-from ..SciTools import InfoReader
+from ..Toolkits import InfoReader
 import numpy as np
 from matplotlib.ticker import AutoMinorLocator, MultipleLocator
 import scipy.signal as sg

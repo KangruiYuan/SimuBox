@@ -8,7 +8,7 @@ from mayavi import mlab
 from skimage.measure import marching_cubes
 
 from ..Schema import Density, NumericType
-from ..SciTools import parse_density
+from ..Toolkits import parse_density
 
 
 def iso3D(

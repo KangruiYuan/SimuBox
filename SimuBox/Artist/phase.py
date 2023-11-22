@@ -8,10 +8,9 @@ import pandas as pd
 from numpy.polynomial import Chebyshev
 from scipy.io import loadmat
 
-from .PlotUtils import plot_locators, plot_savefig
+from .PlotUtils import plot_locators, plot_savefig, generate_colors
 from ..Schema import DetectionMode, CompareResult, PointInfo, CommonLabels, PathType
-from ..SciTools import read_csv
-from ..Utils import generate_colors
+from ..Toolkits import read_csv
 
 PHASE_PLOT_CONFIG = {
     "font.family": "Times New Roman",
@@ -331,7 +330,6 @@ class PhaseDiagram:
                 or cls.check_phase(point=point_other, ignore=ignore)
                 or point.phase == point_other.phase
             )
-
 
     def boundary_detect(
         self,

@@ -1,4 +1,4 @@
-from ..SciTools import InfoReader
+from ..Toolkits import InfoReader
 import numpy as np
 from tqdm import tqdm
 from collections import defaultdict

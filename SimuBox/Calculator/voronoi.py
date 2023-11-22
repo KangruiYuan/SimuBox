@@ -6,7 +6,7 @@ from math import acos
 from collections import defaultdict
 from scipy.spatial import Voronoi, voronoi_plot_2d
 from tqdm import tqdm
-from ..SciTools import InfoReader
+from ..Toolkits import InfoReader
 from itertools import product
 from typing import Union, Tuple, Optional
 from PIL import Image
