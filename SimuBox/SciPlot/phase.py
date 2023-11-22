@@ -5,13 +5,13 @@ from typing import Any, Optional, Union
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from matplotlib.ticker import AutoMinorLocator, MultipleLocator
 from numpy.polynomial import Chebyshev
 from scipy.io import loadmat
 
-from ..Schema import DetectionMode, CompareResult, PointInfo, CommonLabels
-from ..Utils import generate_colors
+from .PlotUtils import plot_locators, plot_savefig
+from ..Schema import DetectionMode, CompareResult, PointInfo, CommonLabels, PathType
 from ..SciTools import read_csv
+from ..Utils import generate_colors
 
 PHASE_PLOT_CONFIG = {
     "font.family": "Times New Roman",
@@ -42,7 +42,7 @@ PHASE_PLOT_CONFIG = {
 class PhaseDiagram:
     def __init__(
         self,
-        path: Union[str, Path],
+        path: PathType,
         xlabel: str,
         ylabel: str,
         colors: Optional[dict] = None,
@@ -50,7 +50,9 @@ class PhaseDiagram:
     ) -> None:
         self.path = Path(path)
         self.colors = colors if colors is not None else {}
-        self.labels = ChainMap(labels, CommonLabels) if labels is not None else CommonLabels
+        self.labels = (
+            ChainMap(labels, CommonLabels) if labels is not None else CommonLabels
+        )
         self.xlabel = xlabel
         self.ylabel = ylabel
 
@@ -187,8 +189,7 @@ class PhaseDiagram:
                 )
             ax.tick_params(top="on", right="on", which="both")
             ax.tick_params(which="both", width=2, length=4, direction="in")
-            ax.xaxis.set_minor_locator(AutoMinorLocator(5))
-            ax.yaxis.set_minor_locator(AutoMinorLocator(5))
+            plot_locators(**kwargs)
             ax.set_xlabel(
                 self.labels.get(self.xlabel, self.xlabel), fontdict={"size": 20}
             )
@@ -286,7 +287,6 @@ class PhaseDiagram:
                     ),
                 )
 
-
         if mat_path := kwargs.get("mat_path", None):
             wrongline = loadmat(mat_path)["origin_wrong"]
             self.draw_line(
@@ -298,12 +298,7 @@ class PhaseDiagram:
             )
 
         plt.margins(0)
-        ax.xaxis.set_minor_locator(AutoMinorLocator(5))
-        ax.yaxis.set_minor_locator(AutoMinorLocator(5))
-        if ymajor := kwargs.get("ymajor", 0):
-            ax.yaxis.set_major_locator(MultipleLocator(ymajor))
-        if xmajor := kwargs.get("xmajor", 0):
-            ax.xaxis.set_major_locator(MultipleLocator(xmajor))
+        plot_locators(**kwargs)
         if xlim := kwargs.get("xlim", []):
             plt.xlim(xlim)
         if ylim := kwargs.get("ylim", []):
@@ -312,9 +307,8 @@ class PhaseDiagram:
         ax.set_ylabel(self.labels[self.ylabel], fontdict={"size": 30})
         plt.tick_params(labelsize=20, pad=8)
         fig.tight_layout()
+        plot_savefig(self)
         plt.show()
-        if save_path := kwargs.get("path", ""):
-            plt.savefig(save_path, dpi=200)
 
     @classmethod
     def check_phase(
@@ -337,15 +331,7 @@ class PhaseDiagram:
                 or cls.check_phase(point=point_other, ignore=ignore)
                 or point.phase == point_other.phase
             )
-            # return (
-            #     not isinstance(point, PointInfo)
-            #     or "unknown" in point.phase
-            #     or not isinstance(point_other, PointInfo)
-            #     or "unknown" in point_other.phase
-            #     or point.phase == point_other.phase
-            #     or point.phase in ignore
-            #     or point_other.phase in ignore
-            # )
+
 
     def boundary_detect(
         self,

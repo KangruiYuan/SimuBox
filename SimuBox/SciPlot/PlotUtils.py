@@ -3,7 +3,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 from typing import Optional
 from matplotlib.ticker import AutoMinorLocator, MultipleLocator
-
+from ..Schema import PathType
 
 def init_plot_config(config: dict):
     plt.rcParams.update(config)
@@ -65,17 +65,18 @@ def plot_savefig(
     prefix: str = "",
     suffix: str = "",
     dpi: int = 150,
-    save: str = "auto",
+    path: Optional[PathType] = None,
     **kwargs,
 ):
-    if save == "auto" and hasattr(obj, 'path'):
+    if hasattr(obj, 'path'):
         path = Path(obj.path)
-        # if not path.is_dir():
-        #     path = path.parent
+    else:
+        path = Path(path)
+    if path.is_file():
         stem = path.stem
         stem = prefix + "_" + stem if prefix else stem
         stem = stem + "_" + suffix if suffix else stem
-        path = path.parent / (stem + kwargs.get("fig_format", ".png"))
-    else:
-        path = save
+        path = path.parent / ".".join((stem, kwargs.get("fig_format", "png")))
+    elif path.is_dir():
+        path = path / ".".join((path.stem, kwargs.get("fig_format", "png")))
     plt.savefig(path, dpi=dpi)

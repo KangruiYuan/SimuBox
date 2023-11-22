@@ -1,16 +1,18 @@
 from decimal import Decimal
+from functools import cached_property
 from pathlib import Path
 from typing import Optional, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from matplotlib.ticker import AutoMinorLocator, MultipleLocator
 from scipy.interpolate import griddata
 from shapely.geometry import Polygon
+
+from collections import ChainMap
+from .PlotUtils import plot_locators, plot_savefig
+from ..Schema import LandscapeResult, PathType, CommonLabels
 from ..SciTools import read_csv
-from ..Schema import LandscapeResult
-from functools import cached_property
 
 LAND_PLOT_CONFIG = {
     "font.family": "Times New Roman",
@@ -35,13 +37,10 @@ LAND_PLOT_CONFIG = {
 
 
 class Landscaper:
-    def __init__(self, path: Union[Path, str], labels: Optional[dict[str, str]] = None):
-        self.path = Path(path) if isinstance(path, str) else path
-        self.path_parent = self.path.parent
+    def __init__(self, path: PathType, labels: Optional[dict[str, str]] = None):
+        self.path = Path(path)
         self.labels = (
-            labels
-            if labels is not None
-            else {"ly": r"$L_y/ R_g$", "lz": r"$L_x/ R_g$", "gamma": r"Lzy/$R_g$"}
+            ChainMap(labels, CommonLabels) if labels is not None else CommonLabels
         )
 
     @cached_property
@@ -180,22 +179,12 @@ class Landscaper:
                     p[0], p[1], s=p[-1], c=p[-2], marker=p[2], alpha=1, zorder=6
                 )
 
-        if xmajor := kwargs.get("xmajor", 0):
-            ax.xaxis.set_major_locator(MultipleLocator(xmajor))
-        if ymajor := kwargs.get("ymajor", 0):
-            ax.xaxis.set_major_locator(MultipleLocator(ymajor))
-        if xminor := kwargs.get("xminor", 0):
-            ax.xaxis.set_minor_locator(AutoMinorLocator(xminor))
-        if yminor := kwargs.get("yminor", 0):
-            ax.yaxis.set_minor_locator(AutoMinorLocator(yminor))
+        plot_locators(**kwargs)
 
         plt.tight_layout()
+        plot_savefig(self)
         plt.show()
-        if save:
-            if isinstance(save, bool):
-                plt.savefig(str(self.path)[:-4] + ".png", dpi=300)
-            else:
-                plt.savefig(save, dpi=300)
+
         return LandscapeResult(
             freeEMat=freeEMat,
             ly=ly,

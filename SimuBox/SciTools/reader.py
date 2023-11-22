@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from ..Schema import Printout, Density, PathType
+from ..Schema import Printout, Density, PathType, FetData
 
 
 def read_json(file: PathType):
@@ -18,18 +18,19 @@ def read_json(file: PathType):
     return dic
 
 
-def read_printout(file: PathType):
-    if isinstance(file, str):
-        file = Path(file)
-    if not file.is_file():
-        file = file / "printout.txt"
-    cont = open(file, "r").readlines()
+def read_printout(path: PathType):
+    if isinstance(path, str):
+        path = Path(path)
+    if not path.is_file():
+        path = path / "printout.txt"
+    cont = open(path, "r").readlines()
     box = np.array(list(map(float, cont[-3].strip().split(" "))))
     lxlylz = box[:3]
     uws = re.findall("[.0-9e+-]+", cont[-1])
     uws = list(map(float, uws))
 
     return Printout(
+        path=path,
         lxlylz=lxlylz,
         box=box,
         step=uws[0],
@@ -42,17 +43,19 @@ def read_printout(file: PathType):
     )
 
 
-def read_density(file: PathType, parse_N: bool = True, parse_L: bool = False, **kwargs):
+def read_density(path: PathType, parse_N: bool = True, parse_L: bool = False, **kwargs):
     """
     for phout, component, block
-    :param file:
+    :param parse_L:
+    :param parse_N:
+    :param path:
     :return:
     """
-    if isinstance(file, str):
-        file = Path(file)
-    if not file.is_file():
-        file = file / "phout.txt"
-    cont = open(file, "r").readlines()
+    if isinstance(path, str):
+        path = Path(path)
+    if not path.is_file():
+        path = path / "phout.txt"
+    cont = open(path, "r").readlines()
 
     skip = 0
     if parse_N:
@@ -67,7 +70,7 @@ def read_density(file: PathType, parse_N: bool = True, parse_L: bool = False, **
     else:
         lxlylz = kwargs.get("lxlylz", np.array([1, 1, 1]))
 
-    data = pd.read_csv(file, skiprows=skip, header=None, sep=r"[ ]+", engine="python")
+    data = pd.read_csv(path, skiprows=skip, header=None, sep=r"[ ]+", engine="python")
 
     if NxNyNz is not None:
         shape = NxNyNz[NxNyNz != 1]
@@ -75,7 +78,7 @@ def read_density(file: PathType, parse_N: bool = True, parse_L: bool = False, **
     else:
         shape = kwargs.get("shape", NxNyNz)
 
-    return Density(data=data, NxNyNz=NxNyNz, lxlylz=lxlylz, shape=shape)
+    return Density(path=path, data=data, NxNyNz=NxNyNz, lxlylz=lxlylz, shape=shape)
 
 
 def read_csv(path: PathType, **kwargs):
@@ -94,11 +97,23 @@ def read_csv(path: PathType, **kwargs):
     return df
 
 
+def read_fet(path: PathType):
+    if isinstance(path, str):
+        path = Path(path)
+    if not path.is_file():
+        path = path / "fet.dat"
+
+    with open(path, mode="r") as fp:
+        cont = fp.readlines()
+    res = [c.strip().split()[1:] for c in cont if c.strip()]
+    res = dict([[c[0], float(c[1])] for c in res])
+    return FetData(path=path, **res)
+
+
 def parse_density(
     density: Density,
     target: Optional[Union[int, Iterable[int]]] = 0,
     permute: Optional[Iterable[int]] = None,
-    **kwargs,
 ):
     assert density.shape is not None, "需要指定shape属性"
     shape = density.shape.copy()
