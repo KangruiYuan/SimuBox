@@ -96,7 +96,7 @@ class CompareJudger:
             print(f'标签{"+".join(ylabel)}总名称指定为{y_name}')
             ylabel = y_name
 
-        plt.figure(figsize=kwargs.get("figsize", (9, 6.5)))
+        plt.figure(figsize=kwargs.get("figsize", (8, 6)))
         ax = plt.gca()
         ax.set_prop_cycle(_STYLE_REF)
 
@@ -198,7 +198,7 @@ class CompareJudger:
             print(f'标签{"+".join(ylabel)}总名称指定为{y_name}')
             ylabel = y_name
 
-        plt.figure(figsize=kwargs.get("figsize", (9, 6.5)))
+        plt.figure(figsize=kwargs.get("figsize", (8, 6)))
         ax = plt.gca()
         ax.set_prop_cycle(_STYLE_ABS)
 
@@ -273,7 +273,6 @@ class CompareJudger:
         plot_trans(**kwargs)
         plot_locators(**kwargs)
         plot_legend(**kwargs)
-
 
         plt.tick_params(axis="both", labelsize=25, pad=8)
         plt.tick_params(axis="both", labelsize=25)

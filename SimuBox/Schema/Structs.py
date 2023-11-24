@@ -1,10 +1,10 @@
 from pathlib import Path
-from typing import Optional, Any
+from typing import Optional, Any, Sequence
+
 import numpy as np
 import pandas as pd
 from matplotlib.figure import Figure, Axes
 from pydantic import BaseModel
-from .Types import NumericType
 
 
 class ExtendedModel(BaseModel):
@@ -94,3 +94,22 @@ class PointInfo(ExtendedModel):
     x: float
     y: float
     freeEnergy: float
+
+class PeakInfo(ExtendedModel):
+
+    amplitude: float
+    center: float
+    width: float
+    background: float
+
+class PeakFitResult(ExtendedModel):
+
+    raw_x: np.ndarray
+    raw_y: np.ndarray
+    peaks: Sequence[PeakInfo]
+    fitted_curve: np.ndarray
+    split_curve: np.ndarray
+
+
+
+

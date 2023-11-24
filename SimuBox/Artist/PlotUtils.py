@@ -2,6 +2,8 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 from typing import Optional
+
+import numpy as np
 from matplotlib.ticker import AutoMinorLocator, MultipleLocator
 from ..Schema import PathType, ColorType
 from typing import Union
@@ -69,6 +71,8 @@ def plot_savefig(
     path: Optional[PathType] = None,
     **kwargs,
 ):
+    if not hasattr(obj, 'path') and path is None:
+        return
     if hasattr(obj, 'path'):
         path = Path(obj.path)
     else:
