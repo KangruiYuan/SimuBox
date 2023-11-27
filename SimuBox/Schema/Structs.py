@@ -97,10 +97,10 @@ class PointInfo(ExtendedModel):
 
 class PeakInfo(ExtendedModel):
 
-    amplitude: float
-    center: float
-    width: float
-    background: float
+    center: Optional[float]
+    amplitude: Optional[float] = None
+    width: Optional[float] = None
+    background: Optional[float] = None
 
 class PeakFitResult(ExtendedModel):
 

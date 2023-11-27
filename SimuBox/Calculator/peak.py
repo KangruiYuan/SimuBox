@@ -2,7 +2,7 @@ import numpy as np
 from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
-from typing import Iterable, Union, Callable, Optional
+from typing import Iterable, Union, Callable, Optional, Sequence
 from ..Schema import NumericType, PeakInfo, PeakFitResult
 from ..Artist import plot_legend, plot_savefig
 
@@ -27,6 +27,33 @@ def curve_function(x: Union[Iterable, NumericType], *params):
     return res + params[-1]
 
 
+def fix_param(params: np.ndarray, fix: Sequence):
+    assert len(params) % 3 == 1
+    fixed = []
+    for i in range(0, len(params) - 1, 3):
+        for idj, j in enumerate(fix[:-1]):
+            idi = i + idj
+            if j:
+                fixed.append(params[idi])
+            else:
+                fixed.append(-1)
+    if fix[-1]:
+        fixed.append(params[-1])
+    else:
+        fixed.append(-1)
+    fixed = np.array(fixed)
+
+    def curve(x: Union[Iterable, NumericType], *args):
+        args = np.array(args)
+        args[fixed != -1] = fixed[fixed != -1]
+        res = 0
+        for i in range(0, len(args) - 1, 3):
+            res += gaussian_expansion(x, params[i], params[i + 1], params[i + 2])
+        return res + args[-1]
+
+    return curve
+
+
 def curve_split(x: Union[Iterable, NumericType], *params):
     assert len(params) % 3 == 1
     res = []
@@ -41,30 +68,57 @@ def curve_split(x: Union[Iterable, NumericType], *params):
 def peak_fit(
     x: np.ndarray,
     y: np.ndarray,
-    peaks: np.ndarray,
+    peaks: Sequence[PeakInfo],
     func: Callable = curve_function,
-    amplitudes: Optional[np.ndarray] = None,
-    widths: Optional[np.ndarray] = None,
-    background: Optional[NumericType] = None,
+    fix: Sequence[bool] = (False, False, False, False),
+    # peaks: np.ndarray,
+    # amplitudes: Optional[np.ndarray] = None,
+    # widths: Optional[np.ndarray] = None,
+    # background: Optional[NumericType] = None,
     plot: bool = True,
     **kwargs
 ):
     x = np.asarray(x)
     y = np.asarray(y)
     y = y - y.min()
-    background = background if background is not None else y.mean() / 4
-    amplitudes = (
-        amplitudes if amplitudes is not None else [float(y.mean() / 2)] * len(peaks)
-    )
-    widths = (
-        widths
-        if widths is not None
-        else [float(np.diff(peaks).mean() / 4)] * len(peaks)
-    )
+    centers = [p.center for p in peaks]
+    backgrounds = [p.background for p in peaks if p.background is not None]
+    if backgrounds:
+        background = np.mean(backgrounds)
+    else:
+        background = y.mean() / 4
 
-    guess = np.array(list(zip(amplitudes, peaks, widths))).flatten()
+    amplitudes = []
+    widths = []
+    base_amplitude = float(y.mean() / 2)
+    base_width = float(np.diff(centers).mean() / 4)
+    for p in peaks:
+        amplitudes.append(p.amplitude if p.amplitude is not None else base_amplitude)
+        widths.append(p.width if p.width is not None else base_width)
+
+    guess = np.array(list(zip(amplitudes, centers, widths))).flatten()
     guess = np.append(guess, background)
-    popt, _ = curve_fit(func, x, y, p0=guess)
+
+    ub = []
+    lb = []
+    lb_scale, ub_scale = kwargs.get('scale', (0.995, 1.095))
+    for i in range(len(amplitudes)):
+        for j, f in enumerate(fix[:-1]):
+            if f:
+                lb.append(max(guess[3 * i + j] * lb_scale, 0))
+                ub.append(guess[3 * i + j] * ub_scale)
+            else:
+                lb.append(0)
+                ub.append(np.inf)
+
+    if fix[-1]:
+        lb.append(max(guess[-1] * lb_scale, 0))
+        ub.append(guess[-1] * ub_scale)
+    else:
+        lb.append(0)
+        ub.append(np.inf)
+
+    popt, _ = curve_fit(func, x, y, p0=guess, bounds=(lb, ub))
 
     fit = func(x, *popt)
     y_split = curve_split(x, *popt)
@@ -83,9 +137,9 @@ def peak_fit(
         plt.tight_layout()
         plot_savefig(**kwargs)
 
-    peaks = []
+    res_peaks = []
     for i in range(0, len(popt) - 1, 3):
-        peaks.append(
+        res_peaks.append(
             PeakInfo(
                 amplitude=popt[i],
                 center=popt[i + 1],
@@ -94,5 +148,5 @@ def peak_fit(
             )
         )
     return PeakFitResult(
-        raw_x=x, raw_y=y, peaks=peaks, fitted_curve=fit, split_curve=y_split
+        raw_x=x, raw_y=y, peaks=res_peaks, fitted_curve=fit, split_curve=y_split
     )
