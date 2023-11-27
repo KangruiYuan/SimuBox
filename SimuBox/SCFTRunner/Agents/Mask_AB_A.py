@@ -1,18 +1,13 @@
-from .agent_base import *
-
-
-def Mask_AB_AB(pn, pv, input_dict):
+from .MixinModel import *
+def Mask_AB_A(pn, pv, input_dict):
     input_dict["Scripts"][pn] = pv
 
     if pn == "fA":
-        global fA
-        fA = pv
         input_dict["Block"][0]["ContourLength"] = pv
         input_dict["Block"][1]["ContourLength"] = round(1 - pv, 6)
-        input_dict["Block"][2]["ContourLength"] = pv
 
-    elif pn == "gamma_AB":
-        input_dict["Block"][3]["ContourLength"] = round(pv - fA, 6)
+    elif pn == "gamma_B":
+        input_dict["Block"][2]["ContourLength"] = pv
 
     elif pn == "xN":
         input_dict["Component"]["FloryHugginsInteraction"][0][

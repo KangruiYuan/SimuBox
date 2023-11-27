@@ -7,7 +7,7 @@ from collections import OrderedDict
 from enum import Enum
 from itertools import chain, product
 from pathlib import Path
-from typing import Any, Callable, Union
+from typing import Any, Union, Callable
 
 import numpy as np
 
@@ -53,7 +53,7 @@ class Options:
     anderson: bool = True
     ergodic: bool = True
 
-    function: Callable
+    function: Union[Callable, Any]
 
     clean: bool = True
 

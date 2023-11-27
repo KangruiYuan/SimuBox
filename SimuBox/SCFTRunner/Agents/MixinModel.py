@@ -1,8 +1,20 @@
+from abc import abstractmethod
 from collections import OrderedDict
+from typing import Any
+
 from ..Phases import PhaseInit
 from ..Utils import Cells, Options
 
-class MixinBlockPolymer:
+
+class MixinAgent:
+    def __call__(self, *args, **kwargs):
+        self.modify(*args, **kwargs)
+
+    @abstractmethod
+    def modify(self,  pn: str, pv: Any, input_dict: OrderedDict, options: Options):
+        pass
+
+class MixinBlockPolymer(MixinAgent):
 
     def __init__(self, input_dict: OrderedDict):
         self.input_dict = input_dict
@@ -25,6 +37,7 @@ class MixinBlockPolymer:
             self.input_dict["Initializer"]["UnitCell"]["Length"][Cells[key].value] = value
     def get(self, *args):
         return [self[arg] for arg in args]
+
 
 def around(number, accuracy: int = 6):
     return round(number, accuracy)
