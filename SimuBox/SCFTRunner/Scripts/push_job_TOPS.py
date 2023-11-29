@@ -1,9 +1,9 @@
 from collections import OrderedDict
 
 try:
-    from SCFTRunner import BABCB, SCFTManager, Options, arange, WHICH
+    from SCFTRunner import BABCB, SCFTManager, Options, arange, Servers
 except ImportError:
-    from SimuBox import BABCB, SCFTManager, Options, arange, WHICH
+    from SimuBox import BABCB, SCFTManager, Options, arange, Servers
 
 import platform
 
@@ -23,7 +23,7 @@ opts.combine_paradict = OrderedDict(
     phase=[["C4", "Crect"], "1"],
 )
 opts.init_phin = ["DG", "NaCl", "CsCl"]
-opts.which = WHICH.cpuTOPS
+opts.which = Servers.cpuTOPS
 SCFTManager.opts = opts
 
 if __name__ == "__main__":

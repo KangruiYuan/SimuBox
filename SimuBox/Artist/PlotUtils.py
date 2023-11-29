@@ -69,8 +69,11 @@ def plot_savefig(
     suffix: str = "",
     dpi: int = 150,
     path: Optional[PathType] = None,
+    save: Optional[bool] = None,
     **kwargs,
 ):
+    if not save:
+        return
     if not hasattr(obj, 'path') and path is None:
         return
     if hasattr(obj, 'path'):

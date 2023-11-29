@@ -7,7 +7,7 @@ from collections import OrderedDict
 from enum import Enum
 from itertools import chain, product
 from pathlib import Path
-from typing import Any, Union, Callable
+from typing import Any, Callable, Union, Sequence
 
 import numpy as np
 
@@ -32,15 +32,17 @@ class Cells(int, Enum):
     lx = 0
     ly = 1
     lz = 2
-    alpha = 3
-    beta = 4
-    gamma = 5
 
 
-class WHICH(str, Enum):
+class Servers(str, Enum):
     cpuTOPS = "cpuTOPS"
     gpuSCFT = "gpuSCFT"
     gpuTOPS = "gpuTOPS"
+
+
+class Ensemble(str, Enum):
+    CANONICAL = "CANONICAL"
+    GRANDCANONICAL = "GRANDCANONICAL"
 
 
 class Options:
@@ -51,6 +53,8 @@ class Options:
 
     cell: bool = True
     anderson: bool = True
+    ensemble: Ensemble = Ensemble.CANONICAL
+
     ergodic: bool = True
 
     function: Union[Callable, Any]
@@ -69,7 +73,7 @@ class Options:
     #     gpuTOPS=f"srun --gpus=rtx_3090:1 --cpus-per-gpu=1 --partition=amd_3090 --gpus=1 -w gpu04 /home/share/TOPS2020/TOPS_device -j -i={json_name} > aa.txt 2>&1 &",
     # )
 
-    which: WHICH = WHICH.cpuTOPS
+    which: Servers = Servers.cpuTOPS
 
     phase_base: str = "/mnt/sdd/kryuan/bcbab/PhoutLib/"
 
@@ -178,11 +182,11 @@ class SCFTManager:
             arr_len = np.inf
             ParaList = []
             for val in cls.opts.combine_paradict.values():
-                if not isinstance(val[0], (np.ndarray, list)):
+                if not isinstance(val[0], (np.ndarray, Sequence)):
                     ParaList.append([val[0]])
+                    # arr_len = min(arr_len, 1)
                 else:
-                    if 1 < len(val[0]) < arr_len:
-                        arr_len = len(val[0])
+                    arr_len = min(arr_len, len(val[0]))
                     ParaList.append(val[0])
             assert arr_len != np.inf
             if cls.opts.ergodic:
@@ -281,11 +285,11 @@ class SCFTManager:
 
                 if phase in cls.opts.gpuSCFT_require:
                     _ = sp.Popen(
-                        cls.opts.worker[WHICH.gpuSCFT], shell=True, stdout=sp.PIPE
+                        cls.opts.worker[Servers.gpuSCFT], shell=True, stdout=sp.PIPE
                     )
                 elif phase in cls.opts.gpuTOPS_require:
                     _ = sp.Popen(
-                        cls.opts.worker[WHICH.gpuTOPS], shell=True, stdout=sp.PIPE
+                        cls.opts.worker[Servers.gpuTOPS], shell=True, stdout=sp.PIPE
                     )
                 else:
                     _ = sp.Popen(

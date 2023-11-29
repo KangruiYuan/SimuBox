@@ -57,12 +57,12 @@ class PhaseDiagram:
 
     def query_point(
         self,
-        df: pd.DataFrame,
+        data: pd.DataFrame,
         xval: Optional[Union[float, str, int]] = None,
         yval: Optional[Union[float, str, int]] = None,
         **kwargs,
     ):
-        res = df.copy()
+        res = data.copy()
         columns = res.columns
         if xval:
             res = res[res[self.xlabel] == xval]
@@ -353,13 +353,13 @@ class PhaseDiagram:
                     if self.check_phase(ele_left_1, ele_right_1, ignore):
                         continue
                     ele_left_2: pd.DataFrame = self.query_point(
-                        df=df,
+                        data=df,
                         xval=ele_left_1.x,
                         yval=ele_left_1.y,
                         phase=ele_right_1.phase,
                     )
                     ele_right_2: pd.DataFrame = self.query_point(
-                        df=df,
+                        data=df,
                         xval=ele_right_1.x,
                         yval=ele_right_1.y,
                         phase=ele_left_1.phase,
@@ -390,13 +390,13 @@ class PhaseDiagram:
                         continue
 
                     ele_left_2: pd.DataFrame = self.query_point(
-                        df=df,
+                        data=df,
                         xval=ele_left_1.x,
                         yval=ele_left_1.y,
                         phase=ele_right_1.phase,
                     )
                     ele_right_2: pd.DataFrame = self.query_point(
-                        df=df,
+                        data=df,
                         xval=ele_right_1.x,
                         yval=ele_right_1.y,
                         phase=ele_left_1.phase,

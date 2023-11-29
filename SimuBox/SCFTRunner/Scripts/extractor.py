@@ -1,46 +1,23 @@
 import argparse
+from argparse import Namespace
 import csv
 import json
 import os
 import re
 import subprocess as sp
-from collections import ChainMap, OrderedDict, defaultdict
+from collections import OrderedDict, defaultdict
 from itertools import combinations
 from pathlib import Path
-from typing import Any, Union
+from typing import Any, Union, Sequence
+from tqdm import tqdm
 
 from push_job_TOPS import opts
-
-parser = argparse.ArgumentParser()
-parser.add_argument("-n", "--name", default="", type=str)
-parser.add_argument("-t", "--terminal", default="WORKING_DIR", type=str)
-parser.add_argument("-w", "--where", default="", type=str)
-parser.add_argument("-a", "--all", action="store_true", default=False)
-args = parser.parse_args()
-
-cmd_lxlylz = "tail -3 printout.txt | head -1"
-cmd_freeE_MaxC = "tail -1 printout.txt | head -1"
-lxlylz_re = re.compile("[.0-9]+(?!e)")
-freeE_re = re.compile("[.0-9e+-]+")
-
-parent_folder = Path.cwd()
-working_directory = parent_folder / args.terminal
-subdirectories = [item for item in working_directory.iterdir() if item.is_dir()]
-
-
-output_csv_name = args.name or parent_folder.name
-output_csv_path = parent_folder / output_csv_name
-if output_csv_path.suffix != ".csv":
-    output_csv_path = output_csv_path.with_suffix(".csv")
-
-
-wrong_list = list()
 
 
 def check_files(files: list[Union[str, Path]]):
     for file in files:
         if not os.path.isfile(file):
-            print(f"Absent: {file}")
+            print(f"Absent: {file}".center(50, "*"))
             return False
     return True
 
@@ -54,8 +31,8 @@ def check_result(res: dict):
     if round(res["freeE_dis"] - res["freeE"], 3) == 0:
         res["phase"] = "Disorder"
 
-    if (res["which_type"] == "cpu" and res["target_comp"] < res["CompMax"]) or (
-        res["which_type"] == "gpu" and res["target_comp"] * 1e3 < res["CompMax"]
+    if (res["server"] == "cpu" and res["target_comp"] < res["CompMax"]) or (
+        res["server"] == "gpu" and res["target_comp"] * 1e3 < res["CompMax"]
     ):
         print("CompMax not satisfied")
         return False
@@ -63,13 +40,18 @@ def check_result(res: dict):
         return True
 
 
-def stats_component(json_dict: dict):
+def stats_component(inputs: dict):
+    total_stats = {}
+    # specy_stats = inputs["Specy"]
+    # for specy in specy_stats:
+    #     total_stats[f"phi{specy['SpecyID']}"] = specy["VolumeFraction"]
+
     comp_stats = defaultdict(float)
-    for i in json_dict["Block"]:
+    for i in inputs["Block"]:
         comp_stats[i["ComponentName"]] += i["ContourLength"]
 
     xN_stats = {}
-    for i in json_dict["Component"]["FloryHugginsInteraction"]:
+    for i in inputs["Component"]["FloryHugginsInteraction"]:
         xN_stats[f"x{i['FirstComponentName']}{i['SecondComponentName']}N"] = i[
             "FloryHugginsParameter"
         ]
@@ -77,151 +59,148 @@ def stats_component(json_dict: dict):
             "FloryHugginsParameter"
         ]
 
-    freeUComp = {}
-    for one, two in combinations(comp_stats.keys(), 2):
-        freeUComp[f"freeU{one}{two}"] = (
-            comp_stats[one] * comp_stats[two] * xN_stats[f"x{one}{two}N"]
+    freeU_stats = {}
+    for kind1, kind2 in combinations(comp_stats.keys(), 2):
+        freeU_stats[f"freeU{kind1}{kind2}"] = (
+            comp_stats[kind1] * comp_stats[kind2] * xN_stats[f"x{kind1}{kind2}N"]
         )
 
-    total_stats = {}
     total_stats.update(comp_stats)
     total_stats.update(xN_stats)
-    # total_stats.update(freeUComp)
-    total_stats["freeE_dis"] = sum(freeUComp.values())
+    total_stats["freeE_dis"] = sum(freeU_stats.values())
     return total_stats
 
 
-columns: set[str] = set()
-datas: list[dict[str, Any]] = []
+def collect(
+    subdirectories: list[Path],
+    args: Namespace,
+):
+    missions_list = list()
+    columns: set[str] = set()
+    datas: list[dict[str, Any]] = []
+    dsp = "COLLECTING" if args.all else "WRONG"
 
-desp = "REPUSH" if args.all else "WRONG"
-
-for subdir in subdirectories:
-    os.chdir(subdir)
-    if not check_files(files=["printout.txt", opts.json_name]):
-        print(str(subdir).center(50, "*"))
-        continue
-    with open(opts.json_name, mode="r") as fp:
-        json_data = json.load(fp, object_pairs_hook=OrderedDict)
-
-    stats_res = stats_component(json_data)
-
-    scripts = json_data["Scripts"]
-    which_type = json_data["Scripts"].get("cal_type", "cpu")
-    target_comp = json_data["Iteration"]["IncompressibilityTarget"]
-    data = {}
-    data.update(scripts)
-    data.update(stats_res)
-    data["which_type"] = which_type
-    data["target_comp"] = target_comp
-    if which_type == "cpu":
-        popen_freeE_MaxC = sp.Popen(
-            cmd_freeE_MaxC, shell=True, stdout=sp.PIPE, stderr=sp.PIPE
-        )
-        popen_freeE_MaxC.wait()
-        line_freeE_MaxC = popen_freeE_MaxC.stdout.readline()
-
-        uws = list(
-            map(
-                float,
-                freeE_re.findall(str(line_freeE_MaxC, encoding="UTF-8").strip()),
-            )
-        )
-
-        data.update(
-            dict(
-                step=int(uws[0]),
-                freeE=uws[1],
-                freeU=uws[2],
-                freeWS=uws[3] + uws[4],
-                CompMax=uws[-1],
-            )
-        )
-
-        popen_lxlylz = sp.Popen(cmd_lxlylz, shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
-        popen_lxlylz.wait()
-        line_lxlylz = popen_lxlylz.stdout.readline()
-
-        lxlylz = list(
-            map(
-                lambda x: round(float(x), 6),
-                str(line_lxlylz, encoding="UTF-8").strip().split(" "),
-            )
-        )
-        data.update(
-            {
-                _k: _v
-                for _k, _v in zip(["lx", "ly", "lz", "alpha", "beta", "gamma"], lxlylz)
-            }
-        )
-
-    else:
-        if not check_files(files=["fet.dat"]):
-            print(str(subdir).center(50, "*"))
+    for subdir in tqdm(subdirectories):
+        os.chdir(subdir)
+        if not check_files(files=["printout.txt", opts.json_name]):
             continue
-        cont = open("fet.dat", "r").readlines()
-        cont = [i.strip().split(" ")[1:] for i in cont if i.split(" ")[1:]]
-        cont = {line[0]: float(line[1]) for line in cont if len(line) == 2}
+        with open(opts.json_name, mode="r") as fp:
+            json_data = json.load(fp, object_pairs_hook=OrderedDict)
 
-        data.update(
-            dict(
-                freeE=cont["freeEnergy"],
-                freeU=cont["freeAB_sum"],
-                freeWS=cont["freeW"] + cont["freeS"],
-                CompMax=cont["inCompMax"],
+        data = {}
+        scripts = json_data["Scripts"]
+        data.update(scripts)
+        stats_res = stats_component(json_data)
+        data.update(stats_res)
+        server_before = json_data["Scripts"].get("cal_type", "cpu")
+        data["server"] = server_before
+        data["target_comp"] = json_data["Iteration"]["IncompressibilityTarget"]
+        if server_before == "cpu":
+            popen_freeE_MaxC = sp.Popen(
+                cmd_freeE_MaxC, shell=True, stdout=sp.PIPE, stderr=sp.PIPE
             )
-        )
-        data.update(cont)
-    columns = columns.union(set(data.keys()))
+            popen_freeE_MaxC.wait()
+            line_freeE_MaxC = popen_freeE_MaxC.stdout.readline()
 
-    if check_result(data) and not args.all:
-        datas.append(data.copy())
-    else:
-        if not args.all:
-            print(f"{desp}: {subdir}")
-        wrong_list.append(
-            {
-                "path": subdir,
-                "lxlylz": [
-                    data.get(n, 0) for n in ["lx", "ly", "lz", "alpha", "beta", "gamma"]
-                ],
-                "step": data.get("step", 2000),
-                "type": which_type,
-            }
-        )
+            uws = list(
+                map(
+                    float,
+                    freeE_re.findall(str(line_freeE_MaxC, encoding="UTF-8").strip()),
+                )
+            )
 
-with open(output_csv_path, "w", newline="") as csvfile:
-    writer = csv.writer(csvfile)
-    columns_list: list = sorted(list(columns))
-    writer.writerow(columns_list)
-    for data in datas:
-        writer.writerow([data.get(c, 0) for c in columns_list])
+            data.update(
+                dict(
+                    step=int(uws[0]),
+                    freeE=uws[1],
+                    freeU=uws[2],
+                    freeWS=uws[3] + uws[4],
+                    CompMax=uws[-1],
+                )
+            )
+
+            popen_lxlylz = sp.Popen(
+                cmd_lxlylz, shell=True, stdout=sp.PIPE, stderr=sp.PIPE
+            )
+            popen_lxlylz.wait()
+            line_lxlylz = popen_lxlylz.stdout.readline()
+
+            lxlylz = list(
+                map(
+                    lambda x: round(float(x), 6),
+                    str(line_lxlylz, encoding="UTF-8").strip().split(" "),
+                )
+            )
+            data.update(
+                {
+                    _k: _v
+                    for _k, _v in zip(
+                        ["lx", "ly", "lz", "alpha", "beta", "gamma"], lxlylz
+                    )
+                }
+            )
+
+        else:
+            if not check_files(files=["fet.dat"]):
+                continue
+            cont = open("fet.dat", "r").readlines()
+            cont = [i.strip().split(" ")[1:] for i in cont if i.split(" ")[1:]]
+            cont = {line[0]: float(line[1]) for line in cont if len(line) == 2}
+
+            data.update(
+                dict(
+                    freeE=cont["freeEnergy"],
+                    freeU=cont["freeAB_sum"],
+                    freeWS=cont["freeW"] + cont["freeS"],
+                    CompMax=cont["inCompMax"],
+                )
+            )
+            data.update(cont)
+        columns = columns.union(set(data.keys()))
+
+        if check_result(data) and not args.all:
+            datas.append(data.copy())
+        else:
+            if not args.all:
+                print(f"{dsp}: {subdir}")
+            missions_list.append(
+                {
+                    "path": subdir,
+                    "lxlylz": [
+                        data.get(n, 0)
+                        for n in ["lx", "ly", "lz", "alpha", "beta", "gamma"]
+                    ],
+                    "step": data.get("step", 2000),
+                    "server": server_before,
+                }
+            )
+    return datas, columns, missions_list
 
 
-def RepushOrDelete(wrongList):
-    if len(wrongList) == 0:
-        print("Everything is ok~ Have a good time!")
+def dispatch(missions: list):
+    if len(missions) == 0:
+        print("所有数据无显著错误，祝您生活愉快。")
         return
-    mode = input("Delete(d) / Continue(c) / Repush(r)?(d/c/r/[pass])") or "pass"
+    mode = input("删除(d) / 续跑(c) / 重投(r) / 跳过(其他任意键)? (d/c/r/[pass])") or "pass"
     if mode == "c":
-        for i in wrongList:
-            tmp_path = i["path"]
-            os.chdir(tmp_path)
+        for mission in missions:
+            mission_folder = mission["path"]
+            os.chdir(mission_folder)
             with open(opts.json_name, mode="r") as fp:
                 json_base = json.load(fp, object_pairs_hook=OrderedDict)
-            new_type = args.where or i["type"]
+            server = args.server or mission["server"]
             json_base["Scripts"]["cal_type"] = (
-                new_type if os.path.isfile("phout.txt") else "cpu"
+                server if os.path.isfile("phout.txt") else "cpu"
             )
-            json_base["Iteration"]["MaxStep"] = i["step"]
-            json_base["Initializer"]["UnitCell"]["Length"] = i["lxlylz"]
+            json_base["Iteration"]["MaxStep"] = mission["step"]
+            json_base["Initializer"]["UnitCell"]["Length"] = mission["lxlylz"]
             if os.path.isfile("phout.txt"):
                 sp.call("cp phout.txt phin.txt", shell=True, stdout=sp.PIPE)
                 json_base["Initializer"]["Mode"] = "FILE"
                 json_base["Initializer"]["FileInitializer"] = {
                     "Mode": "OMEGA",
                     "Path": "phin.txt",
-                    "SkipLineNumber": 1 if i["type"] == "cpu" else 2,
+                    "SkipLineNumber": 1 if mission["server"] == "cpu" else 2,
                 }
                 json_base["Iteration"]["AndersonMixing"]["Switch"] = "AUTO"
 
@@ -232,22 +211,61 @@ def RepushOrDelete(wrongList):
                 job = sp.Popen(opts.worker["gpuSCFT"], shell=True, stdout=sp.PIPE)
             else:
                 job = sp.Popen(opts.worker["cpuTOPS"], shell=True, stdout=sp.PIPE)
-            print("{pid}:{path}".format(pid=job.pid, path=tmp_path))
+            print(f"续跑任务({job.pid}):{mission_folder}")
     elif mode == "r":
-        for i in wrongList:
-            tmp_path = i["path"]
-            os.chdir(tmp_path)
-            new_type = args.where or i["type"]
-            if new_type == "gpu":
+        for mission in missions:
+            mission_folder = mission["path"]
+            os.chdir(mission_folder)
+            server = args.server or mission["server"]
+            if server == "gpu":
                 job = sp.Popen(opts.worker["gpuSCFT"], shell=True, stdout=sp.PIPE)
             else:
                 job = sp.Popen(opts.worker["cpuTOPS"], shell=True, stdout=sp.PIPE)
-            print("{pid}:{path}".format(pid=job.pid, path=tmp_path))
+            print(f"重投任务({job.pid}):{mission_folder}")
     elif mode == "d":
-        for i in wrongList:
-            tmp_path = str(i["path"])
-            sp.Popen("rm -r " + tmp_path, shell=True, stdout=sp.PIPE)
-        print("Delete finished!")
+        for mission in missions:
+            mission_folder = str(mission["path"])
+            sp.Popen("rm -r " + mission_folder, shell=True, stdout=sp.PIPE)
+        print("全部有误文件夹均已删除。")
 
 
-RepushOrDelete(wrong_list)
+def write_to_csv(
+    path: Union[Path, str], datas: list[dict[str, Any]], columns: Union[Sequence, set]
+):
+    with open(path, "w", newline="") as csvfile:
+        writer = csv.writer(csvfile)
+        columns_list: list = sorted(list(columns))
+        writer.writerow(columns_list)
+        for data in datas:
+            writer.writerow([data.get(c, 0) for c in columns_list])
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-n", "--name", default="", type=str)
+    parser.add_argument("-t", "--terminal", default="WORKING_DIR", type=str)
+    parser.add_argument("-s", "--server", default="", type=str)
+    parser.add_argument("-a", "--all", action="store_true", default=False)
+    args = parser.parse_args()
+
+    cmd_lxlylz = "tail -3 printout.txt | head -1"
+    cmd_freeE_MaxC = "tail -1 printout.txt | head -1"
+    lxlylz_re = re.compile("[.0-9]+(?!e)")
+    freeE_re = re.compile("[.0-9e+-]+")
+
+    parent_folder = Path.cwd()
+    working_directory = parent_folder / args.terminal
+    subdirectories = [item for item in working_directory.iterdir() if item.is_dir()]
+
+    output_csv_name = args.name or parent_folder.name
+    output_csv_path = parent_folder / output_csv_name
+    if output_csv_path.suffix != ".csv":
+        output_csv_path = str(output_csv_path) + ".csv"
+
+    datas, columns, missions_list = collect(subdirectories, args)
+
+    print("数据收集完成，写入中。")
+
+    write_to_csv(output_csv_path, datas, columns)
+
+    dispatch(missions_list)

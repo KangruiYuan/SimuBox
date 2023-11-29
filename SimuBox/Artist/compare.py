@@ -4,6 +4,7 @@ from typing import Optional, Union, Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 from cycler import cycler
 
 from collections import ChainMap
@@ -76,6 +77,9 @@ class CompareJudger:
             ChainMap(abs_labels, AbsCommon) if abs_labels is not None else AbsCommon
         )
 
+    def data(self, **kwargs):
+        return read_csv(self.path, **kwargs)
+
     def diff_comparison(
         self,
         base: str,
@@ -83,11 +87,12 @@ class CompareJudger:
         xlabel: str,
         ylabel: Union[str, list[str]],
         horiline: Literal["all", "mask", None] = "all",
-        save: Optional[Union[Path, str, bool]] = True,
+        save: Optional[bool] = True,
+        data: Optional[pd.DataFrame] = None,
         **kwargs,
     ):
 
-        data = read_csv(self.path, **kwargs)
+        data = self.data(**kwargs) if data is None else data
         data = data.sort_values(by=xlabel)
 
         if isinstance(ylabel, list):
@@ -159,7 +164,7 @@ class CompareJudger:
             )
 
         plot_trans(**kwargs)
-        plot_locators(**kwargs)
+        plot_locators(ax=ax, **kwargs)
         plot_legend(**kwargs)
 
         plt.tick_params(axis="both", labelsize=25, pad=8)
@@ -169,7 +174,7 @@ class CompareJudger:
         if margin := kwargs.get("margin", (0.15, 0.15)):
             plt.margins(*margin)
         plt.tight_layout()
-        plot_savefig(self, prefix="diff", suffix=ylabel)
+        plot_savefig(self, prefix="diff", suffix=ylabel, save=save, **kwargs)
         plt.show()
 
     def abs_comparison(
@@ -178,10 +183,11 @@ class CompareJudger:
         ylabel: Union[str, list[str]],
         phases: Optional[Union[list[str], str]] = None,
         save: Optional[Union[Path, str, bool]] = True,
+        data: Optional[pd.DataFrame] = None,
         **kwargs,
     ):
 
-        data = read_csv(self.path, **kwargs)
+        data = self.data(**kwargs) if data is None else data
         data = data.sort_values(by=xlabel)
 
         phases = (
@@ -217,14 +223,14 @@ class CompareJudger:
         plt.tick_params(axis="both", labelsize=25, pad=8)
 
         plot_trans(**kwargs)
-        plot_locators(**kwargs)
+        plot_locators(ax=ax, **kwargs)
         plot_legend(**kwargs)
 
         if margin := kwargs.get("margin", (0.15, 0.15)):
             plt.margins(*margin)
 
         plt.tight_layout()
-        plot_savefig(self, prefix="abs", suffix=ylabel)
+        plot_savefig(self, prefix="abs", suffix=ylabel, save=save)
         plt.show()
 
     def multi_target_ref(
@@ -234,9 +240,11 @@ class CompareJudger:
         xlabel: str,
         ylabels: Union[str, list[str]],
         ylabel_name: str,
+        save: Optional[bool] = True,
+        data: Optional[pd.DataFrame] = None,
         **kwargs,
     ):
-        data = read_csv(self.path, **kwargs)
+        data = self.data(**kwargs) if data is None else data
         data = data.sort_values(by=xlabel)
 
         plt.figure(figsize=kwargs.get("figsize", (8, 6)))
@@ -271,7 +279,7 @@ class CompareJudger:
             )
 
         plot_trans(**kwargs)
-        plot_locators(**kwargs)
+        plot_locators(ax=ax, **kwargs)
         plot_legend(**kwargs)
 
         plt.tick_params(axis="both", labelsize=25, pad=8)
@@ -283,5 +291,5 @@ class CompareJudger:
             plt.margins(*margin)
 
         plt.tight_layout()
-        plot_savefig(self, prefix="multi", suffix=ylabel_name, **kwargs)
+        plot_savefig(self, prefix="multi", suffix=ylabel_name, save=save, **kwargs)
         plt.show()

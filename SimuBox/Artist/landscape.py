@@ -43,9 +43,10 @@ class Landscaper:
             ChainMap(labels, CommonLabels) if labels is not None else CommonLabels
         )
 
-    @cached_property
-    def data(self):
-        return read_csv(self.path, subset=["ly", "lz", "freeE", "phase"])
+    def data(self, **kwargs):
+        if "subset" not in kwargs:
+            kwargs["subset"] = ["ly", "lz", "freeE", "phase"]
+        return read_csv(self.path, **kwargs)
 
     @staticmethod
     def get_w_s(num: np.ndarray, Res: int):
@@ -53,7 +54,7 @@ class Landscaper:
         return 10 ** (-abs(xs[2]) - Res)  # type: ignore
 
     @staticmethod
-    def levels_IQ(contour_set, levels: list[float] = None):
+    def levels_IQ(contour_set, levels: list[float] = None, **kwargs):
         # 获取等高面的信息
         if levels is None:
             levels = [0.001, 0.01]
@@ -79,13 +80,12 @@ class Landscaper:
         AxisY: str = "lz",
         Vals: str = "freeE",
         precision: int = 3,
-        save: Optional[Union[Path, str, bool]] = True,
+        save: Optional[bool] = True,
         tick_num: int = 11,
         asp: Union[str, float, int] = 1,
         **kwargs,
     ):
-        df: pd.DataFrame = self.data
-        # df: pd.DataFrame = deepcopy(df)
+        df: pd.DataFrame = self.data(**kwargs)
         ly = np.sort(df[AxisX].unique())
         lz = np.sort(df[AxisY].unique())
         min_data = df[df[Vals] == df[Vals].min()]
@@ -182,7 +182,7 @@ class Landscaper:
         plot_locators(**kwargs)
 
         plt.tight_layout()
-        plot_savefig(self)
+        plot_savefig(self, save=save, **kwargs)
         plt.show()
 
         return LandscapeResult(
