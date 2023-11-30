@@ -8,6 +8,7 @@ from matplotlib.ticker import AutoMinorLocator, MultipleLocator
 from ..Schema import PathType, ColorType
 from typing import Union
 
+
 def init_plot_config(config: dict):
     plt.rcParams.update(config)
 
@@ -68,32 +69,45 @@ def plot_savefig(
     prefix: str = "",
     suffix: str = "",
     dpi: int = 150,
-    path: Optional[PathType] = None,
-    save: Optional[bool] = None,
+    save: Union[PathType, bool] = False,
     **kwargs,
 ):
-    if not save:
-        return
-    if not hasattr(obj, 'path') and path is None:
-        return
-    if hasattr(obj, 'path'):
-        path = Path(obj.path)
+    if isinstance(save, bool):
+        if not save:
+            return
+        else:
+            assert hasattr(obj, "path"), "不支持自动保存，请传递路径信息给参数save"
+            path = Path(obj.path)
+    elif isinstance(save, PathType):
+        path = Path(save)
     else:
-        path = Path(path)
+        raise ValueError(f"save类型应为[Path, str, bool], 而当前是{type(save)}")
+
+    stem = path.stem
+    stem = prefix + "_" + stem if prefix else stem
+    stem = stem + "_" + suffix if suffix else stem
     if path.is_file():
-        stem = path.stem
-        stem = prefix + "_" + stem if prefix else stem
-        stem = stem + "_" + suffix if suffix else stem
         path = path.parent / ".".join((stem, kwargs.get("fig_format", "png")))
     elif path.is_dir():
-        path = path / ".".join((path.stem, kwargs.get("fig_format", "png")))
+        path = path / ".".join((stem, kwargs.get("fig_format", "png")))
     plt.savefig(path, dpi=dpi)
 
-def generate_colors(mode: Union[str, ColorType] = ColorType.RGB, num: int = 1):
+
+def generate_colors(
+    mode: Union[str, ColorType] = ColorType.RGB, num: int = 1, linear: bool = True
+):
     if mode == ColorType.RGB:
         color = np.random.choice(range(256), size=(num, 3)).tolist()
     elif mode == ColorType.HEX:
-        color = ["#" + "".join(i) for i in np.random.choice(list("0123456789ABCDEF"), size=(num, 6))]
+        color = [
+            "#" + "".join(i)
+            for i in np.random.choice(list("0123456789ABCDEF"), size=(num, 6))
+        ]
+    elif mode == ColorType.L:
+        if linear:
+            color = np.linspace(0, 255, num, dtype=int).tolist()
+        else:
+            color = np.random.choice(range(256), size=num).tolist()
     else:
         raise NotImplementedError(mode.value)
     return color

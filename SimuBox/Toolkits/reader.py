@@ -3,7 +3,7 @@ import os
 import re
 from collections import OrderedDict
 from pathlib import Path
-from typing import Optional, Iterable, Union
+from typing import Optional, Iterable, Union, Sequence
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -112,7 +112,7 @@ def read_fet(path: PathType):
 
 def parse_density(
     density: Density,
-    target: Optional[Union[int, Iterable[int]]] = 0,
+    target: Union[int, Iterable[int]] = 0,
     permute: Optional[Iterable[int]] = None,
 ):
     assert density.shape is not None, "需要指定shape属性"
@@ -131,6 +131,25 @@ def parse_density(
         return [density.data[t].values.reshape(shape) for t in target], shape, lxlylz
     else:
         raise TypeError("Check the type for param: target")
+
+
+def tile_density(
+    density: Density,
+    target: int = 0,
+    permute: Optional[Iterable[int]] = None,
+    expand: Union[int, Sequence[int]] = 3,
+    **kwargs,
+):
+    mat, shape, lxlylz = parse_density(density, target, permute)
+    if isinstance(expand, int):
+        expand = [3] * mat.ndim
+    else:
+        assert len(expand) == mat.ndim
+    expand = np.array(expand)
+    mat = np.tile(mat, expand)
+    shape = shape * expand
+    lxlylz = lxlylz * expand
+    return mat, shape, lxlylz
 
 
 class InfoReader:

@@ -26,6 +26,8 @@ class IntEnum(int, ExtendedEnum):
 class ColorType(StrEnum):
     RGB = "RGB"
     HEX = "HEX"
+    L = "L"
+    # RANDOM = "RANDOM"
 
 
 class DetectionMode(StrEnum):
@@ -34,3 +36,13 @@ class DetectionMode(StrEnum):
     BOTH = "both"
     INTERP = "interp"
     MIX = "mix"
+
+class AnalyzeMode(StrEnum):
+    VORONOI = "voronoi"
+    TRIANGLE = "triangle"
+    # WEIGHTED = "weighted"
+
+
+class WeightedMethod(StrEnum):
+    additive = "additive"
+    power = "power"

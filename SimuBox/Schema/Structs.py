@@ -32,6 +32,31 @@ class Density(ExtendedModel):
     lxlylz: Optional[np.ndarray] = None
     shape: Optional[np.ndarray] = None
 
+    def repair(self, printout: Printout):
+        if self.NxNyNz is not None:
+            mask = self.NxNyNz != 1
+        else:
+            mask = None
+        if self.lxlylz is None or (all(self.lxlylz == 1) and any(printout.lxlylz != 1)):
+            self.lxlylz = printout.lxlylz if mask is None else printout.lxlylz[mask]
+
+class Summation(ExtendedModel):
+    path: Optional[Path] = None
+    box: Optional[np.ndarray] = None
+    NxNyNz: Optional[np.ndarray] = None
+    lxlylz: Optional[np.ndarray] = None
+    shape: Optional[np.ndarray] = None
+    data: pd.DataFrame
+    step: int
+    freeEnergy: float
+    freeW: float
+    freeS: float
+    freeWS: float
+    freeU: float
+    inCompMax: float
+
+
+
 
 class FetData(ExtendedModel):
     path: Optional[Path] = None
@@ -109,6 +134,19 @@ class PeakFitResult(ExtendedModel):
     peaks: Sequence[PeakInfo]
     fitted_curve: np.ndarray
     split_curve: np.ndarray
+
+class ScatterResult(ExtendedModel):
+    q_Intensity: np.ndarray
+    q_idx: dict
+
+
+class CVResult(ExtendedModel):
+    data: np.ndarray
+    lxlylz: np.ndarray
+    NxNyNz: np.ndarray
+    facets: list
+    centers: np.ndarray
+
 
 
 
