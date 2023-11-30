@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Union, Optional
+from typing import Union, Optional, Sequence
 
 from tqdm import tqdm
 import pandas as pd
@@ -8,136 +8,110 @@ import re
 from itertools import product
 import xml
 
+from ..Schema import XMLRaw, XMLTransform
+
 
 class XmlTransformer:
+    xml: XMLRaw
+
     def __init__(
         self,
         path: Union[Path, str],
-        rcut: Union[int, float] = 2.0,
-        map_dict: Optional[dict] = None,
     ):
+        self.path = Path(path)
 
-        if map_dict is None:
-            map_dict = {
-                "A": 0,
-                "A1": 0,
-                "A2": 0,
-                "B": 1,
-                "B1": 1,
-                "B2": 1,
-                "C": 2,
-                "D": 3,
-                "F": 4,
-            }
-        self.path = path
-        self.rcut = rcut
-        self.map_dict = map_dict
+    @classmethod
+    def collect_types(cls, root):
+        txt = root.getElementsByTagName("type")[0].firstChild.wholeText
+        types = re.sub(r"[\n ]+", " ", txt).strip(" ").split(" ")
+        return types
 
-    def getXmlData(self, tag=None, NxNyNz=None):
-        # global natoms, lxlylz, grid_spacing
-        if tag is None:
-            tag = ["position", "type", "box"]
-        dom = xml.dom.minidom.parse(self.path)
-        root = dom.documentElement
-        dataList = []
-        nameList = []
-        for _tag in tag:
-            tmp = root.getElementsByTagName(_tag)[0]
-            if _tag == "box":
-                lxlylz = np.array(
-                    [float(tmp.getAttribute(i)) for i in ["lx", "ly", "lz"]]
-                )
-                if NxNyNz:
-                    NxNyNz = np.array(NxNyNz)
-                    grid_spacing = lxlylz / NxNyNz
-                else:
-                    tmp = np.ceil(lxlylz, dtype=int)
-                    NxNyNz = []
-                    for i in tmp:
-                        num = i if i % 2 == 0 else i + 1
-                        NxNyNz.append(num)
-                    NxNyNz = np.array(np.ceil(lxlylz, dtype=int))
-                    grid_spacing = lxlylz / grid_spacing
+    @classmethod
+    def collect_positions(cls, root):
+        txt = root.getElementsByTagName("position")[0].firstChild.wholeText
+        positions = re.sub(r"[\n ]+", " ", txt).strip(" ").split(" ")
+        positions = list(map(float, positions))
+        positions = np.array(positions).reshape((-1, 3))
+        return positions
 
-                continue
-            # print(root.getElementsByTagName(_tag))
-            tmp_data = tmp.firstChild.read_csv
-            # tmp_data = tmp_data.replace('\n', '').strip(' ')
-            tmp_data = re.sub(r"[\n ]+", " ", tmp_data)
-            tmp_data = tmp_data.strip(" ")
-            tmp_data_float = []
-            if _tag == "position":
-                tmp_data_float = list(map(float, tmp_data.split(" ")))
-                tmp_data_float = np.array(tmp_data_float, dtype=np.float64).reshape(
-                    (-1, 3)
-                )
-                nameList.extend(["X", "Y", "Z"])
-                natoms = int(tmp.getAttribute("num"))
-            elif _tag == "type":
-                tmp_data_float = np.array(tmp_data.split(" "), dtype=str).reshape(
-                    (-1, 1)
-                )
-                if tmp_data_float[0][0].isalpha():
-                    map_flag = True
-                nameList.extend(["type"])
-            # finally:
-            dataList.append(tmp_data_float)
-        dataAll = np.hstack(dataList)
-        df = pd.DataFrame(data=dataAll, columns=nameList)
-        self.atoms = dict([(i, self.map_dict[i]) for i in df["type"].unique()])
-        if map_flag:
-            df["type"] = df["type"].map(self.map_dict)
-        df = df.astype({"X": float, "Y": float, "Z": float, "type": int})
+    @classmethod
+    def collect_lxlylz(cls, root):
+        temp = root.getElementsByTagName("box")[0]
+        return np.array([float(temp.getAttribute(i)) for i in ["lx", "ly", "lz"]])
 
-        self.data = df
-        self.natoms = natoms
-        self.NxNyNz = NxNyNz
-        self.lxlylz = lxlylz
-        self.grid_spacing = grid_spacing
+    def parse_xml(
+        self,
+        NxNyNz: Optional[Union[np.ndarray, Sequence[int]]] = None,
+        atoms_mapping: Optional[dict] = None,
+        merge: bool = True,
+    ):
+        root = xml.dom.minidom.parse(self.path.open("r"))
+        lxlylz = self.collect_lxlylz(root)
+        types = self.collect_types(root)
+        positions = self.collect_positions(root)
+        data = pd.DataFrame(data=positions, columns=["x", "y", "z"])
+        data["type"] = types
+        atoms_type = sorted(data["type"].unique().tolist())
+        if atoms_mapping is None:
+            if merge:
+                atoms_type = [re.sub(r"\d", "", i) for i in atoms_type]
+                atoms_type = sorted(list(set(atoms_type)))
+            atoms_mapping = dict(list(enumerate(atoms_type)))
+            atoms_mapping = {v: k for k, v in atoms_mapping.items()}
 
-    def phi_mode_sphere(self, xyz, grid_xyz, t, phi):
-        grids = (self.res + grid_xyz) % self.NxNyNz
-        grids_coord = grids * self.grid_spacing - self.lxlylz / 2
-        dis = np.sqrt(np.sum((grids_coord - xyz) ** 2, axis=1))
-        mask = dis <= self.rcut
-        for grid in grids[mask]:
-            phi[t][grid[0]][grid[1]][grid[2]] += 1
+        assert all(
+            a in atoms_mapping for a in atoms_type
+        ), f"需要建立所有原子类型（{atoms_type}）的映射"
+        mapping_values = list(atoms_mapping.values())
+        assert (
+            all(np.diff(mapping_values) == 1) and min(mapping_values) == 0
+        ), "映射值应为起始为0,等差为1的连续整数"
+        data["index"] = data["type"].map(atoms_mapping)
 
-    def transform(self):
-        phi = np.zeros([len(self.atoms), *self.NxNyNz])
+        if NxNyNz is None:
+            NxNyNz = [i if i % 2 == 0 else i + 1 for i in np.ceil(lxlylz).astype(int)]
+        NxNyNz = np.array(NxNyNz, dtype=int)
+        grid_spacing = lxlylz / NxNyNz
 
-        idx_lst = np.array(self.rcut * 2 / self.grid_spacing + 2, dtype=int)
-        self.res = np.array(list(product(*[range(idx) for idx in idx_lst])), dtype=int)
+        res = XMLRaw(
+            path=self.path,
+            data=data,
+            NxNyNz=NxNyNz,
+            lxlylz=lxlylz,
+            grid_spacing=grid_spacing,
+            atoms_type=atoms_type,
+            atoms_mapping=atoms_mapping,
+        )
+        self.xml = res
+        return res
 
-        df_val = self.data.values
-        xyz = df_val[:, :3]
-        t = df_val[:, -1].astype(int)
+    @classmethod
+    def transform(cls, xml: Optional[XMLRaw] = None, r_cut: Union[int, float] = 2.0):
+
+        xml = xml if xml is not None else cls.xml
+        assert xml is not None
+        phi = np.zeros([len(xml.atoms_type), *xml.NxNyNz])
+
+        idx_lst = np.array(r_cut * 2 / xml.grid_spacing + 2, dtype=int)
+
+        res = np.array(list(product(*[range(idx) for idx in idx_lst])), dtype=int)
+
+        xyz = xml.data[["x", "y", "z"]].values
+        t = xml.data["index"].values
         grid_xyz = np.array(
             (
-                np.floor((xyz - self.rcut) / self.grid_spacing) * self.grid_spacing
-                + self.lxlylz / 2.0
+                np.floor((xyz - r_cut) / xml.grid_spacing) * xml.grid_spacing
+                + xml.lxlylz / 2.0
             )
-            / self.grid_spacing,
+            / xml.grid_spacing,
             dtype=int,
         )
 
         for i in tqdm(range(len(grid_xyz))):
-            self.phi_mode_sphere(xyz[i], grid_xyz[i], t[i], phi)
-
-        self.phi = phi
-
-    def write(self, path="phout.txt", scale: bool = False):
-        if scale:
-            ph = self.phi / self.phi.sum(axis=0)
-        ph_lst = [ph[i].reshape((-1, 1)) for i in range(len(self.atoms))]
-        ph = np.c_[ph_lst]
-        ph = np.squeeze(ph)
-        ph = ph.T
-        np.savetxt(
-            path,
-            ph,
-            fmt="%.3f",
-            delimiter=" ",
-            header=" ".join(map(str, self.NxNyNz)),
-            comments="",
-        )
+            grids = (res + grid_xyz[i]) % xml.NxNyNz
+            grids_coord = grids * xml.grid_spacing - xml.lxlylz / 2
+            dis = np.sqrt(np.sum((grids_coord - xyz[i]) ** 2, axis=1))
+            mask = dis <= r_cut
+            for grid in grids[mask]:
+                phi[t[i]][grid[0]][grid[1]][grid[2]] += 1
+        return XMLTransform(xml=xml, phi=phi)

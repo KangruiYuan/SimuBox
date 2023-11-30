@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Optional, Any, Sequence
+from typing import Optional, Any, Sequence, Union
 
 import numpy as np
 import pandas as pd
@@ -40,6 +40,7 @@ class Density(ExtendedModel):
         if self.lxlylz is None or (all(self.lxlylz == 1) and any(printout.lxlylz != 1)):
             self.lxlylz = printout.lxlylz if mask is None else printout.lxlylz[mask]
 
+
 class Summation(ExtendedModel):
     path: Optional[Path] = None
     box: Optional[np.ndarray] = None
@@ -54,8 +55,6 @@ class Summation(ExtendedModel):
     freeWS: float
     freeU: float
     inCompMax: float
-
-
 
 
 class FetData(ExtendedModel):
@@ -120,12 +119,14 @@ class PointInfo(ExtendedModel):
     y: float
     freeEnergy: float
 
+
 class PeakInfo(ExtendedModel):
 
     center: Optional[float]
     amplitude: Optional[float] = None
     width: Optional[float] = None
     background: Optional[float] = None
+
 
 class PeakFitResult(ExtendedModel):
 
@@ -134,6 +135,7 @@ class PeakFitResult(ExtendedModel):
     peaks: Sequence[PeakInfo]
     fitted_curve: np.ndarray
     split_curve: np.ndarray
+
 
 class ScatterResult(ExtendedModel):
     q_Intensity: np.ndarray
@@ -149,6 +151,7 @@ class CVResult(ExtendedModel):
     facets: list
     centers: np.ndarray
 
+
 class TileResult(ExtendedModel):
     raw_NxNyNz: np.ndarray
     raw_lxlylz: np.ndarray
@@ -159,8 +162,39 @@ class TileResult(ExtendedModel):
     expand: np.ndarray
 
 
+class XMLRaw(ExtendedModel):
+    path: Path
+    NxNyNz: np.ndarray
+    lxlylz: np.ndarray
+    grid_spacing: np.ndarray
+    data: pd.DataFrame
+    atoms_type: list
+    atoms_mapping: dict[str, int]
 
 
+class XMLTransform(ExtendedModel):
+    xml: XMLRaw
+    phi: np.ndarray
 
-
-
+    def write(
+        self,
+        phi: Optional[np.ndarray] = None,
+        path: Optional[Union[str, Path]] = None,
+        scale: bool = False,
+    ):
+        if phi is None:
+            phi = self.phi
+        if scale:
+            phi = phi / phi.sum(axis=0)
+        phi = np.c_[[i.reshape((-1, 1)) for i in phi]]
+        phi = np.squeeze(phi).T
+        if path is None:
+            path = self.xml.path.with_suffix(".txt")
+        np.savetxt(
+            path,
+            phi,
+            fmt="%.3f",
+            delimiter=" ",
+            header=" ".join(map(str, self.xml.NxNyNz)),
+            comments="",
+        )
