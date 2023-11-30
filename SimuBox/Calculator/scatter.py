@@ -145,7 +145,8 @@ class Scatter:
         x = x / x[peaks[height_info["peak_heights"].argmax()]]
 
         plt.figure(figsize=kwargs.get("figsize", (8, 6)))
-        plt.plot(q, y, lw=2, c="k")
+        plot_x = x if kwargs.get("scale", True) else q
+        plt.plot(plot_x, y, lw=2, c="k")
         plt.ylabel("Intensity", fontsize=20)
         plt.xlabel(r"$q/R_g^{-1}$", fontsize=20)
 

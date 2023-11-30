@@ -23,7 +23,8 @@ class VoronoiCell:
         **kwargs,
     ):
         # ------------读取原生数据-----------------
-        mat, NxNyNz, lxlylz = tile_density(density, **kwargs)
+        tiled = tile_density(density, **kwargs)
+        mat = tiled.mat
         assert mat.ndim == 2, f"目前仅支持二维Voronoi剖分，当前矩阵维度为{mat.ndim}"
         gray_image = np.array(mat * 255, dtype=np.uint8)
         size = gray_image.shape
@@ -49,7 +50,13 @@ class VoronoiCell:
         # facets = np.array(facets, dtype=int)
 
         return CVResult(
-            data=mat, lxlylz=lxlylz, NxNyNz=NxNyNz, facets=facets, centers=centers
+            raw_NxNyNz=tiled.raw_NxNyNz.copy(),
+            raw_lxlylz=tiled.raw_lxlylz.copy(),
+            data=tiled.mat.copy(),
+            lxlylz=tiled.lxlylz.copy(),
+            NxNyNz=tiled.NxNyNz.copy(),
+            facets=facets,
+            centers=centers,
         )
 
     @staticmethod
@@ -74,9 +81,9 @@ class VoronoiCell:
         )
 
         if mode == AnalyzeMode.VORONOI:
-            cls.voronoi(density, centers_lxly, **kwargs)
+            cls.voronoi(cv_res, centers_lxly, **kwargs)
         elif mode == AnalyzeMode.TRIANGLE:
-            cls.triangle(density, centers_lxly, **kwargs)
+            cls.triangle(cv_res, centers_lxly, **kwargs)
         else:
             raise NotImplementedError(f"{mode} 解析模式尚未建立。")
 
@@ -86,13 +93,13 @@ class VoronoiCell:
         return np.array(attr) + 1
 
     @classmethod
-    def voronoi(cls, density: Density, centers: np.ndarray, **kwargs):
+    def voronoi(cls, cv_res: CVResult, centers: np.ndarray, **kwargs):
         point_color = kwargs.get("pc", "b")
         line_color = kwargs.get("lc", "k")
-        centers_cut = cls.set_point_limits(density, centers, **kwargs)
+        centers_cut = cls.set_point_limits(cv_res, centers, **kwargs)
 
         vor = Voronoi(centers, incremental=True)
-        asp = density.lxlylz[1] / density.lxlylz[0]
+        asp = cv_res.lxlylz[1] / cv_res.lxlylz[0]
         plt.figure(figsize=kwargs.get("figsize", (6, 6 / asp)))
         ax = plt.gca()
         fig = voronoi_plot_2d(
@@ -100,17 +107,17 @@ class VoronoiCell:
         )
         if kwargs.get("point", True):
             plt.scatter(centers_cut[:, 0], centers_cut[:, 1], s=20, c=point_color)
-        cls.set_axis_limits(density, **kwargs)
+        cls.set_axis_limits(cv_res, **kwargs)
         plt.xticks([])
         plt.yticks([])
         plt.tight_layout()
         plt.show()
 
     @classmethod
-    def triangle(cls, density: Density, centers: np.ndarray, **kwargs):
+    def triangle(cls, cv_res: CVResult, centers: np.ndarray, **kwargs):
         point_color = kwargs.get("pc", "b")
         line_color = kwargs.get("lc", "k")
-        centers_cut = cls.set_point_limits(density, centers, **kwargs)
+        centers_cut = cls.set_point_limits(cv_res, centers, **kwargs)
 
         theta_max = kwargs.get("theta_max", np.pi / 2)
         dist_matrix = distance.cdist(centers, centers, "euclidean")
@@ -134,37 +141,37 @@ class VoronoiCell:
             coord_dict[t[1]].update([t[0], t[2]])
             coord_dict[t[2]].update([t[0], t[1]])
 
-        asp = density.lxlylz[1] / density.lxlylz[0]
+        asp = cv_res.lxlylz[1] / cv_res.lxlylz[0]
         plt.figure(figsize=kwargs.get("figsize", (6, 6 / asp)))
         if kwargs.get("point", True):
             plt.scatter(centers_cut[:, 0], centers_cut[:, 1], s=20, c=point_color)
         plt.triplot(
             centers[:, 0], centers[:, 1], triangles, linewidth=1, color=line_color
         )
-        cls.set_axis_limits(density, **kwargs)
+        cls.set_axis_limits(cv_res, **kwargs)
         plt.xticks([])
         plt.yticks([])
         plt.show()
 
     @classmethod
-    def set_point_limits(cls, density: Density, centers: np.ndarray, **kwargs):
+    def set_point_limits(cls, density: CVResult, centers: np.ndarray, **kwargs):
         point_xlim = cls.get_lim_attributes("point_xlim", (-0.1, 1.1), **kwargs)
         point_ylim = cls.get_lim_attributes("point_ylim", (-0.1, 1.1), **kwargs)
 
         mask = cls.in_lim(
             point=centers,
-            xlim=density.lxlylz[1] * point_xlim,
-            ylim=density.lxlylz[0] * point_ylim,
+            xlim=density.raw_lxlylz[1] * point_xlim,
+            ylim=density.raw_lxlylz[0] * point_ylim,
         )
         centers_cut = centers[mask]
         return centers_cut
 
     @classmethod
-    def set_axis_limits(cls, density: Density, **kwargs):
+    def set_axis_limits(cls, density: CVResult, **kwargs):
         axis_xlim = cls.get_lim_attributes("axis_xlim", (-0.5, 1.5), **kwargs)
         axis_ylim = cls.get_lim_attributes("axis_xlim", (-0.5, 1.5), **kwargs)
-        plt.xlim(density.lxlylz[1] * axis_xlim)
-        plt.ylim(density.lxlylz[0] * axis_ylim)
+        plt.xlim(density.raw_lxlylz[1] * axis_xlim)
+        plt.ylim(density.raw_lxlylz[0] * axis_ylim)
 
     @staticmethod
     def additive(points, arr, weights):
@@ -180,8 +187,9 @@ class VoronoiCell:
         )
         return dis
 
+    @classmethod
     def weighted_voronoi_diagrams(
-        self,
+        cls,
         points: Union[list, np.ndarray],
         weights: Optional[Union[float, int, list, np.ndarray]] = 0,
         method: WeightedMethod = "additive",
@@ -206,14 +214,16 @@ class VoronoiCell:
 
         arrs = np.array(list(product(range(imgx), range(imgy))), dtype=int)
 
-        func = getattr(self, method.value)
+        func = getattr(
+            cls, method.value if isinstance(method, WeightedMethod) else method
+        )
         for arr in tqdm(arrs):
             dis = func(points, arr, weights)
             min_idx = np.argmin(dis)
             putpixel(arr, colors[min_idx])
         plot = kwargs.get("plot", "imshow")
         im = np.array(image)
-        plt.figure(figsize=kwargs.get("figsize", (8, 8)))
+        plt.figure(figsize=kwargs.get("figsize", (5, 5)))
         plt.scatter(points[:, 0], points[:, 1], s=max(size) * 0.1, c="white")
         if plot == "imshow":
             if color_mode == ColorType.L:

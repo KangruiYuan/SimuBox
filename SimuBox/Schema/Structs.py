@@ -141,11 +141,24 @@ class ScatterResult(ExtendedModel):
 
 
 class CVResult(ExtendedModel):
+    raw_NxNyNz: np.ndarray
+    raw_lxlylz: np.ndarray
     data: np.ndarray
     lxlylz: np.ndarray
     NxNyNz: np.ndarray
     facets: list
     centers: np.ndarray
+
+class TileResult(ExtendedModel):
+    raw_NxNyNz: np.ndarray
+    raw_lxlylz: np.ndarray
+    raw_mat: np.ndarray
+    lxlylz: np.ndarray
+    NxNyNz: np.ndarray
+    mat: np.ndarray
+    expand: np.ndarray
+
+
 
 
 

@@ -94,7 +94,10 @@ def plot_savefig(
 
 
 def generate_colors(
-    mode: Union[str, ColorType] = ColorType.RGB, num: int = 1, linear: bool = True
+    mode: Union[str, ColorType] = ColorType.RGB,
+    num: int = 1,
+    linear: bool = True,
+    **kwargs,
 ):
     if mode == ColorType.RGB:
         color = np.random.choice(range(256), size=(num, 3)).tolist()

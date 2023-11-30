@@ -124,6 +124,7 @@ class Landscaper:
 
         if levels := kwargs.get("levels", []):
             # levels = kwargs.get("levels", False)
+            levels = np.array(levels)
             ticks = levels
 
         else:

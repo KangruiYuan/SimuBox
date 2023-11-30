@@ -21,7 +21,7 @@ x = Symbol('x', real=True, postive=True)
 class Joint:
     count = 0
 
-    def __init__(self, _id, new: bool = False):
+    def __init__(self, _id:int, new: bool = False):
 
         if new: Joint.count = 0
         self.id = _id
@@ -56,7 +56,7 @@ class Joint:
             if j not in self:
                 self.connection.append(j)
 
-    def search_by_count_id(self, count_id):
+    def search_by_count_id(self, count_id: int):
         _log = set()
         q = []
         q.append(self)
@@ -74,7 +74,7 @@ class Joint:
                 continue
         print(f"Joint with count id = {count_id} do not exist!")
 
-    def stats_connection(self, verbose=True):
+    def stats_connection(self, verbose: bool=True):
         print("format: id(count_id)")
         exp_log = set()
         q = []
