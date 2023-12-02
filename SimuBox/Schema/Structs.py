@@ -24,39 +24,6 @@ class Printout(ExtendedModel):
     freeU: float
     inCompMax: float
 
-
-class Density(ExtendedModel):
-    path: Optional[Path] = None
-    data: pd.DataFrame
-    NxNyNz: Optional[np.ndarray] = None
-    lxlylz: Optional[np.ndarray] = None
-    shape: Optional[np.ndarray] = None
-
-    def repair(self, printout: Printout):
-        if self.NxNyNz is not None:
-            mask = self.NxNyNz != 1
-        else:
-            mask = None
-        if self.lxlylz is None or (all(self.lxlylz == 1) and any(printout.lxlylz != 1)):
-            self.lxlylz = printout.lxlylz if mask is None else printout.lxlylz[mask]
-
-
-class Summation(ExtendedModel):
-    path: Optional[Path] = None
-    box: Optional[np.ndarray] = None
-    NxNyNz: Optional[np.ndarray] = None
-    lxlylz: Optional[np.ndarray] = None
-    shape: Optional[np.ndarray] = None
-    data: pd.DataFrame
-    step: int
-    freeEnergy: float
-    freeW: float
-    freeS: float
-    freeWS: float
-    freeU: float
-    inCompMax: float
-
-
 class FetData(ExtendedModel):
     path: Optional[Path] = None
     xACN: Optional[float] = None
@@ -90,6 +57,49 @@ class FetData(ExtendedModel):
     VolumeFraction0: Optional[float] = None
     sumVolume: Optional[float] = None
     activity0: Optional[float] = None
+
+
+class Density(ExtendedModel):
+    path: Optional[Path] = None
+    data: pd.DataFrame
+    NxNyNz: Optional[np.ndarray] = None
+    lxlylz: Optional[np.ndarray] = None
+    shape: Optional[np.ndarray] = None
+
+    def repair_from_printout(self, printout: Printout):
+        if self.NxNyNz is not None:
+            mask = self.NxNyNz != 1
+        else:
+            mask = None
+        if self.lxlylz is None or (all(self.lxlylz == 1) and any(printout.lxlylz != 1)):
+            self.lxlylz = printout.lxlylz if mask is None else printout.lxlylz[mask]
+
+    def repair_from_fet(self, fet: FetData):
+        if self.NxNyNz is not None:
+            if self.NxNyNz is not None:
+                mask = self.NxNyNz != 1
+            else:
+                mask = None
+        lxlylz = np.array([fet.lx, fet.ly, fet.lz])
+        if self.lxlylz is None or (all(self.lxlylz == 1) and any(lxlylz != 1)):
+            self.lxlylz = lxlylz if mask is None else lxlylz[mask]
+
+
+
+class Summation(ExtendedModel):
+    path: Optional[Path] = None
+    box: Optional[np.ndarray] = None
+    NxNyNz: Optional[np.ndarray] = None
+    lxlylz: Optional[np.ndarray] = None
+    shape: Optional[np.ndarray] = None
+    data: pd.DataFrame
+    step: int
+    freeEnergy: float
+    freeW: float
+    freeS: float
+    freeWS: float
+    freeU: float
+    inCompMax: float
 
 
 class CompareResult(ExtendedModel):
@@ -152,7 +162,8 @@ class CVResult(ExtendedModel):
     centers: np.ndarray
 
 
-class TileResult(ExtendedModel):
+class DensityParseResult(ExtendedModel):
+    path: Path
     raw_NxNyNz: np.ndarray
     raw_lxlylz: np.ndarray
     raw_mat: np.ndarray

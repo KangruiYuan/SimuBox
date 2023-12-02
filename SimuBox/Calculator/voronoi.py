@@ -13,17 +13,18 @@ from tqdm import tqdm
 
 from ..Artist import generate_colors
 from ..Schema import Density, CVResult, AnalyzeMode, ColorType, WeightedMethod
-from ..Toolkits import tile_density
+from ..Toolkits import parse_density
 
 
 class VoronoiCell:
     @staticmethod
     def OpenCV(
         density: Density,
+        expand: Union[int, Sequence[int]] = 3,
         **kwargs,
     ):
         # ------------读取原生数据-----------------
-        tiled = tile_density(density, **kwargs)
+        tiled = parse_density(density, expand=expand, **kwargs)
         mat = tiled.mat
         assert mat.ndim == 2, f"目前仅支持二维Voronoi剖分，当前矩阵维度为{mat.ndim}"
         gray_image = np.array(mat * 255, dtype=np.uint8)
