@@ -76,7 +76,9 @@ def plot_savefig(
         if not save:
             return
         else:
-            assert hasattr(obj, "path"), "不支持自动保存，请传递路径信息给参数save"
+            if not hasattr(obj, "path"):
+                print("不支持自动保存，请传递路径信息给参数save")
+                return
             path = Path(obj.path)
     elif isinstance(save, PathType):
         path = Path(save)
@@ -86,10 +88,11 @@ def plot_savefig(
     stem = path.stem
     stem = prefix + "_" + stem if prefix else stem
     stem = stem + "_" + suffix if suffix else stem
-    if path.is_file():
-        path = path.parent / ".".join((stem, kwargs.get("fig_format", "png")))
-    elif path.is_dir():
+    if path.is_dir():
         path = path / ".".join((stem, kwargs.get("fig_format", "png")))
+    else:
+        path = path.parent / ".".join((stem, kwargs.get("fig_format", "png")))
+    print(f"Save to: {path}")
     plt.savefig(path, dpi=dpi)
 
 

@@ -7,8 +7,9 @@ import pyvista as pv
 
 from skimage.measure import marching_cubes
 
-from ..Schema import Density, NumericType
+from ..Schema import Density, NumericType, PathType
 from ..Toolkits import parse_density
+from .PlotUtils import plot_savefig
 
 
 def iso3D(
@@ -19,6 +20,7 @@ def iso3D(
     backend: str = "vista",
     interactive: bool = True,
     frame: bool = True,
+    save: Optional[PathType] = None,
     **kwargs,
 ):
     parsed = parse_density(density, target, permute, **kwargs)
@@ -61,6 +63,8 @@ def iso3D(
         )
         p.view_isometric()
         p.background_color = kwargs.get("bk", "white")
+        if save is not None:
+            p.save_graphic(filename=save)
         if interactive:
             p.show()
         return p
@@ -87,6 +91,7 @@ def iso2D(
     label: bool = True,
     colorbar: bool = False,
     interactive: bool = True,
+    save: Union[PathType, bool] = None,
     **kwargs,
 ):
 
@@ -126,8 +131,7 @@ def iso2D(
             plt.colorbar(im, ax=ax)
 
     fig.tight_layout()
-    if save := kwargs.get("save"):
-        plt.savefig(save, dpi=150)
+    plot_savefig(save=save, **kwargs)
     if interactive:
         plt.show()
     return fig, axes

@@ -4,19 +4,18 @@ from pathlib import Path
 
 import numpy as np
 import streamlit as st
-from SimuBox import read_density, read_printout, iso2D, iso3D
-from stpyvista import stpyvista
+from SimuBox import read_density, read_printout, parse_density, Scatter
 
 warnings.filterwarnings("ignore")
 
 
 st.set_page_config(layout="wide")
-st.title(":blue[SimuBox] :red[Visual] : 结构图绘制")
+st.title(":blue[SimuBox] :red[Visual] : 散射图绘制")
 
-with st.expander("结构图绘制使用说明"):
+with st.expander("散射图绘制使用说明"):
     st.markdown(
         """
-            ### 密度文件可视化
+            ### 散射图可视化
             - 通用文件类型：phout.txt, block.txt, joint.txt 或者其他符合相同格式的文本文件
             - 参数类型：
                 - target: 绘制图像的第几列，对于二维图形可以选择多项，对于三维图像每次仅能绘制单列。
@@ -88,10 +87,11 @@ if uploaded_phout:
             temp_name = Path(temp_file.name)
 
     multi_select_cols = st.columns(4)
-    targets = multi_select_cols[0].multiselect(
-        label="请选择需要绘制的列号", options=list(range(density.data.shape[1])), default=[0]
+    targets = multi_select_cols[0].selectbox(
+        label="请选择需要绘制的列号", options=list(range(density.data.shape[1])), index=0
     )
-    targets = targets if targets else [0]
+    targets = int(targets)
+
     base_permute = list(range(len(density.shape)))
     permute = multi_select_cols[1].text_input(
         label=f"请指定坐标轴{base_permute}的顺序，以空格为间隔", value=""
@@ -105,76 +105,29 @@ if uploaded_phout:
         label="延拓信息", value=1, min_value=1, max_value=3
     )
 
-    if len(density.shape) == 2 or slices:
-        if len(targets) == 1:
-            sub_cols = st.columns(3)
-            fig, axes = iso2D(
-                density,
-                target=targets,
-                permute=permute,
-                slices=slices,
-                colorbar=colorbar,
-                expand=expand,
-                save=save,
-                suffix=str(targets[0]),
-            )
-            sub_cols[1].pyplot(fig, use_container_width=True)
-        elif len(targets) == 2:
-            sub_cols = st.columns(4)
-            for target, sub_col in zip(targets, sub_cols[1:3]):
-                fig, axes = iso2D(
-                    density,
-                    target=target,
-                    permute=permute,
-                    slices=slices,
-                    colorbar=colorbar,
-                    expand=expand,
-                    save=save,
-                    suffix=str(target),
-                )
-                sub_col.pyplot(fig, use_container_width=True)
-        else:
-            sub_cols = st.columns(len(targets))
-            for target, sub_col in zip(targets, sub_cols):
-                fig, axes = iso2D(
-                    density,
-                    target=target,
-                    permute=permute,
-                    slices=slices,
-                    colorbar=colorbar,
-                    expand=expand,
-                    save=save,
-                    suffix=str(target),
-                )
-                sub_col.pyplot(fig, use_container_width=True)
-    elif len(density.shape) == 3:
-        sub_cols = st.columns(spec=[0.667, 0.333])
-        with sub_cols[1]:
-            front_color = st.text_input("请输入物体颜色", value="blue")
-            background_color = st.text_input("请输入背景颜色", value="white")
-            opacity = st.number_input(
-                "请输入透明度（0-1）", value=0.8, min_value=0.0, max_value=1.0
-            )
-            frame = st.checkbox("是否需要外部框体", value=True)
-            style = st.selectbox(
-                "选择绘图模式",
-                options=["surface", "wireframe", "points", "points_gaussian"],
-                index=0,
-            )
+    parsed = parse_density(density, target=targets, expand=expand, slices=slices, permute=permute)
+    sc = Scatter.sacttering_peak(mat=parsed.mat[0], NxNyNz=parsed.NxNyNz, lxlylz=parsed.lxlylz)
 
-        with sub_cols[0]:
-            plotter = iso3D(
-                density,
-                target=targets[0],
-                backend="vista",
-                interactive=False,
-                permute=permute,
-                bk=background_color,
-                color=front_color,
-                opacity=opacity,
-                frame=frame,
-                style=style,
-                expand=expand,
-                save=save.parent / ("_".join([save.stem , str(targets[0])]) + ".svg")
-            )
-            stpyvista(plotter)
+    plot_col, info_col = st.columns([0.667, 0.333])
+
+    with info_col:
+        width = st.number_input("高斯展开峰宽", value=0.5, min_value=0.0)
+        step = st.number_input("离散化参数（越大越光滑）", value=2000, min_value=1000, max_value=5000)
+        cut_off = st.number_input("截断参数", value=300.0, min_value=0.0)
+        min_height = st.number_input("最低峰高", value=1.0, min_value=0.0)
+
+    with plot_col:
+        sc_plots = Scatter.show_peak(res=sc, width=width, step=step, cutoff=cut_off, min_height=min_height)
+        st.pyplot(sc_plots.fig)
+
+    peaks_loc = np.around(sc_plots.peaks_location, 3)
+    peaks_loc_str = " : ".join([str(x) for x in peaks_loc])
+    peaks_loc_2 = np.around(sc_plots.peaks_location ** 2).astype(int)
+    peaks_loc_2_str = " : ".join([rf"\sqrt{str(x)}" for x in peaks_loc_2])
+
+    info_col.markdown(f"""
+    #### 峰位比值: \n
+    ${peaks_loc_str}$ \n
+    ${peaks_loc_2_str}$
+    """)
+

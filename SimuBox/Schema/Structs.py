@@ -151,6 +151,13 @@ class ScatterResult(ExtendedModel):
     q_Intensity: np.ndarray
     q_idx: dict
 
+class ScatterPlots(ExtendedModel):
+    peaks_location: np.ndarray
+    peaks_height: dict
+    plot_y: np.ndarray
+    plot_x: np.ndarray
+    fig: Any
+    ax: Any
 
 class CVResult(ExtendedModel):
     raw_NxNyNz: np.ndarray

@@ -28,6 +28,15 @@ if not st.session_state.cache_dir.exists():
     st.session_state.cache_dir.mkdir()
 cols[0].caption(st.session_state.cache_dir.resolve())
 
+dpi = cols[1].number_input("保存图像dpi", value=150, min_value=50, max_value=300)
+st.session_state.dpi = dpi
+
+save_auto = cols[2].checkbox("自动保存相应图像", value=True)
+st.session_state.save_auto = save_auto
+
+save_name_auto = cols[2].checkbox("自动重命名", value=True)
+st.session_state.save_name_auto = save_name_auto
+
 st.markdown(
     f"""
     - 项目主页: [Github pages](https://github.com/KangruiYuan/SimuBox)

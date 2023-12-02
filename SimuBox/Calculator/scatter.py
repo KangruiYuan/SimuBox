@@ -7,7 +7,7 @@ import scipy.signal as sg
 
 from .peak import gaussian_expansion
 from ..Artist import plot_locators, plot_savefig
-from ..Schema import ScatterResult
+from ..Schema import ScatterResult, ScatterPlots
 
 SCATTER_PLOT_CONFIG = {
     "font.family": "Times New Roman",
@@ -35,7 +35,6 @@ SCATTER_PLOT_CONFIG = {
 
 
 class Scatter:
-
     @staticmethod
     def k_vector(N: int):
         if -N / 2 + 1 > -1:
@@ -120,10 +119,12 @@ class Scatter:
     def show_peak(
         cls,
         res: ScatterResult,
+        width: float = 0.5,
         step: int = 2000,
         cutoff: int = 20,
-        height: int = 1,
+        min_height: int = 1,
         save: Optional[bool] = False,
+        interactive: bool = False,
         **kwargs,
     ):
 
@@ -135,23 +136,31 @@ class Scatter:
 
         x = np.linspace(q_Intensity[0, 0], q_Intensity[-1, 0], step)
 
-        y = cast(np.ndarray, 0)
-        w = kwargs.get("w", 0.5)
+        plot_y = cast(np.ndarray, 0)
         for q_i in q_Intensity:
-            y += gaussian_expansion(array=x, ctr=q_i[0], amp=q_i[1], wid=w)
+            plot_y += gaussian_expansion(array=x, ctr=q_i[0], amp=q_i[1], wid=width)
 
-        peaks, height_info = sg.find_peaks(y, height=height)
+        peaks_location, peaks_height = sg.find_peaks(plot_y, height=min_height)
         q = x.copy()
-        x = x / x[peaks[height_info["peak_heights"].argmax()]]
+        x = x / x[peaks_location[peaks_height["peak_heights"].argmax()]]
 
-        plt.figure(figsize=kwargs.get("figsize", (8, 6)))
+        fig = plt.figure(figsize=kwargs.get("figsize", (8, 6)))
+        ax = plt.gca()
         plot_x = x if kwargs.get("scale", True) else q
-        plt.plot(plot_x, y, lw=2, c="k")
+        plt.plot(plot_x, plot_y, lw=2, c="k")
         plt.ylabel("Intensity", fontsize=20)
         plt.xlabel(r"$q/R_g^{-1}$", fontsize=20)
 
-        plot_locators(**kwargs)
+        plot_locators(ax=ax, **kwargs)
         plt.tight_layout()
         plot_savefig(save=save, **kwargs)
-        plt.show()
-        return x[peaks]
+        if interactive:
+            plt.show()
+        return ScatterPlots(
+            peaks_location=x[peaks_location],
+            fig=fig,
+            ax=ax,
+            peaks_height=peaks_height,
+            plot_x=plot_x,
+            plot_y=plot_y,
+        )
