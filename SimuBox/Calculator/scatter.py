@@ -1,5 +1,5 @@
 from itertools import product
-from typing import Union, Sequence, cast, Optional
+from typing import cast, Optional, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -7,7 +7,8 @@ import scipy.signal as sg
 
 from .peak import gaussian_expansion
 from ..Artist import plot_locators, plot_savefig
-from ..Schema import ScatterResult, ScatterPlots
+from ..Schema import ScatterResult, ScatterPlots, Density, PathType
+from ..Toolkits import parse_density
 
 SCATTER_PLOT_CONFIG = {
     "font.family": "Times New Roman",
@@ -66,15 +67,18 @@ class Scatter:
     @classmethod
     def sacttering_peak(
         cls,
-        mat: np.ndarray,
-        NxNyNz: Union[np.ndarray, Sequence],
-        lxlylz: Union[np.ndarray, Sequence],
+        density: Density,
+        # mat: np.ndarray,
+        # NxNyNz: Union[np.ndarray, Sequence],
+        # lxlylz: Union[np.ndarray, Sequence],
         cutoff: int = 30,
         threshold: float = 1e-12,
+        **kwargs,
     ):
-
-        kxyz, k_vecs = cls.k_space(*NxNyNz, *lxlylz)
-        Nxyz = np.prod(NxNyNz)
+        parsed = parse_density(density, **kwargs)
+        mat = parsed.mat.squeeze()
+        kxyz, k_vecs = cls.k_space(*parsed.NxNyNz, *parsed.lxlylz)
+        Nxyz = np.prod(parsed.NxNyNz)
         txyz = np.asarray(list(product(*k_vecs)))
 
         factor = 1 / Nxyz
@@ -113,7 +117,9 @@ class Scatter:
         q_Intensity = np.asarray(q_Intensity)
         q_Intensity[:, 0] = np.sqrt(q_Intensity[:, 0])
 
-        return ScatterResult(q_Intensity=q_Intensity, q_idx=q_idx)
+        return ScatterResult(
+            parsed_density=parsed, q_Intensity=q_Intensity, q_idx=q_idx
+        )
 
     @classmethod
     def show_peak(
@@ -123,7 +129,7 @@ class Scatter:
         step: int = 2000,
         cutoff: int = 20,
         min_height: int = 1,
-        save: Optional[bool] = False,
+        save: Optional[Union[PathType, bool]] = False,
         interactive: bool = False,
         **kwargs,
     ):
@@ -153,7 +159,13 @@ class Scatter:
 
         plot_locators(ax=ax, **kwargs)
         plt.tight_layout()
-        plot_savefig(save=save, **kwargs)
+        plot_savefig(
+            res.parsed_density,
+            save=save,
+            prefix="scatter",
+            suffix=str(res.parsed_density.target[0]),
+            **kwargs,
+        )
         if interactive:
             plt.show()
         return ScatterPlots(

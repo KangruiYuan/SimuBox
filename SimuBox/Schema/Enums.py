@@ -40,7 +40,7 @@ class DetectionMode(StrEnum):
 class AnalyzeMode(StrEnum):
     VORONOI = "voronoi"
     TRIANGLE = "triangle"
-    # WEIGHTED = "weighted"
+    WEIGHTED = "weighted"
 
 
 class WeightedMethod(StrEnum):

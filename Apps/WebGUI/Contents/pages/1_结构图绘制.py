@@ -59,11 +59,11 @@ if uploaded_phout:
         # 将 BytesIO 中的数据写入临时文件
         temp_file.write(uploaded_phout.read().decode("utf-8"))
         temp_name = Path(temp_file.name)
-        save = (
-            st.session_state.cache_dir / uploaded_phout.name
-            if st.session_state.save_auto
-            else False
-        )
+        # save = (
+        #     st.session_state.cache_dir / uploaded_phout.name
+        #     if st.session_state.save_auto
+        #     else False
+        # )
     density = read_density(temp_name, parse_N=parse_N, parse_L=parse_L)
     temp_name.unlink()
     # targets = left_upload_col.text_input(label="请选择需要绘制的列号（从0开始，以空格间隔）", value="0")
@@ -115,8 +115,8 @@ if uploaded_phout:
                 slices=slices,
                 colorbar=colorbar,
                 expand=expand,
-                save=save,
-                suffix=str(targets[0]),
+                save=st.session_state.save_auto,
+                    dpi=st.session_state.dpi,
             )
             sub_cols[1].pyplot(fig, use_container_width=True)
         elif len(targets) == 2:
@@ -129,8 +129,8 @@ if uploaded_phout:
                     slices=slices,
                     colorbar=colorbar,
                     expand=expand,
-                    save=save,
-                    suffix=str(target),
+                    save=st.session_state.save_auto,
+                        dpi=st.session_state.dpi,
                 )
                 sub_col.pyplot(fig, use_container_width=True)
         else:
@@ -143,12 +143,12 @@ if uploaded_phout:
                     slices=slices,
                     colorbar=colorbar,
                     expand=expand,
-                    save=save,
-                    suffix=str(target),
+                    save=st.session_state.save_auto,
+                        dpi=st.session_state.dpi,
                 )
                 sub_col.pyplot(fig, use_container_width=True)
     elif len(density.shape) == 3:
-        sub_cols = st.columns(spec=[0.667, 0.333])
+        sub_cols = st.columns(spec=[0.75, 0.25])
         with sub_cols[1]:
             front_color = st.text_input("请输入物体颜色", value="blue")
             background_color = st.text_input("请输入背景颜色", value="white")
@@ -175,6 +175,7 @@ if uploaded_phout:
                 frame=frame,
                 style=style,
                 expand=expand,
-                save=save.parent / ("_".join([save.stem , str(targets[0])]) + ".svg")
+                save=save.parent
+                / ("_".join(["iso3d", save.stem, str(targets[0])]) + ".svg"),
             )
             stpyvista(plotter)

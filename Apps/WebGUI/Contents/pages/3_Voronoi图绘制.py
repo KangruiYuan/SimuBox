@@ -3,19 +3,24 @@ import warnings
 from pathlib import Path
 
 import numpy as np
-import pyecharts.options as opts
+import pandas as pd
 import streamlit as st
-from SimuBox import read_density, read_printout, Scatter
-from pyecharts.charts import Line
-from streamlit_echarts import st_pyecharts
+from SimuBox import (
+    read_density,
+    read_printout,
+    AnalyzeMode,
+    VoronoiCell,
+    WeightedMethod,
+    ColorType,
+)
 
 warnings.filterwarnings("ignore")
 
 
 st.set_page_config(layout="wide")
-st.title(":blue[SimuBox] :red[Visual] : 散射图绘制")
+st.title(":blue[SimuBox] :red[Visual] : Voronoi图绘制")
 
-with st.expander("散射图绘制使用说明"):
+with st.expander("Voronoi图绘制使用说明"):
     st.markdown(
         """
             ### 散射图可视化
@@ -54,18 +59,24 @@ repair_from_fet = right_sub_cols[1].checkbox(
     "从SCFT输出补充信息", value=False, key="repair_from_fet"
 )
 
-if uploaded_phout:
+plot_col, info_col = st.columns([0.75, 0.25])
+main_mode = info_col.selectbox(
+    "请选择分析模式", options=AnalyzeMode.values(), index=0, key="main mode"
+)
+info_col.divider()
+
+if uploaded_phout and main_mode != AnalyzeMode.WEIGHTED:
     with tempfile.NamedTemporaryFile(
         delete=False, mode="w+", encoding="utf-8", dir=st.session_state.cache_dir
     ) as temp_file:
         # 将 BytesIO 中的数据写入临时文件
         temp_file.write(uploaded_phout.read().decode("utf-8"))
         temp_name = Path(temp_file.name)
-        # save = (
-        #     st.session_state.cache_dir / uploaded_phout.name
-        #     if st.session_state.save_auto
-        #     else False
-        # )
+        save = (
+            st.session_state.cache_dir / uploaded_phout.name
+            if st.session_state.save_auto
+            else False
+        )
     density = read_density(temp_name, parse_N=parse_N, parse_L=parse_L)
     temp_name.unlink()
     # targets = left_upload_col.text_input(label="请选择需要绘制的列号（从0开始，以空格间隔）", value="0")
@@ -105,96 +116,100 @@ if uploaded_phout:
     slices = list(map(int, slices.split())) if slices else None
 
     expand = multi_select_cols[3].number_input(
-        label="延拓信息", value=1, min_value=1, max_value=3
+        label="延拓信息", value=3, min_value=1, max_value=5
     )
 
-    sc = Scatter.sacttering_peak(
-        density, target=targets, expand=expand, slices=slices, permute=permute
-    )
-
-    plot_col, info_col = st.columns([0.75, 0.25])
-
+    half_expand = expand / 2
     with info_col:
-        width = st.number_input("高斯展开峰宽", value=0.5, min_value=0.0)
-        step = st.number_input(
-            "离散化参数（越大越光滑）", value=2000, min_value=1000, max_value=5000
+        point_color = st.text_input("请输入节点颜色", value="b")
+        line_color = st.text_input("请输入边线颜色", value="k")
+        point_xlim = st.slider(
+            "节点横向范围",
+            min_value=-expand / 2 + 0.5,
+            max_value=expand / 2 + 0.5,
+            value=(-0.1, 1.1),
+            key="point_xlim",
         )
-        cut_off = st.number_input("截断参数", value=300.0, min_value=0.0)
-        min_height = st.number_input("最低峰高", value=1.0, min_value=0.0)
-        interactive = st.checkbox("启用交互式绘图", value=False)
-
+        point_ylim = st.slider(
+            "节点纵向范围",
+            min_value=-expand / 2 + 0.5,
+            max_value=expand / 2 + 0.5,
+            value=(-0.1, 1.1),
+            key="point_ylim",
+        )
+        axis_xlim = st.slider(
+            "图幅横向范围",
+            min_value=-expand / 2 + 0.5,
+            max_value=expand / 2 + 0.5,
+            value=(-0.5, 1.5),
+            key="axis_xlim",
+        )
+        axis_ylim = st.slider(
+            "图幅纵向范围",
+            min_value=-expand / 2 + 0.5,
+            max_value=expand / 2 + 0.5,
+            value=(-0.5, 1.5),
+            key="axis_ylim",
+        )
     with plot_col:
-        sc_plots = Scatter.show_peak(
-            res=sc,
-            width=width,
-            step=step,
-            cutoff=cut_off,
-            min_height=min_height,
-            save=st.session_state.save_auto,
-            dpi=st.session_state.dpi,
-        )
-        if not interactive:
-            st.pyplot(sc_plots.fig)
+        if len(density.shape) == 3 and slices is None:
+            st.warning("现无法支持三维剖分，请选择二维密度文件或输入切片信息")
         else:
-            c = (
-                Line(
-                    init_opts=opts.InitOpts(
-                        # height="450px",
-                    )
-                )
-                .add_xaxis(sc_plots.plot_x)
-                .add_yaxis(
-                    "散射峰",
-                    sc_plots.plot_y,
-                    is_symbol_show=True,
-                    symbol=None,
-                    symbol_size=1,
-                    areastyle_opts=opts.AreaStyleOpts(opacity=0.5),
-                )
-                .set_global_opts(
-                    title_opts=opts.TitleOpts(title="结构散射结果图"),
-                    yaxis_opts=opts.AxisOpts(
-                        name="Intensity",
-                        name_location="middle",
-                        name_gap=35,
-                        name_textstyle_opts=opts.TextStyleOpts(
-                            font_weight="bold", font_size=20
-                        ),
-                    ),
-                    xaxis_opts=opts.AxisOpts(
-                        name=r"q/Rg",
-                        name_location="end",
-                        name_gap=20,
-                        name_textstyle_opts=opts.TextStyleOpts(
-                            font_weight="bold", font_size=20
-                        ),
-                    ),
-                    datazoom_opts=opts.DataZoomOpts(
-                        type_="slider",
-                        is_show=True,
-                        # start_value=min(sc_plots.plot_x),
-                        # end_value=max(sc_plots.plot_x),
-                        range_start=0,
-                        range_end=100,
-                        orient="horizontal",
-                        pos_bottom="15px",
-                    ),
-                )
-                .set_series_opts(
-                    label_opts=opts.LabelOpts(is_show=False),
-                )
+            vc = VoronoiCell.Analyze(
+                density,
+                mode=main_mode,
+                pc=point_color,
+                lc=line_color,
+                target=targets,
+                expand=expand,
+                slices=slices,
+                permute=permute,
+                save=st.session_state.save_auto,
+                dpi=st.session_state.dpi,
+                interactive=False,
+                point_xlim=point_xlim,
+                point_ylim=point_ylim,
+                axis_xlim=axis_xlim,
+                axis_ylim=axis_ylim,
+                figsize=(4, 4),
             )
-            st_pyecharts(c, height="500px")
+            st.pyplot(vc.fig)
 
-    peaks_loc = np.around(sc_plots.peaks_location, 3)
-    peaks_loc_str = " : ".join([str(x) for x in peaks_loc])
-    peaks_loc_2 = np.around(sc_plots.peaks_location**2).astype(int)
-    peaks_loc_2_str = " : ".join([rf"\sqrt{str(x)}" for x in peaks_loc_2])
-
-    info_col.markdown(
-        f"""
-    #### 峰位比值: \n
-    ${peaks_loc_str}$ \n
-    ${peaks_loc_2_str}$
-    """
-    )
+elif main_mode == AnalyzeMode.WEIGHTED:
+    with info_col:
+        sub_mode = st.selectbox(
+            "请选择加权方式", options=WeightedMethod.values(), index=0, key="sub_mode"
+        )
+        color_mode = st.selectbox(
+            "请选择颜色模式",
+            options=[ColorType.L.value, ColorType.RGB.value],
+            index=0,
+            key="color_mode",
+        )
+        linear = st.checkbox("颜色线性变化 (目前仅对灰度图有效)", value=True)
+        init_weight = 100 if sub_mode == WeightedMethod.additive else 1e4
+        df = pd.DataFrame(
+            [
+                {"x": 100, "y": 350, "weight": init_weight},
+                {"x": 100, "y": 100, "weight": 0},
+                {"x": 350, "y": 350, "weight": 0},
+                {"x": 350, "y": 100, "weight": 0},
+            ]
+        )
+        edited_df = st.data_editor(
+            df, num_rows="dynamic", hide_index=False, use_container_width=False
+        )
+        plot = st.button("开始绘制")
+    with plot_col:
+        if plot:
+            sub_plot_cols = st.columns([0.15,0.7,0.15])
+            with st.spinner("In progress..."):
+                fig, ax = VoronoiCell.weighted_voronoi_diagrams(
+                    edited_df[["x", "y"]].values,
+                    weights=edited_df["weight"].values,
+                    plot="imshow",
+                    method=sub_mode,
+                    color_mode=color_mode,
+                    linear=linear
+                )
+                sub_plot_cols[1].pyplot(fig)

@@ -12,8 +12,17 @@ from scipy.spatial import distance, Delaunay
 from tqdm import tqdm
 
 from ..Artist import generate_colors
-from ..Schema import Density, CVResult, AnalyzeMode, ColorType, WeightedMethod
+from ..Schema import (
+    Density,
+    CVResult,
+    AnalyzeMode,
+    ColorType,
+    WeightedMethod,
+    AnalyzeResult,
+    PathType,
+)
 from ..Toolkits import parse_density
+from ..Artist import plot_savefig
 
 
 class VoronoiCell:
@@ -24,8 +33,8 @@ class VoronoiCell:
         **kwargs,
     ):
         # ------------读取原生数据-----------------
-        tiled = parse_density(density, expand=expand, **kwargs)
-        mat = tiled.mat
+        parsed = parse_density(density, expand=expand, **kwargs)
+        mat = parsed.mat.squeeze()
         assert mat.ndim == 2, f"目前仅支持二维Voronoi剖分，当前矩阵维度为{mat.ndim}"
         gray_image = np.array(mat * 255, dtype=np.uint8)
         size = gray_image.shape
@@ -51,11 +60,8 @@ class VoronoiCell:
         # facets = np.array(facets, dtype=int)
 
         return CVResult(
-            raw_NxNyNz=tiled.raw_NxNyNz.copy(),
-            raw_lxlylz=tiled.raw_lxlylz.copy(),
-            data=tiled.mat.copy(),
-            lxlylz=tiled.lxlylz.copy(),
-            NxNyNz=tiled.NxNyNz.copy(),
+            path=density.path,
+            parsed_density=parsed,
             facets=facets,
             centers=centers,
         )
@@ -73,7 +79,12 @@ class VoronoiCell:
     def Analyze(cls, density: Density, mode: AnalyzeMode, **kwargs):
 
         cv_res = cls.OpenCV(density, **kwargs)
-        vecs = [np.linspace(0, l, N) for l, N in zip(cv_res.lxlylz, cv_res.NxNyNz)]
+        if "expand" in kwargs:
+            kwargs.pop("expand")
+        vecs = [
+            np.linspace(0, l, N)
+            for l, N in zip(cv_res.parsed_density.lxlylz, cv_res.parsed_density.NxNyNz)
+        ]
         vecs = vecs[::-1]
         X, Y = np.meshgrid(*vecs)
         centers = np.around(cv_res.centers).astype(int)
@@ -82,25 +93,32 @@ class VoronoiCell:
         )
 
         if mode == AnalyzeMode.VORONOI:
-            cls.voronoi(cv_res, centers_lxly, **kwargs)
+            return cls.voronoi(cv_res, centers_lxly, **kwargs)
         elif mode == AnalyzeMode.TRIANGLE:
-            cls.triangle(cv_res, centers_lxly, **kwargs)
+            return cls.triangle(cv_res, centers_lxly, **kwargs)
         else:
             raise NotImplementedError(f"{mode} 解析模式尚未建立。")
 
     @staticmethod
-    def get_lim_attributes(key: str, default: Sequence, **kwargs):
+    def get_lim_attributes(key: str, default: Sequence, expand: int, **kwargs):
         attr = kwargs.get(key, default)
-        return np.array(attr) + 1
+        return np.array(attr) + expand / 2
 
     @classmethod
-    def voronoi(cls, cv_res: CVResult, centers: np.ndarray, **kwargs):
+    def voronoi(
+        cls,
+        cv_res: CVResult,
+        centers: np.ndarray,
+        interactive: bool = True,
+        save: Union[PathType, bool] = False,
+        **kwargs,
+    ):
         point_color = kwargs.get("pc", "b")
         line_color = kwargs.get("lc", "k")
         centers_cut = cls.set_point_limits(cv_res, centers, **kwargs)
 
         vor = Voronoi(centers, incremental=True)
-        asp = cv_res.lxlylz[1] / cv_res.lxlylz[0]
+        asp = cv_res.parsed_density.lxlylz[1] / cv_res.parsed_density.lxlylz[0]
         plt.figure(figsize=kwargs.get("figsize", (6, 6 / asp)))
         ax = plt.gca()
         fig = voronoi_plot_2d(
@@ -112,10 +130,24 @@ class VoronoiCell:
         plt.xticks([])
         plt.yticks([])
         plt.tight_layout()
-        plt.show()
+        plot_savefig(
+            cv_res, save=save, prefix="voronoi", suffix=str(cv_res.parsed_density.target[0]), **kwargs
+        )
+        if interactive:
+            plt.show()
+        return AnalyzeResult(
+            path=cv_res.path, cv_result=cv_res, fig=fig, ax=ax, voronoi=vor
+        )
 
     @classmethod
-    def triangle(cls, cv_res: CVResult, centers: np.ndarray, **kwargs):
+    def triangle(
+        cls,
+        cv_res: CVResult,
+        centers: np.ndarray,
+        interactive: bool = True,
+        save: Union[PathType, bool] = False,
+        **kwargs,
+    ):
         point_color = kwargs.get("pc", "b")
         line_color = kwargs.get("lc", "k")
         centers_cut = cls.set_point_limits(cv_res, centers, **kwargs)
@@ -142,8 +174,8 @@ class VoronoiCell:
             coord_dict[t[1]].update([t[0], t[2]])
             coord_dict[t[2]].update([t[0], t[1]])
 
-        asp = cv_res.lxlylz[1] / cv_res.lxlylz[0]
-        plt.figure(figsize=kwargs.get("figsize", (6, 6 / asp)))
+        asp = cv_res.parsed_density.lxlylz[1] / cv_res.parsed_density.lxlylz[0]
+        fig = plt.figure(figsize=kwargs.get("figsize", (6, 6 / asp)))
         if kwargs.get("point", True):
             plt.scatter(centers_cut[:, 0], centers_cut[:, 1], s=20, c=point_color)
         plt.triplot(
@@ -152,27 +184,48 @@ class VoronoiCell:
         cls.set_axis_limits(cv_res, **kwargs)
         plt.xticks([])
         plt.yticks([])
-        plt.show()
+        plt.tight_layout()
+        plot_savefig(
+            cv_res, save=save, prefix="triangle", suffix=str(cv_res.parsed_density.target[0]), **kwargs
+        )
+        if interactive:
+            plt.show()
+        return AnalyzeResult(
+            path=cv_res.path,
+            cv_result=cv_res,
+            fig=fig,
+            ax=plt.gca(),
+            triangle=triangles,
+            coord_dict=coord_dict,
+        )
 
     @classmethod
     def set_point_limits(cls, density: CVResult, centers: np.ndarray, **kwargs):
-        point_xlim = cls.get_lim_attributes("point_xlim", (-0.1, 1.1), **kwargs)
-        point_ylim = cls.get_lim_attributes("point_ylim", (-0.1, 1.1), **kwargs)
+        point_xlim = cls.get_lim_attributes(
+            "point_xlim", (-0.1, 1.1), density.parsed_density.expand[0], **kwargs
+        )
+        point_ylim = cls.get_lim_attributes(
+            "point_ylim", (-0.1, 1.1), density.parsed_density.expand[1], **kwargs
+        )
 
         mask = cls.in_lim(
             point=centers,
-            xlim=density.raw_lxlylz[1] * point_xlim,
-            ylim=density.raw_lxlylz[0] * point_ylim,
+            xlim=density.parsed_density.raw_lxlylz[1] * point_xlim,
+            ylim=density.parsed_density.raw_lxlylz[0] * point_ylim,
         )
         centers_cut = centers[mask]
         return centers_cut
 
     @classmethod
     def set_axis_limits(cls, density: CVResult, **kwargs):
-        axis_xlim = cls.get_lim_attributes("axis_xlim", (-0.5, 1.5), **kwargs)
-        axis_ylim = cls.get_lim_attributes("axis_xlim", (-0.5, 1.5), **kwargs)
-        plt.xlim(density.raw_lxlylz[1] * axis_xlim)
-        plt.ylim(density.raw_lxlylz[0] * axis_ylim)
+        axis_xlim = cls.get_lim_attributes(
+            "axis_xlim", (-0.5, 1.5), density.parsed_density.expand[0], **kwargs
+        )
+        axis_ylim = cls.get_lim_attributes(
+            "axis_ylim", (-0.5, 1.5), density.parsed_density.expand[1], **kwargs
+        )
+        plt.xlim(density.parsed_density.raw_lxlylz[1] * axis_xlim)
+        plt.ylim(density.parsed_density.raw_lxlylz[0] * axis_ylim)
 
     @staticmethod
     def additive(points, arr, weights):
@@ -224,17 +277,17 @@ class VoronoiCell:
             putpixel(arr, colors[min_idx])
         plot = kwargs.get("plot", "imshow")
         im = np.array(image)
-        plt.figure(figsize=kwargs.get("figsize", (5, 5)))
-        plt.scatter(points[:, 0], points[:, 1], s=max(size) * 0.1, c="white")
+        fig = plt.figure(figsize=kwargs.get("figsize", (5, 5)))
+        plt.scatter(points[:, 0], points[:, 1], s=max(size) * 0.1, c="white", zorder=10)
         if plot == "imshow":
             if color_mode == ColorType.L:
-                plt.imshow(im, "gray")
+                plt.imshow(im, "gray", zorder=5)
             elif color_mode == ColorType.RGB:
-                plt.imshow(im)
+                plt.imshow(im, zorder=5)
         elif plot == "vertices":
             if color_mode == "RGB":
                 im = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
             canny = cv2.Canny(im, threshold1=40, threshold2=80, apertureSize=5)
-            plt.imshow(canny, "gray")
+            plt.imshow(canny, "gray", zorder=5)
         plt.show()
-        return image
+        return fig, plt.gca()

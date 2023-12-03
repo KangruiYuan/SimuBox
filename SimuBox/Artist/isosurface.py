@@ -81,6 +81,7 @@ def iso3D(
         plt.show()
         return fig, ax
 
+
 def iso2D(
     density: Density,
     target: Optional[Union[int, Iterable[int]]] = 0,
@@ -91,7 +92,7 @@ def iso2D(
     label: bool = True,
     colorbar: bool = False,
     interactive: bool = True,
-    save: Union[PathType, bool] = None,
+    save: Union[PathType, bool] = False,
     **kwargs,
 ):
 
@@ -131,7 +132,13 @@ def iso2D(
             plt.colorbar(im, ax=ax)
 
     fig.tight_layout()
-    plot_savefig(save=save, **kwargs)
+    plot_savefig(
+        density,
+        prefix="iso2d",
+        suffix="_".join(str(i) for i in parsed.target),
+        save=save,
+        **kwargs,
+    )
     if interactive:
         plt.show()
     return fig, axes

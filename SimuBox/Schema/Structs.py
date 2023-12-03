@@ -3,8 +3,10 @@ from typing import Optional, Any, Sequence, Union
 
 import numpy as np
 import pandas as pd
-from matplotlib.figure import Figure, Axes
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 from pydantic import BaseModel
+from scipy.spatial import Voronoi
 
 
 class ExtendedModel(BaseModel):
@@ -146,29 +148,6 @@ class PeakFitResult(ExtendedModel):
     fitted_curve: np.ndarray
     split_curve: np.ndarray
 
-
-class ScatterResult(ExtendedModel):
-    q_Intensity: np.ndarray
-    q_idx: dict
-
-class ScatterPlots(ExtendedModel):
-    peaks_location: np.ndarray
-    peaks_height: dict
-    plot_y: np.ndarray
-    plot_x: np.ndarray
-    fig: Any
-    ax: Any
-
-class CVResult(ExtendedModel):
-    raw_NxNyNz: np.ndarray
-    raw_lxlylz: np.ndarray
-    data: np.ndarray
-    lxlylz: np.ndarray
-    NxNyNz: np.ndarray
-    facets: list
-    centers: np.ndarray
-
-
 class DensityParseResult(ExtendedModel):
     path: Path
     raw_NxNyNz: np.ndarray
@@ -178,6 +157,36 @@ class DensityParseResult(ExtendedModel):
     NxNyNz: np.ndarray
     mat: np.ndarray
     expand: np.ndarray
+    target: list[int]
+
+class ScatterResult(ExtendedModel):
+    parsed_density: DensityParseResult
+    q_Intensity: np.ndarray
+    q_idx: dict
+
+class ScatterPlots(ExtendedModel):
+    peaks_location: np.ndarray
+    peaks_height: dict
+    plot_y: np.ndarray
+    plot_x: np.ndarray
+    fig: Optional[Figure] = None
+    ax: Optional[Axes] = None
+
+class CVResult(ExtendedModel):
+    path: Path
+    parsed_density: DensityParseResult
+    facets: list
+    centers: np.ndarray
+
+class AnalyzeResult(ExtendedModel):
+    path: Path
+    cv_result: CVResult
+    fig: Optional[Figure] = None
+    ax: Optional[Axes] = None
+    voronoi: Optional[Voronoi] = None
+    triangle: Optional[list] = None
+    coord_dict: Optional[dict] = None
+
 
 
 class XMLRaw(ExtendedModel):

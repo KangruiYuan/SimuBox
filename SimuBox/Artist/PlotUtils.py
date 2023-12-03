@@ -67,6 +67,7 @@ def plot_locators(
 def plot_savefig(
     obj: Optional = None,
     prefix: str = "",
+    middle: str = "",
     suffix: str = "",
     dpi: int = 150,
     save: Union[PathType, bool] = False,
@@ -85,7 +86,7 @@ def plot_savefig(
     else:
         raise ValueError(f"save类型应为[Path, str, bool], 而当前是{type(save)}")
 
-    stem = path.stem
+    stem = middle or path.stem
     stem = prefix + "_" + stem if prefix else stem
     stem = stem + "_" + suffix if suffix else stem
     if path.is_dir():
@@ -103,7 +104,7 @@ def generate_colors(
     **kwargs,
 ):
     if mode == ColorType.RGB:
-        color = np.random.choice(range(256), size=(num, 3)).tolist()
+        color = [tuple(i) for i in np.random.choice(range(256), size=(num, 3))]
     elif mode == ColorType.HEX:
         color = [
             "#" + "".join(i)

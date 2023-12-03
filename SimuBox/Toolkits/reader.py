@@ -12,8 +12,9 @@ import pandas as pd
 
 from ..Schema import Printout, Density, PathType, FetData, DensityParseResult
 
-def read_file(path:PathType, default_name: Optional[str] = None, **kwargs):
-    encoding = kwargs.get('encoding', "utf-8")
+
+def read_file(path: PathType, default_name: Optional[str] = None, **kwargs):
+    encoding = kwargs.get("encoding", "utf-8")
     if isinstance(path, BytesIO):
         with TextIOWrapper(path, encoding=encoding) as txt:
             content = txt.readlines()
@@ -35,7 +36,9 @@ def read_json(path: PathType):
 
 
 def read_printout(path: PathType, **kwargs):
-    cont, path = read_file(path, default_name=kwargs.get('default_name', "printout.txt"))
+    cont, path = read_file(
+        path, default_name=kwargs.get("default_name", "printout.txt")
+    )
     box = np.array(list(map(float, cont[-3].strip().split(" "))))
     lxlylz = box[:3]
     uws = re.findall("[.0-9e+-]+", cont[-1])
@@ -63,7 +66,7 @@ def read_density(path: PathType, parse_N: bool = True, parse_L: bool = False, **
     :param path:
     :return:
     """
-    cont, path = read_file(path, default_name=kwargs.get('default_name', "phout.txt"))
+    cont, path = read_file(path, default_name=kwargs.get("default_name", "phout.txt"))
 
     skip = 0
     if parse_N:
@@ -79,7 +82,9 @@ def read_density(path: PathType, parse_N: bool = True, parse_L: bool = False, **
         lxlylz = kwargs.get("lxlylz", np.array([1, 1, 1]))
 
     try:
-        data = pd.read_csv(path, skiprows=skip, header=None, sep=r"[ ]+", engine="python")
+        data = pd.read_csv(
+            path, skiprows=skip, header=None, sep=r"[ ]+", engine="python"
+        )
     except:
         return read_density(path, parse_N=True, parse_L=True, **kwargs)
 
@@ -109,7 +114,7 @@ def read_csv(path: PathType, **kwargs):
 
 
 def read_fet(path: PathType, **kwargs):
-    cont, path = read_file(path, default_name=kwargs.get('default_name', "fet.dat"))
+    cont, path = read_file(path, default_name=kwargs.get("default_name", "fet.dat"))
 
     with open(path, mode="r") as fp:
         cont = fp.readlines()
@@ -117,6 +122,33 @@ def read_fet(path: PathType, **kwargs):
     res = dict([[c[0], float(c[1])] for c in res])
     return FetData(path=path, **res)
 
+def periodic_extension(arr: np.ndarray, periods: Sequence[int]):
+    """
+    对三维数组进行周期性延拓
+
+    Parameters:
+    - arr: 三维数组
+    - periods: 三维延拓的周期数，例如 (period_x, period_y, period_z)
+
+    Returns:
+    - 周期性延拓后的数组
+    """
+    shape = arr.shape
+    result = np.zeros(
+        (shape[0] * periods[0], shape[1] * periods[1], shape[2] * periods[2]),
+        dtype=arr.dtype,
+    )
+
+    for i in range(periods[0]):
+        for j in range(periods[1]):
+            for k in range(periods[2]):
+                result[
+                    i * shape[0] : (i + 1) * shape[0],
+                    j * shape[1] : (j + 1) * shape[1],
+                    k * shape[2] : (k + 1) * shape[2],
+                ] = arr
+
+    return result
 
 def parse_density(
     density: Density,
@@ -133,7 +165,9 @@ def parse_density(
         permute = np.arange(len(shape))
     else:
         permute = np.array(permute)
-        assert len(permute) == len(shape), f"length of permute({len(permute)}) and shape({len(shape)}) mismatch"
+        assert len(permute) == len(
+            shape
+        ), f"length of permute({len(permute)}) and shape({len(shape)}) mismatch"
     shape = shape[permute]
     lxlylz = lxlylz[permute]
     if slices is not None:
@@ -148,20 +182,21 @@ def parse_density(
     shape = f_vec(shape)
     lxlylz = f_vec(lxlylz)
 
-
     if isinstance(expand, int):
         expand = np.array([expand] * len(shape))
     else:
         assert len(expand) == len(shape), f"当前矩阵维度为3，拓展信息长度为{len(expand)}, 不匹配"
+        expand = np.array(expand)
 
     return DensityParseResult(
-            path=density.path,
-            raw_NxNyNz=shape.copy(),
-            raw_lxlylz=lxlylz.copy(),
-            raw_mat=np.stack(mats),
-            lxlylz=lxlylz * expand,
-            NxNyNz=shape * expand,
-            mat=np.stack([np.tile(mat, expand) for mat in mats]),
-            expand=expand.copy(),
+        path=density.path,
+        raw_NxNyNz=shape.copy(),
+        raw_lxlylz=lxlylz.copy(),
+        raw_mat=np.stack(mats),
+        lxlylz=lxlylz * expand,
+        NxNyNz=shape * expand,
+        mat=np.stack([np.tile(mat, expand) for mat in mats]),
+        # mat=np.stack([periodic_extension(mat, expand) for mat in mats]),
+        expand=expand.copy(),
+        target = [int(i) for i in target]
     )
-
