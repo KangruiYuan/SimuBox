@@ -249,6 +249,7 @@ class VoronoiCell:
         method: WeightedMethod = "additive",
         size: Tuple = (500, 500),
         color_mode: ColorType = "L",
+        interactive: bool = True,
         **kwargs,
     ):
         image = Image.new(color_mode, size)
@@ -278,6 +279,7 @@ class VoronoiCell:
         plot = kwargs.get("plot", "imshow")
         im = np.array(image)
         fig = plt.figure(figsize=kwargs.get("figsize", (5, 5)))
+        ax = plt.gca()
         plt.scatter(points[:, 0], points[:, 1], s=max(size) * 0.1, c="white", zorder=10)
         if plot == "imshow":
             if color_mode == ColorType.L:
@@ -289,5 +291,6 @@ class VoronoiCell:
                 im = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
             canny = cv2.Canny(im, threshold1=40, threshold2=80, apertureSize=5)
             plt.imshow(canny, "gray", zorder=5)
-        plt.show()
-        return fig, plt.gca()
+        if interactive:
+            plt.show()
+        return fig, ax

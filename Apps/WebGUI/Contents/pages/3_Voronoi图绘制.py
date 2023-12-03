@@ -207,6 +207,7 @@ elif main_mode == AnalyzeMode.WEIGHTED:
                     plot="imshow",
                     method=sub_mode,
                     color_mode=color_mode,
-                    linear=linear
+                    linear=linear,
+                    interactive=False
                 )
                 sub_plot_cols[1].pyplot(fig)
