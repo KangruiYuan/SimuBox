@@ -14,7 +14,7 @@ from .PlotUtils import plot_savefig
 
 def iso3D(
     density: Density,
-    target: int = 0,
+    target: Optional[Union[int, Iterable[int]]] = 0,
     permute: Optional[Iterable[int]] = None,
     level: Union[float, List[float]] = 0.5,
     backend: str = "vista",
@@ -26,6 +26,7 @@ def iso3D(
     parsed = parse_density(density, target, permute, **kwargs)
     lxlylz = parsed.lxlylz
     NxNyNz = parsed.NxNyNz
+    mats = parsed.mat
     if all(lxlylz / parsed.expand == 1):
         lxlylz *= NxNyNz
 
@@ -35,32 +36,39 @@ def iso3D(
         0 : lxlylz[2] : complex(0, NxNyNz[2]),
     ]
 
+    colors = kwargs.get("colors", [])
+    colors.extend(["blue", "red", "green"])
+    style = kwargs.get("style", "surface")
+    opacity = kwargs.get("opacity", 0.8)
+
     if backend == "vista":
         grid = pv.StructuredGrid(x, y, z)
         level = level if isinstance(level, Sequence) else [level]
-        contours = grid.contour(
-            level,
-            scalars=parsed.mat.flatten(),
-            # rng=[1,2],
-            method="contour",
-        )
         pv.set_plot_theme(kwargs.get("theme", "document"))  # type: ignore
         p = pv.Plotter(
             line_smoothing=True, polygon_smoothing=True, lighting="light kit"
         )
-        if frame:
-            p.add_mesh(grid.outline(), color="k")
 
-        p.add_mesh(
-            contours,
-            color=kwargs.get("color", "blue"),
-            show_edges=False,
-            style=kwargs.get("style", "surface"),
-            smooth_shading=True,
-            opacity=kwargs.get("opacity", 0.8),
-            pbr=True,
-            roughness=0,
-        )
+        for idx, target in enumerate(parsed.target):
+            contours = grid.contour(
+                level,
+                scalars=mats[idx].flatten(),
+                method="contour",
+            )
+
+            if frame and idx == 0:
+                p.add_mesh(grid.outline(), color="k")
+
+            p.add_mesh(
+                contours,
+                color=colors[idx],
+                show_edges=False,
+                style=style,
+                smooth_shading=True,
+                opacity=opacity,
+                pbr=True,
+                roughness=0,
+            )
         p.view_isometric()
         p.background_color = kwargs.get("bk", "white")
         if save is not None:

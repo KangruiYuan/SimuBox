@@ -59,12 +59,9 @@ if uploaded_phout:
         # 将 BytesIO 中的数据写入临时文件
         temp_file.write(uploaded_phout.read().decode("utf-8"))
         temp_name = Path(temp_file.name)
-        # save = (
-        #     st.session_state.cache_dir / uploaded_phout.name
-        #     if st.session_state.save_auto
-        #     else False
-        # )
+        save = st.session_state.cache_dir / uploaded_phout.name
     density = read_density(temp_name, parse_N=parse_N, parse_L=parse_L)
+    density.path = save
     temp_name.unlink()
     # targets = left_upload_col.text_input(label="请选择需要绘制的列号（从0开始，以空格间隔）", value="0")
     if use_lxlylz and lxlylz is not None:
@@ -165,7 +162,7 @@ if uploaded_phout:
         with sub_cols[0]:
             plotter = iso3D(
                 density,
-                target=targets[0],
+                target=targets,
                 backend="vista",
                 interactive=False,
                 permute=permute,
