@@ -22,38 +22,36 @@ def print_help():
         "-" * 20,
         "(1) 绘制相结构(2D)",
         "(2) 绘制相结构(3D)",
+        "(?) 显示帮助信息",
+        "(x) 退出程序",
         "-" * 20,
         "请输入相应功能序号：",
     ]
     for desc in description:
         print(desc)
 
+def prepare_iso_info(folder_path):
+    density = read_density(folder_path)
+    print(f"当前可绘制的图像列号为: {list(range(len(density.data.columns)))}")
+    targets = list(map(int, input("请输入绘制目标为（以空格间隔）：").split(" ")))
+    permute = list(range(len(density.shape)))
+    print(f"当前可调换的坐标轴为: {permute}")
+    try:
+        permute = list(map(int, input("请输入调换后的坐标轴顺序（以空格间隔，默认为原始序列）：").split(" ")))
+    except:
+        pass
+    return density, targets, permute
+
 def plot_iso2D():
     folder_path = get_directory_path()
     if folder_path:
-        density = read_density(folder_path)
-        print(f"当前可绘制的图像列号为: {list(range(len(density.data.columns)))}")
-        targets = list(map(int, input("请输入绘制目标为（以空格间隔）：").split(" ")))
-        permute = list(range(len(density.shape)))
-        print(f"当前可调换的坐标轴为: {permute}")
-        try:
-            permute = list(map(int, input("请输入调换后的坐标轴顺序（以空格间隔，默认为原始序列）：").split(" ")))
-        except:
-            pass
+        density, targets, permute = prepare_iso_info(folder_path)
         iso2D(density, target=targets, permute=permute)
 
 def plot_iso3D():
     folder_path = get_directory_path()
     if folder_path:
-        density = read_density(folder_path)
-        print(f"当前可绘制的图像列号为: {list(range(len(density.data.columns)))}")
-        targets = int(input("请输入绘制目标为（仅能输入单列序号）："))
-        permute = list(range(len(density.shape)))
-        print(f"当前可调换的坐标轴为: {permute}")
-        try:
-            permute = list(map(int, input("请输入调换后的坐标轴顺序（以空格间隔，默认为原始序列）：").split(" ")))
-        except:
-            pass
+        density, targets, permute = prepare_iso_info(folder_path)
         iso3D(density, target=targets, permute=permute)
 
 
@@ -71,6 +69,8 @@ if __name__ == "__main__":
             if cmd == "x":
                 print("程序退出，祝您愉快。")
                 break
+            elif cmd == "?":
+                print_help()
             elif cmd == "1":
                 plot_iso2D()
             elif cmd == "2":

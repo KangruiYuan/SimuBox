@@ -14,7 +14,7 @@ st.set_page_config(
 )
 
 st.title(":blue[SimuBox] :red[Visual] :sunglasses:")
-st.header('该项目由复旦大学李卫华教授课题组全体开发。', divider='rainbow')
+st.header('特别鸣谢复旦大学李卫华教授及全体同门。', divider='rainbow')
 st.caption(f'当前时间为: {datetime.now()}')
 
 st.subheader("全局参数设置")

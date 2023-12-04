@@ -113,7 +113,7 @@ if uploaded_phout:
                 colorbar=colorbar,
                 expand=expand,
                 save=st.session_state.save_auto,
-                    dpi=st.session_state.dpi,
+                dpi=st.session_state.dpi,
             )
             sub_cols[1].pyplot(fig, use_container_width=True)
         elif len(targets) == 2:
@@ -127,7 +127,7 @@ if uploaded_phout:
                     colorbar=colorbar,
                     expand=expand,
                     save=st.session_state.save_auto,
-                        dpi=st.session_state.dpi,
+                    dpi=st.session_state.dpi,
                 )
                 sub_col.pyplot(fig, use_container_width=True)
         else:
@@ -141,13 +141,17 @@ if uploaded_phout:
                     colorbar=colorbar,
                     expand=expand,
                     save=st.session_state.save_auto,
-                        dpi=st.session_state.dpi,
+                    dpi=st.session_state.dpi,
                 )
                 sub_col.pyplot(fig, use_container_width=True)
     elif len(density.shape) == 3:
         sub_cols = st.columns(spec=[0.75, 0.25])
         with sub_cols[1]:
-            front_color = st.text_input("请输入物体颜色", value="blue")
+            front_color = st.multiselect(
+                "请输入物体颜色",
+                options=("blue", "red", "green", "yellow"),
+                default=("blue", "red"),
+            )
             background_color = st.text_input("请输入背景颜色", value="white")
             opacity = st.number_input(
                 "请输入透明度（0-1）", value=0.8, min_value=0.0, max_value=1.0
@@ -167,7 +171,7 @@ if uploaded_phout:
                 interactive=False,
                 permute=permute,
                 bk=background_color,
-                color=front_color,
+                colors=front_color,
                 opacity=opacity,
                 frame=frame,
                 style=style,

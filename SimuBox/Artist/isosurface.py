@@ -37,7 +37,9 @@ def iso3D(
     ]
 
     colors = kwargs.get("colors", [])
-    colors.extend(["blue", "red", "green"])
+    for c in ["blue", "red", "green"]:
+        if c not in colors:
+            colors.append(c)
     style = kwargs.get("style", "surface")
     opacity = kwargs.get("opacity", 0.8)
 

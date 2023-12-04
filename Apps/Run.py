@@ -8,5 +8,5 @@ if __name__ == '__main__':
     parser.add_argument("-a", "--app", type=str, default="主页.py", help="主页面文件")
     parser.add_argument("-p", "--port", type=int, default=9998)
     args = parser.parse_args()
-    app_path = Path(__file__).parent / "Contents" / args.app
+    app_path = Path(__file__).parent / "Web" / args.app
     os.system(f"python -m streamlit run {app_path} --server.port {args.port}")
