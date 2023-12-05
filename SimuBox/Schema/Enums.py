@@ -27,7 +27,14 @@ class ColorType(StrEnum):
     RGB = "RGB"
     HEX = "HEX"
     L = "L"
-    # RANDOM = "RANDOM"
+    RANDOM = "RANDOM"
+
+
+class CompareMode(StrEnum):
+
+    DIFF = "diff"
+    ABS = "abs"
+    MULTI = "multi"
 
 
 class DetectionMode(StrEnum):

@@ -225,3 +225,16 @@ class XMLTransform(ExtendedModel):
             header=" ".join(map(str, self.xml.NxNyNz)),
             comments="",
         )
+
+class LineInfo(ExtendedModel):
+    x: np.ndarray
+    y: np.ndarray
+    label: str
+
+class LineCompareResult(ExtendedModel):
+    fig: Optional[Figure]
+    ax: Optional[Axes]
+    lines: list[LineInfo]
+    xlabel: str
+    ylabel: str
+

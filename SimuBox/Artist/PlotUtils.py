@@ -32,14 +32,14 @@ def plot_trans(trans: Optional[dict] = None, **kwargs):
 def plot_legend(legend: Optional[dict] = None, **kwargs):
     if legend is None:
         legend = dict()
-    fontsize = legend.get("fontsize", 25)
+    fontsize = legend.get("fontsize", 15)
     mode = legend.get("mode", "auto")
     if mode == "outside":
         loc = legend.get("loc", "upper left")
         bbox_to_anchor = legend.get("bbox_to_anchor", (0.98, 0.8))
-        plt.legend(fontsize=fontsize, loc=loc, bbox_to_anchor=bbox_to_anchor)
+        plt.legend(fontsize=fontsize, loc=loc, bbox_to_anchor=bbox_to_anchor, frameon=False)
     elif mode == "auto":
-        plt.legend(fontsize=fontsize, loc="best")
+        plt.legend(fontsize=fontsize, loc="best", frameon=False)
     else:
         raise NotImplementedError("legend mode must be one of ['outside', 'auto']")
 

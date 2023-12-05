@@ -29,13 +29,14 @@ def replace_target(path: PathType, target: str, key: str = "phase") -> Optional[
         return
 
 
-def match_path(paths: Sequence[PathType], **kwargs):
+def match_path(paths, **kwargs):
     criteria = [k + str(v) for k, v in kwargs.items()]
     for path in paths:
         path = str(path)
         for c in criteria:
             if c not in path:
                 break
-        return Path(path)
+        else:
+            return Path(path)
     print(f"{criteria}匹配失败。")
     return

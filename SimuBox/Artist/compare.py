@@ -10,7 +10,7 @@ from cycler import cycler
 from collections import ChainMap
 
 from ..Toolkits import read_csv
-from ..Schema import AbsCommon, DiffCommon
+from ..Schema import AbsCommon, DiffCommon, LineCompareResult, LineInfo
 from .PlotUtils import plot_trans, plot_legend, plot_locators, plot_savefig
 
 COMPARE_PLOT_CONFIG = {
@@ -89,9 +89,11 @@ class CompareJudger:
         horiline: Literal["all", "mask", None] = "all",
         save: Optional[bool] = True,
         data: Optional[pd.DataFrame] = None,
+        interactive: bool = True,
         **kwargs,
     ):
 
+        lines = []
         data = self.data(**kwargs) if data is None else data
         data = data.sort_values(by=xlabel)
 
@@ -101,7 +103,7 @@ class CompareJudger:
             print(f'标签{"+".join(ylabel)}总名称指定为{y_name}')
             ylabel = y_name
 
-        plt.figure(figsize=kwargs.get("figsize", (8, 6)))
+        fig = plt.figure(figsize=kwargs.get("figsize", (8, 6)))
         ax = plt.gca()
         ax.set_prop_cycle(_STYLE_REF)
 
@@ -128,19 +130,23 @@ class CompareJudger:
             inverse_mask = np.in1d(base_xticks, o_xticks)
             base_xticks_mask = base_xticks[inverse_mask]
             base_yticks_mask = base_yticks[inverse_mask]
+            o_yticks = o_yticks - base_yticks_mask
             ax.plot(
                 o_xticks,
-                o_yticks - base_yticks_mask,
+                o_yticks,
                 label=self.diff_labels.get(o, o),
                 lw=2.5,
                 markersize=8,
                 alpha=1.0,
             )
+            lines.append(
+                LineInfo(x=o_xticks, y=o_yticks, label=self.diff_labels.get(o, o))
+            )
 
         if horiline:
             if horiline == "all":
                 horiline_xticks = base_xticks
-                horiline_yticks = [0] * len(base_xticks)
+                horiline_yticks = np.zeros_like(horiline_xticks)
             elif horiline == "mask":
                 rest = data[data["phase"] != base]
                 rest_xticks = rest[xlabel].unique()
@@ -162,6 +168,13 @@ class CompareJudger:
                 markersize=8,
                 alpha=0.8,
             )
+            lines.append(
+                LineInfo(
+                    x=horiline_xticks,
+                    y=horiline_yticks,
+                    label=self.diff_labels.get(base, base),
+                )
+            )
 
         plot_trans(**kwargs)
         plot_locators(ax=ax, **kwargs)
@@ -175,7 +188,15 @@ class CompareJudger:
             plt.margins(*margin)
         plt.tight_layout()
         plot_savefig(self, prefix="diff", suffix=ylabel, save=save, **kwargs)
-        plt.show()
+        if interactive:
+            plt.show()
+        return LineCompareResult(
+            fig=fig,
+            ax=ax,
+            lines=lines,
+            xlabel=self.diff_labels.get(xlabel, xlabel),
+            ylabel=self.diff_labels.get(ylabel, ylabel),
+        )
 
     def abs_comparison(
         self,
@@ -184,9 +205,10 @@ class CompareJudger:
         phases: Optional[Union[list[str], str]] = None,
         save: Optional[Union[Path, str, bool]] = True,
         data: Optional[pd.DataFrame] = None,
+        interactive: bool = True,
         **kwargs,
     ):
-
+        lines = []
         data = self.data(**kwargs) if data is None else data
         data = data.sort_values(by=xlabel)
 
@@ -204,19 +226,22 @@ class CompareJudger:
             print(f'标签{"+".join(ylabel)}总名称指定为{y_name}')
             ylabel = y_name
 
-        plt.figure(figsize=kwargs.get("figsize", (8, 6)))
+        fig = plt.figure(figsize=kwargs.get("figsize", (8, 6)))
         ax = plt.gca()
         ax.set_prop_cycle(_STYLE_ABS)
 
         for p in phases:
             tmp = data[data.phase == p]
+            x = tmp[xlabel].values
+            y = tmp[ylabel].values
             ax.plot(
-                tmp[xlabel],
-                tmp[ylabel],
+                x,
+                y,
                 label=self.abs_labels.get(p, p),
                 lw=2.5,
                 markersize=8,
             )
+            lines.append(LineInfo(x=x, y=y, label=self.abs_labels.get(p, p)))
 
         plt.xlabel(self.abs_labels.get(xlabel, xlabel), fontsize=30)
         plt.ylabel(self.abs_labels.get(ylabel, ylabel), fontsize=30)
@@ -231,7 +256,15 @@ class CompareJudger:
 
         plt.tight_layout()
         plot_savefig(self, prefix="abs", suffix=ylabel, save=save)
-        plt.show()
+        if interactive:
+            plt.show()
+        return LineCompareResult(
+            fig=fig,
+            ax=ax,
+            lines=lines,
+            xlabel=self.abs_labels.get(xlabel, xlabel),
+            ylabel=self.abs_labels.get(ylabel, ylabel),
+        )
 
     def multi_target_ref(
         self,
@@ -242,12 +275,14 @@ class CompareJudger:
         ylabel_name: str,
         save: Optional[bool] = True,
         data: Optional[pd.DataFrame] = None,
+        interactive: bool = True,
         **kwargs,
     ):
+        lines = []
         data = self.data(**kwargs) if data is None else data
         data = data.sort_values(by=xlabel)
 
-        plt.figure(figsize=kwargs.get("figsize", (8, 6)))
+        fig = plt.figure(figsize=kwargs.get("figsize", (8, 6)))
         ax = plt.gca()
         ax.set_prop_cycle(_STYLE_REF)
 
@@ -269,13 +304,17 @@ class CompareJudger:
             inverse_mask = np.in1d(base_xticks, o_xticks)
             # base_xticks_mask = base_xticks[inverse_mask]
             base_yticks_mask = base_yticks[inverse_mask]
+            o_yticks = o_yticks - base_yticks_mask
             ax.plot(
                 o_xticks,
-                o_yticks - base_yticks_mask,
-                label=DiffCommon[yl],
+                o_yticks,
+                label=self.diff_labels.get(yl, yl),
                 lw=2.5,
                 markersize=8,
                 alpha=1.0,
+            )
+            lines.append(
+                LineInfo(x=o_xticks, y=o_yticks, label=self.diff_labels.get(yl, yl))
             )
 
         plot_trans(**kwargs)
@@ -292,4 +331,13 @@ class CompareJudger:
 
         plt.tight_layout()
         plot_savefig(self, prefix="multi", suffix=ylabel_name, save=save, **kwargs)
-        plt.show()
+        if interactive:
+            plt.show()
+
+        return LineCompareResult(
+            fig=fig,
+            ax=ax,
+            lines=lines,
+            xlabel=self.diff_labels.get(xlabel, xlabel),
+            ylabel=self.diff_labels.get(ylabel_name, ylabel_name),
+        )
