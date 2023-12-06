@@ -42,7 +42,9 @@ if uploaded_csv:
     plot_col, info_col = st.columns([0.75, 0.25])
 
     with info_col:
-        mode = st.selectbox("请选择比较模式", options=CompareMode.values(), index=0)
+        mode = st.selectbox(
+            "请选择比较模式", options=[CompareMode.DIFF.value, CompareMode.ABS.value], index=0
+        )
         plot_button = st.button("绘制图像")
         interactive = st.checkbox("开启交互式绘图", value=False)
 

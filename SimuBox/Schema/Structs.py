@@ -131,22 +131,29 @@ class PointInfo(ExtendedModel):
     y: float
     freeEnergy: float
 
-
+from pydantic import Field
 class PeakInfo(ExtendedModel):
 
     center: Optional[float]
     amplitude: Optional[float] = None
     width: Optional[float] = None
     background: Optional[float] = None
-
+    fix: Optional[Sequence[bool]] = (False, False, False)
+    area: Optional[float] = None
 
 class PeakFitResult(ExtendedModel):
 
-    raw_x: np.ndarray
-    raw_y: np.ndarray
+    x: np.ndarray
+    y: np.ndarray
     peaks: Sequence[PeakInfo]
     fitted_curve: np.ndarray
     split_curve: np.ndarray
+    r2: float
+    adj_r2: float
+    area: float
+    fig: Optional[Figure] = None
+    ax: Optional[Axes] = None
+
 
 class DensityParseResult(ExtendedModel):
     path: Path

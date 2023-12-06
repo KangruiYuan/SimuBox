@@ -631,16 +631,6 @@ class TopoCreater(nx.DiGraph):
             ax.set_ylabel(kwargs.get("ylabel", r"$\chi N$"), fontdict={"fontsize": 20})
             plt.show()
 
-
-class PhiCreater:
-    def __int__(self, NxNyNz, lxlylz, **kwargs):
-        self.NxNyNz = NxNyNz
-        self.lxlylz = lxlylz
-
-    def generate(self, template):
-        pass
-
-
 if __name__ == "__main__":
     import doctest
 
