@@ -245,3 +245,20 @@ class LineCompareResult(ExtendedModel):
     xlabel: str
     ylabel: str
 
+class ODTResult(ExtendedModel):
+
+    fig: Optional[Figure]
+    ax: Optional[Axes]
+    xN: np.ndarray
+    f: np.ndarray
+    expression: Any
+    xlabel: str
+    ylabel: str
+
+
+class TopoShow(ExtendedModel):
+    fig: Optional[Figure]
+    ax: Optional[Axes]
+    kind_color: dict[str, str]
+    rad: float
+

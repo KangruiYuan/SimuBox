@@ -2,12 +2,9 @@ import warnings
 from copy import deepcopy
 
 import pandas as pd
+import plotly.graph_objs as go
 import streamlit as st
 from SimuBox import CompareJudger, CompareMode
-from pyecharts.charts import Line
-from streamlit_echarts import st_pyecharts
-import pyecharts.options as opts
-import plotly.graph_objs as go
 
 warnings.filterwarnings("ignore")
 

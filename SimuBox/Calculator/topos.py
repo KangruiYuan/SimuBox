@@ -1,6 +1,7 @@
 import json
 from collections import Counter, defaultdict, OrderedDict
-from typing import Union, Dict, List, Tuple
+from pathlib import Path
+from typing import Union, Dict, List, Tuple, Sequence, Optional, Any, Mapping
 
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -8,26 +9,28 @@ import numpy as np
 import scipy.optimize as opt
 import sympy as sym
 from sympy import Symbol
-from ..Artist import plot_locators
+from ..Artist import plot_locators, plot_legend
+from ..Schema import TopoBlockSet, ODTResult, TopoShow
 
 __all__ = ["TopoCreater", "fA", "fB", "x", "Joint"]
 
 fA = Symbol("fA", real=True, postive=True)
 fB = Symbol("fB", real=True, postive=True)
+fC = Symbol("fC", real=True, postive=True)
 x = Symbol("x", real=True, postive=True)
 
 
 class Joint:
-    count = 0
+    __count = 0
 
     def __init__(self, _id: int, new: bool = False):
 
         if new:
-            Joint.count = 0
+            Joint.__count = 0
         self.id = _id
-        self.count_id = Joint.count
+        self.count_id = Joint.__count
         self.connection = []
-        Joint.count += 1
+        Joint.__count += 1
 
     def __str__(self):
         """
@@ -44,11 +47,11 @@ class Joint:
     def __contains__(self, item):
         return item in self.connection
 
-    def add(self, joint) -> None:
+    def add(self, other_joint: Union["Joint", Sequence["Joint"]]) -> None:
 
-        if isinstance(joint, Joint):
-            joint = [joint]
-        for j in joint:
+        if isinstance(other_joint, Joint):
+            other_joint = [other_joint]
+        for j in other_joint:
             if self in j and j in self:
                 continue
             if self not in j:
@@ -58,18 +61,17 @@ class Joint:
 
     def search_by_count_id(self, count_id: int):
         _log = set()
-        q = []
-        q.append(self)
+        q = [self]
         while q:
-            joint = q.pop()
-            _id = joint.id
-            _count_id = joint.count_id
+            current_joint = q.pop()
+            _id = current_joint.id
+            _count_id = current_joint.count_id
             if _count_id not in _log:
                 _log.add(_count_id)
                 if _count_id == count_id:
-                    return joint
+                    return current_joint
                 else:
-                    q.extend(joint.connection)
+                    q.extend(current_joint.connection)
             else:
                 continue
         print(f"Joint with count id = {count_id} do not exist!")
@@ -78,14 +80,13 @@ class Joint:
         if verbose:
             print("format: id(count_id)")
         exp_log = set()
-        q = []
-        q.append(self)
-        res = defaultdict(list)
+        q = [self]
+        res: dict[tuple, list] = defaultdict(list)
         while q:
-            joint = q.pop()
-            _id = joint.id
-            _count_id = joint.count_id
-            for child in joint.connection:
+            current_joint = q.pop()
+            _id = current_joint.id
+            _count_id = current_joint.count_id
+            for child in current_joint.connection:
                 child_id = child.id
                 child_count_id = child.count_id
                 exp = f"{_id}({_count_id})-{child_id}({child_count_id})"
@@ -103,36 +104,42 @@ class Joint:
                     continue
         return res
 
-    def attach_by_id(self, _id, other_id):
+    def attach_by_id(self, _id: int, other_id: int):
         _log = set()
-        q = []
-        q.append(self)
+        q = [self]
         while q:
-            joint = q.pop()
-            tmp_id = joint.id
-            _count_id = joint.count_id
+            current_joint = q.pop()
+            tmp_id = current_joint.id
+            _count_id = current_joint.count_id
             if _count_id not in _log:
                 _log.add(_count_id)
-                for child in joint.connection:
+                for child in current_joint.connection:
                     if child.count_id not in _log:
                         q.append(child)
                 if _id == tmp_id:
-                    tmp_joint = Joint(_id=other_id)
-                    joint.add(tmp_joint)
+                    tmp_joint: Joint = Joint(_id=other_id)
+                    current_joint.add(tmp_joint)
             else:
                 continue
 
     @property
     def joint_num(self):
-        return Joint.count
+        return Joint.__count
 
 
 class TopoCreater(nx.DiGraph):
-    def __init__(self, verbose=True, simple=True):
+    def __init__(self, verbose: bool = True):
         super(TopoCreater, self).__init__()
+        self.SAB = None
+        self.SBB = None
+        self.SAA = None
+        self.kind_edges = None
+        self.edge_info = None
+        self.type = None
+        self.node_names = None
+        self.node_nums = None
         self.final_func = None
         self.verbose = verbose
-        self.simple = simple
 
     def init_nodes(self, node_nums: int, node_names: list[str] = None):
         self.node_nums = node_nums
@@ -144,12 +151,12 @@ class TopoCreater(nx.DiGraph):
             for i in range(node_nums):
                 self.add_node(i, name=str(i))
 
-    def print(self, s):
+    def print(self, s: Any):
         if self.verbose:
             print(s)
 
     @staticmethod
-    def stats(blocks, multiplier=1):
+    def stats(blocks: Union[str, list, dict], multiplier: int = 1):
         """
         >>> tp = TopoCreater()
         >>> print(tp.stats({'A':3, 'a':5}))
@@ -159,7 +166,7 @@ class TopoCreater(nx.DiGraph):
         if isinstance(blocks, str):
             res = Counter(blocks.upper())
         elif isinstance(blocks, list):
-            res = Counter(list(map(lambda x: x.upper(), blocks)))
+            res = Counter(list(map(lambda block: block.upper(), blocks)))
         elif isinstance(blocks, dict):
             res = defaultdict(int)
             for k, v in blocks.items():
@@ -172,15 +179,21 @@ class TopoCreater(nx.DiGraph):
             res[k] = v * multiplier
         return res
 
-    def add_di_edge(self, pairs: Tuple[int, int], fraction, name, **kwargs):
+    def add_di_edge(
+        self,
+        pairs: Tuple[int, int],
+        fraction: Union[int, float, Symbol],
+        name: str,
+        **kwargs,
+    ):
         self.add_edge(*pairs, fraction=fraction, name=name, **kwargs)
         self.add_edge(*pairs[::-1], fraction=fraction, name=name, **kwargs)
 
     def linear(
         self,
         blocks: Union[List[str], str, Dict],
-        fractions=None,
-        method="auto",
+        fractions: Optional[Sequence[Union[int, float, Symbol]]] = None,
+        method: TopoBlockSet = TopoBlockSet.AUTO,
         **kwargs,
     ):
         if fractions is None:
@@ -193,7 +206,7 @@ class TopoCreater(nx.DiGraph):
             blocks = blocks_info.elements()
 
         self.init_nodes(sum(blocks_info.values()) + 1)
-        if method == "auto" and len(fractions) == 0:
+        if method == TopoBlockSet.AUTO and len(fractions) == 0:
             fraction = np.around(1 / sum(blocks_info.values()), 3)
             for i, b in enumerate(blocks):
                 self.add_di_edge(
@@ -202,7 +215,7 @@ class TopoCreater(nx.DiGraph):
                     name="_".join([b, str(i + 1)]),
                     kind=b,
                 )
-        elif method == "manual" or len(fractions) != 0:
+        elif method == TopoBlockSet.MANUAL or len(fractions) != 0:
             if len(fractions) == 0 or len(fractions) != sum(blocks_info.values()):
                 raise ValueError(
                     f"Fractions for blocks (length={len(fractions)}) is not right!"
@@ -220,8 +233,8 @@ class TopoCreater(nx.DiGraph):
     def AmBn(
         self,
         blocks: Union[str, List[str], Dict],
-        fractions=None,
-        method="auto",
+        fractions: Optional[Sequence[Union[int, float, Symbol]]] = None,
+        method: TopoBlockSet = TopoBlockSet.AUTO,
         **kwargs,
     ):
 
@@ -234,7 +247,7 @@ class TopoCreater(nx.DiGraph):
             blocks = blocks_info.elements()
 
         self.init_nodes(sum(blocks_info.values()) + 1)
-        if method == "auto" and len(fractions) == 0:
+        if method == TopoBlockSet.AUTO and len(fractions) == 0:
             fraction = np.around(1 / sum(blocks_info.values()), 3)
             for i, b in enumerate(blocks):
                 self.add_di_edge(
@@ -243,7 +256,7 @@ class TopoCreater(nx.DiGraph):
                     name="_".join([b, str(i + 1)]),
                     kind=b,
                 )
-        elif method == "manual" or len(fractions) != 0:
+        elif method == TopoBlockSet.MANUAL or len(fractions) != 0:
             if len(fractions) == 0 or len(fractions) != sum(blocks_info.values()):
                 raise ValueError(
                     f"Fractions for blocks (length={len(fractions)}) is not right!"
@@ -265,10 +278,10 @@ class TopoCreater(nx.DiGraph):
     def star(
         self,
         blocks: Union[str, List[str]],
-        fractions=None,
+        fractions: Optional[Sequence[Union[int, float, Symbol]]] = None,
         arm: int = 5,
         head: bool = True,
-        method="auto",
+        method: TopoBlockSet = TopoBlockSet.AUTO,
         **kwargs,
     ):
 
@@ -281,7 +294,7 @@ class TopoCreater(nx.DiGraph):
             blocks = blocks[::-1]
 
         self.init_nodes(sum(blocks_info.values()) + 1)
-        if method == "auto" and len(fractions) == 0:
+        if method == TopoBlockSet.AUTO and len(fractions) == 0:
             fraction = np.around(1 / sum(blocks_info.values()), 3)
             for a in range(arm):
                 for i, b in enumerate(blocks):
@@ -294,7 +307,7 @@ class TopoCreater(nx.DiGraph):
                         kind=b,
                     )
 
-        elif method == "manual" or len(fractions) != 0:
+        elif method == TopoBlockSet.MANUAL or len(fractions) != 0:
             if len(fractions) * 5 != sum(blocks_info.values()):
                 raise ValueError(
                     f"Fractions for blocks (length={len(fractions)}*{arm}={len(fractions) * arm}) is not right!"
@@ -319,9 +332,12 @@ class TopoCreater(nx.DiGraph):
         self.get_info()
 
     @classmethod
-    def parseJson(cls, path: str) -> np.ndarray:
-        with open(path, mode="r") as fp:
-            data = json.load(fp, object_pairs_hook=OrderedDict)
+    def parseJson(cls, path: Union[Path, str, Mapping]) -> np.ndarray:
+        if not isinstance(path, Mapping):
+            with open(path, mode="r") as fp:
+                data = json.load(fp, object_pairs_hook=OrderedDict)
+        else:
+            data = path
         topo_mat = []
         for block in data["Block"]:
             id1 = block["LeftVertexID"]
@@ -344,9 +360,9 @@ class TopoCreater(nx.DiGraph):
         topo_mat = np.array(topo_mat, dtype=object)
         return topo_mat
 
-    def fromJson(self, path: str, **kwargs):
+    def fromJson(self, path: Union[Path, str, Mapping], **kwargs):
         topo_mat = self.parseJson(path)
-        edges_info = defaultdict(dict)
+        edges_info: dict[tuple, dict] = defaultdict(dict)
         count = 1
         for i, t in enumerate(topo_mat):
             core_id = t[t[3]]
@@ -362,7 +378,7 @@ class TopoCreater(nx.DiGraph):
             for j in range(branch_mul):
                 joint.attach_by_id(_id=core_id, other_id=branch_id)
             count += 1
-        connections = joint.stats_connection(verbose=kwargs.get("verbose", True))
+        connections = joint.stats_connection(verbose=self.verbose)
         node_num = joint.joint_num
         self.init_nodes(node_num)
 
@@ -372,146 +388,227 @@ class TopoCreater(nx.DiGraph):
         self.get_info()
 
     @staticmethod
-    def count_nums(layers, branch):
+    def count_nums(layers: int, branch: int):
         return sum([branch**i for i in range(layers)])
 
     def dendrimer(
         self,
-        Ablock_layer: int = 1,
-        Bblock_layer: int = 1,
+        A_block_layer: int = 1,
+        B_block_layer: int = 1,
         A_branch: int = 2,
         B_branch: int = 2,
-        fractions=None,
-        method="auto",
+        fractions: Optional[Sequence[Union[int, float, Symbol]]] = None,
+        method: TopoBlockSet = TopoBlockSet.AUTO,
         **kwargs,
     ):
 
-        if fractions is None:
-            fractions = []
+        # if fractions is None:
+        #     fractions = []
         self.clear()
         self.type = "dendrimer"
-        Ablock_num = self.count_nums(Ablock_layer, A_branch)
-        Ablock_out_num = Ablock_num - self.count_nums(Ablock_layer - 1, A_branch)
-        Bblock_num = self.count_nums(Bblock_layer, B_branch) * B_branch * Ablock_out_num
+        Ablock_num = self.count_nums(A_block_layer, A_branch)
+        Ablock_out_num = Ablock_num - self.count_nums(A_block_layer - 1, A_branch)
+        Bblock_num = (
+            self.count_nums(B_block_layer, B_branch) * B_branch * Ablock_out_num
+        )
         total_blocks = Ablock_num + Bblock_num
         total_nodes = total_blocks + 1
         self.init_nodes(total_nodes)
 
-        if method == "auto" and len(fractions) == 0:
-            fraction = np.around(1 / total_nodes, 3)
-            count = 0
-            for i in range(Ablock_layer):
-                if i == 0:
-                    self.add_di_edge(
-                        (0, 1),
-                        fraction=fraction,
-                        name="_".join(["A", str(count + 1)]),
-                        kind="A",
-                    )
-                    count += 1
-                    last_layer_nodes = [count]
-                else:
-                    this_layer_nodes = np.arange(
-                        count + 1, count + A_branch**i + 1, 1
-                    )
-                    for j in last_layer_nodes:
-                        tmp = 1
-                        while tmp <= A_branch:
-                            count += 1
-                            self.add_di_edge(
-                                (j, count),
-                                fraction=fraction,
-                                name="_".join(["A", str(count + 1)]),
-                                kind="A",
-                            )
-                            tmp += 1
-                        last_layer_nodes = this_layer_nodes
-            for i in range(Ablock_layer, Ablock_layer + Bblock_layer, 1):
-                beginning_node_num = len(last_layer_nodes)
+        if fractions is None:
+            fractions = np.around(1 / total_nodes, 3) * np.ones(total_blocks)
+        else:
+            if len(fractions) != total_blocks:
+                raise ValueError(
+                    f"Fractions for blocks (length={len(fractions)}) is not right!"
+                )
+            if round(sum(fractions), 3) != 1:
+                raise ValueError(
+                    f"Fractions do not sum to one, value={round(sum(fractions), 3)}"
+                )
+
+        count = 0
+        for i in range(A_block_layer):
+            if i == 0:
+                self.add_di_edge(
+                    (0, 1),
+                    fraction=fractions[count],
+                    name="_".join(["A", str(count + 1)]),
+                    kind="A",
+                )
+                count += 1
+                last_layer_nodes = [count]
+            else:
                 this_layer_nodes = np.arange(
-                    count + 1, count + 1 + beginning_node_num * B_branch, 1
+                    count + 1, count + A_branch**i + 1, 1
                 )
                 for j in last_layer_nodes:
                     tmp = 1
-                    while tmp <= B_branch:
+                    while tmp <= A_branch:
                         count += 1
                         self.add_di_edge(
                             (j, count),
-                            fraction=fraction,
-                            name="_".join(["B", str(count + 1)]),
-                            kind="B",
+                            fraction=fractions[count - 1],
+                            name="_".join(["A", str(count + 1)]),
+                            kind="A",
                         )
                         tmp += 1
-                last_layer_nodes = this_layer_nodes
-        else:
-            raise NotImplementedError(method)
+                    last_layer_nodes = this_layer_nodes
+        for i in range(A_block_layer, A_block_layer + B_block_layer, 1):
+            beginning_node_num = len(last_layer_nodes)
+            this_layer_nodes = np.arange(
+                count + 1, count + 1 + beginning_node_num * B_branch, 1
+            )
+            for j in last_layer_nodes:
+                tmp = 1
+                while tmp <= B_branch:
+                    count += 1
+                    self.add_di_edge(
+                        (j, count),
+                        fraction=fractions[count - 1],
+                        name="_".join(["B", str(count + 1)]),
+                        kind="B",
+                    )
+                    tmp += 1
+            last_layer_nodes = this_layer_nodes
         self.get_info()
 
     def get_info(self):
 
         self.edge_info = self.edges(data=True)
-        self.edge_kinds = {}
+        self.kind_edges = {}
         for ix, iy, dic in self.edge_info:
             kind = dic["kind"]
-            self.edge_kinds[kind] = self.edge_kinds.get(kind, []) + [(ix, iy)]
+            self.kind_edges[kind] = self.kind_edges.get(kind, []) + [(ix, iy)]
 
     def show_topo(
         self,
-        colorlist=None,
-        node_size=200,
-        node_color="gray",
-        pos=None,
-        figsize=(10, 10),
-        save_path=None,
+        colors: Optional[Sequence[str]] = None,
+        node_size: int = 200,
+        node_color: str = "gray",
+        pos: Optional[dict] = None,
+        figsize: Sequence[int] = (6, 6),
+        interactive: bool = True,
+        curve: bool = False,
+        rad: float = 0.4,
+        show_nodes: bool = True,
+        show_edge_labels: bool = True,
+        show_node_labels: bool = True,
+        save: Optional[Union[Path, str, bool]] = False,
         **kwargs,
     ):
 
-        if colorlist is None:
-            colorlist = ["r", "b", "g", "blueviolet", "cyan"]
+        if colors is None:
+            colors = ["b", "r", "g", "blueviolet", "cyan"]
         fig, ax = plt.subplots(figsize=figsize)
+
         if pos is None:
             pos = nx.kamada_kawai_layout(self)
 
+        kind_edges = list(self.kind_edges.items())
+        kind_edges.sort(key=lambda x: x[0])
+        kinds = list(self.kind_edges.keys())
+        assert len(colors) >= len(kinds), "Not enough colors!"
+        edge_kind = {}
+        for k, v in kind_edges:
+            for _e in v:
+                edge_kind[_e] = k
+        kind_color = dict(zip(kinds, colors[: len(kinds)]))
+
+        if curve:
+            rad_inverse_log = {}
+            for edge in self.edges():
+                source, target = edge
+                if target < source:
+                    continue
+                if source not in rad_inverse_log:
+                    flag = True
+                else:
+                    flag = not rad_inverse_log[source]
+                rad_inverse_log[target] = flag
+                _rad = rad if flag else -rad
+                _kind = edge_kind[(source, target)]
+                # nx.draw_networkx_edges(
+                #     self,
+                #     pos,
+                #     edgelist=[edge],
+                #     width=3,
+                #     alpha=1,
+                #     edge_color=kind_color[_kind],
+                #     label=_kind,
+                #     arrows=True,
+                #     connectionstyle=f"arc3,rad={_rad}",
+                #     arrowstyle="-",
+                #     ax=ax,
+                # )
+                arrow_props = dict(
+                    arrowstyle="-",
+                    color=kind_color[_kind],
+                    connectionstyle=f"arc3,rad={_rad}",
+                    linestyle="-",
+                    alpha=1.0,
+                    linewidth=3,
+                )
+                ax.annotate(
+                    "", xy=pos[source], xytext=pos[target], arrowprops=arrow_props
+                )
+            # print(rad_inverse_log)
+        else:
+            for i, (_kind, _edge) in enumerate(kind_edges):
+                nx.draw_networkx_edges(
+                    self,
+                    pos,
+                    edgelist=_edge,
+                    width=3,
+                    alpha=1,
+                    edge_color=colors[i],
+                    label=_kind,
+                    arrows=False,
+                    ax=ax,
+                )
+
+            plot_legend(**kwargs)
+
+        node_size = node_size if show_nodes else 0
+        node_color = node_color if show_nodes else None
+        alpha = 1 if show_nodes else 0
+        linewidths = 1 if show_nodes else 0
         nx.draw_networkx_nodes(
-            self, pos, node_size=node_size, node_color=node_color, ax=ax
+            self,
+            pos,
+            node_size=node_size,
+            node_color=node_color,
+            ax=ax,
+            alpha=alpha,
+            linewidths=linewidths,
         )
 
-        for i, (_kind, _edge) in enumerate(self.edge_kinds.items()):
-            nx.draw_networkx_edges(
+        if show_node_labels:
+            nx.draw_networkx_labels(
                 self,
                 pos,
-                edgelist=_edge,
-                width=3,
-                alpha=1,
-                edge_color=colorlist[i],
-                label=_kind,
-                arrows=False,
+                labels=nx.get_node_attributes(self, "name"),
+                font_size=12,
+                font_family="sans-serif",
+                font_color=kwargs.get("font_color", "white"),
                 ax=ax,
             )
 
-        nx.draw_networkx_edge_labels(
-            self, pos, edge_labels=nx.get_edge_attributes(self, "fraction"), ax=ax
-        )
-        nx.draw_networkx_labels(
-            self,
-            pos,
-            nx.get_node_attributes(self, "name"),
-            font_size=12,
-            font_family="sans-serif",
-            ax=ax,
-        )
-        ax.legend(loc=kwargs.get("loc", "best"), frameon=False)
-        plt.axis("on")
-        plt.show()
-        if save_path:
-            plt.savefig(save_path)
+        if show_edge_labels:
+            nx.draw_networkx_edge_labels(
+                self, pos, edge_labels=nx.get_edge_attributes(self, "fraction"), ax=ax
+            )
+        plt.axis(False)
+        if interactive:
+            plt.show()
+        return TopoShow(fig=fig, ax=ax, kind_color=kind_color, rad=rad)
 
     @classmethod
-    def h(cls, f, x):
+    def h(cls, f, x=x):
         return 2 / (x**2) * (f * x + sym.exp(-f * x) - 1)
 
     @classmethod
-    def S(cls, f1, fdis, f2, x):
+    def S(cls, f1, fdis, f2, x=x):
         result = (
             1
             / 2
@@ -525,10 +622,10 @@ class TopoCreater(nx.DiGraph):
         return result
 
     @classmethod
-    def Sself(cls, f, x):
+    def S_self(cls, f, x=x):
         return 1 / 2 * cls.h(f, x)
 
-    def nodes_dis(self, start, end):
+    def nodes_dis(self, start: int, end: int):
         path = nx.dijkstra_path(self, start, end)
         return sum(
             [
@@ -537,7 +634,7 @@ class TopoCreater(nx.DiGraph):
             ]
         )
 
-    def RPA(self, latex=False):
+    def RPA(self, latex: bool = False):
         global x
         edgeNum = self.number_of_edges()
         edgeNum_half = int(edgeNum / 2)
@@ -552,32 +649,41 @@ class TopoCreater(nx.DiGraph):
                 edge_fraction.append(dic["fraction"])
                 edge_kinds.append(dic["kind"])
 
-        dismat = np.zeros((edgeNum_half, edgeNum_half), dtype=object)
+        distance_matrix = np.zeros((edgeNum_half, edgeNum_half), dtype=object)
         for i in range(edgeNum_half):
             for j in range(edgeNum_half):
                 if i == j:
-                    dismat[i][j] = 0
+                    distance_matrix[i][j] = 0
                     continue
 
-                tmppath = nx.dijkstra_path(self, edges[i][0], edges[j][1])
-                if edges[i][1] in tmppath and edges[j][0] in tmppath:
+                path_between_node = nx.dijkstra_path(self, edges[i][0], edges[j][1])
+                if (
+                    edges[i][1] in path_between_node
+                    and edges[j][0] in path_between_node
+                ):
                     tmpDis = self.nodes_dis(edges[i][1], edges[j][0])
-                elif edges[i][1] in tmppath and edges[j][0] not in tmppath:
+                elif (
+                    edges[i][1] in path_between_node
+                    and edges[j][0] not in path_between_node
+                ):
                     tmpDis = self.nodes_dis(edges[i][1], edges[j][1])
-                elif edges[i][1] not in tmppath and edges[j][0] in tmppath:
+                elif (
+                    edges[i][1] not in path_between_node
+                    and edges[j][0] in path_between_node
+                ):
                     tmpDis = self.nodes_dis(edges[i][0], edges[j][0])
                 else:
                     tmpDis = self.nodes_dis(edges[i][0], edges[j][1])
-                dismat[i][j] = tmpDis
+                distance_matrix[i][j] = tmpDis
 
         Slist = np.zeros((edgeNum_half, edgeNum_half), dtype=object)
         for i in range(edgeNum_half):
             for j in range(i + 1):
                 if j == i:
-                    Slist[i][j] = self.Sself(edge_fraction[i], x)
+                    Slist[i][j] = self.S_self(edge_fraction[i], x)
                 else:
                     Slist[i][j] = self.S(
-                        edge_fraction[i], dismat[i][j], edge_fraction[j], x
+                        edge_fraction[i], distance_matrix[i][j], edge_fraction[j], x
                     )
         self.SAA = 0
         self.SBB = 0
@@ -604,32 +710,53 @@ class TopoCreater(nx.DiGraph):
 
     def ODT(
         self,
-        fAs: Union[List[float], np.ndarray] = np.arange(0.1, 1.0, 0.1),
-        plot: bool = True,
+        fs: Union[List[float], np.ndarray] = np.arange(0.1, 1.0, 0.1),
         symbol: Symbol = fA,
+        plot: bool = True,
+        interactive: bool = True,
+        xlabel: str = r"$f_{A}$",
+        ylabel: str = r"$\chi {\rm N}$",
+        save: Optional[Union[Path, str, bool]] = False,
         **kwargs,
     ):
         global x
         xN = []
-        ylim = kwargs.get("lim", (0, 100))
-        for i in fAs:
+        x_lim = kwargs.get("x_lim", (0, 1))
+        y_lim = kwargs.get("y_lim", (0, 100))
+        for i in fs:
             func = self.final_func.evalf(subs={symbol: i})
             func = sym.lambdify(x, func, "scipy")
-            xN.append(opt.fminbound(func, *ylim, full_output=True)[1])
+            xN.append(opt.fminbound(func, *y_lim, full_output=True, maxfun=2000)[1])
+        xN = np.array(xN)
 
-        if len(np.unique(xN)) == 1:
-            print(f"ODT is {xN[0]}")
-            return
-
+        fig = ax = None
         if plot:
-            fig, ax = plt.subplots(figsize=kwargs.get("figsize", (6, 4)))
-            ax.plot(fAs, xN, "r-", lw=2)
-            ax.set_xlim([0, 1])
-            ax.set_ylim(ylim)
+            fig, ax = plt.subplots(figsize=kwargs.get("figsize", (6, 6)))
+            ax.plot(fs, xN, c="r", lw=2.5, marker="o", label="ODT")
+            ax.set_xlim(x_lim)
+            ax.set_ylim(y_lim)
             plot_locators(**kwargs)
-            ax.set_xlabel(kwargs.get("xlabel", r"$f_{A}$"), fontdict={"fontsize": 20})
-            ax.set_ylabel(kwargs.get("ylabel", r"$\chi N$"), fontdict={"fontsize": 20})
-            plt.show()
+            plot_legend(**kwargs)
+            fontsize = kwargs.get("fontsize", 20)
+            plt.xticks(fontsize=fontsize)
+            plt.yticks(fontsize=fontsize)
+            if xlabel:
+                ax.set_xlabel(xlabel, fontsize=fontsize)
+            if ylabel:
+                ax.set_ylabel(ylabel, fontsize=fontsize)
+            if interactive:
+                plt.show()
+
+        return ODTResult(
+            f=fs,
+            xN=xN,
+            fig=fig,
+            ax=ax,
+            expression=self.final_func,
+            xlabel=xlabel,
+            ylabel=ylabel,
+        )
+
 
 if __name__ == "__main__":
     import doctest

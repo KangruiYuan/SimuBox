@@ -36,6 +36,18 @@ class CompareMode(StrEnum):
     ABS = "abs"
     MULTI = "multi"
 
+class TopoBlockSet(StrEnum):
+
+    AUTO = "auto"
+    MANUAL = "manual"
+
+class TopoCreateMode(StrEnum):
+    JSON = "json"
+    AMBN = "AmBn"
+    DENDRIMER = "dendrimer"
+    LINEAR = "linear"
+    STAR = "star"
+
 
 class DetectionMode(StrEnum):
     HORIZONTAL = "hori"

@@ -1,14 +1,8 @@
 import warnings
-from copy import deepcopy
 
-import numpy as np
 import pandas as pd
 import streamlit as st
 from SimuBox import PeakInfo, peak_fit
-from pyecharts.charts import Line
-from streamlit_echarts import st_pyecharts
-import pyecharts.options as opts
-import plotly.graph_objs as go
 
 warnings.filterwarnings("ignore")
 
