@@ -193,11 +193,8 @@ class TopoCreater(nx.DiGraph):
         self,
         blocks: Union[List[str], str, Dict],
         fractions: Optional[Sequence[Union[int, float, Symbol]]] = None,
-        method: TopoBlockSet = TopoBlockSet.AUTO,
         **kwargs,
     ):
-        if fractions is None:
-            fractions = []
         self.clear()
 
         self.type = "linear"
@@ -205,74 +202,61 @@ class TopoCreater(nx.DiGraph):
         if isinstance(blocks, dict):
             blocks = blocks_info.elements()
 
-        self.init_nodes(sum(blocks_info.values()) + 1)
-        if method == TopoBlockSet.AUTO and len(fractions) == 0:
-            fraction = np.around(1 / sum(blocks_info.values()), 3)
-            for i, b in enumerate(blocks):
-                self.add_di_edge(
-                    (i, i + 1),
-                    fraction=fraction,
-                    name="_".join([b, str(i + 1)]),
-                    kind=b,
-                )
-        elif method == TopoBlockSet.MANUAL or len(fractions) != 0:
-            if len(fractions) == 0 or len(fractions) != sum(blocks_info.values()):
+        total_blocks = sum(blocks_info.values())
+        self.init_nodes(total_blocks + 1)
+
+        if fractions is None:
+            fractions = np.around(1 / total_blocks, 3) * np.ones(total_blocks)
+        else:
+            if len(fractions) != total_blocks:
                 raise ValueError(
                     f"Fractions for blocks (length={len(fractions)}) is not right!"
                 )
             if round(sum(fractions), 3) != 1:
                 raise ValueError(f"Fractions do not sum to one, value={sum(fractions)}")
-            for i, (b, f) in enumerate(zip(blocks, fractions)):
-                self.add_di_edge(
-                    (i, i + 1), fraction=f, name="_".join([b, str(i + 1)]), kind=b
-                )
-        else:
-            raise NotImplementedError(method)
+
+        for i, b in enumerate(blocks):
+            self.add_di_edge(
+                (i, i + 1),
+                fraction=fractions[i],
+                name="_".join([b, str(i + 1)]),
+                kind=b,
+            )
+
         self.get_info()
 
     def AmBn(
         self,
         blocks: Union[str, List[str], Dict],
         fractions: Optional[Sequence[Union[int, float, Symbol]]] = None,
-        method: TopoBlockSet = TopoBlockSet.AUTO,
         **kwargs,
     ):
 
-        if fractions is None:
-            fractions = []
         self.clear()
         self.type = "AmBn"
         blocks_info = self.stats(blocks)
         if isinstance(blocks, dict):
             blocks = blocks_info.elements()
+        total_blocks = sum(blocks_info.values())
+        self.init_nodes(total_blocks + 1)
 
-        self.init_nodes(sum(blocks_info.values()) + 1)
-        if method == TopoBlockSet.AUTO and len(fractions) == 0:
-            fraction = np.around(1 / sum(blocks_info.values()), 3)
-            for i, b in enumerate(blocks):
-                self.add_di_edge(
-                    (0, i + 1),
-                    fraction=fraction,
-                    name="_".join([b, str(i + 1)]),
-                    kind=b,
-                )
-        elif method == TopoBlockSet.MANUAL or len(fractions) != 0:
-            if len(fractions) == 0 or len(fractions) != sum(blocks_info.values()):
+        if fractions is None:
+            fractions = np.around(1 / total_blocks, 3) * np.ones(total_blocks)
+        else:
+            if len(fractions) != total_blocks:
                 raise ValueError(
                     f"Fractions for blocks (length={len(fractions)}) is not right!"
                 )
             if round(sum(fractions), 3) != 1:
                 raise ValueError(f"Fractions do not sum to one, value={sum(fractions)}")
-            for i, (b, f) in enumerate(zip(blocks, fractions)):
-                self.add_di_edge(
-                    (0, i + 1),
-                    fraction=f,
-                    name="_".join([b, str(i + 1)]),
-                    kind=b,
-                    minlen=f,
-                )
-        else:
-            raise NotImplementedError(method)
+
+        for i, b in enumerate(blocks):
+            self.add_di_edge(
+                (0, i + 1),
+                fraction=fractions[i],
+                name="_".join([b, str(i + 1)]),
+                kind=b,
+            )
         self.get_info()
 
     def star(
@@ -281,34 +265,24 @@ class TopoCreater(nx.DiGraph):
         fractions: Optional[Sequence[Union[int, float, Symbol]]] = None,
         arm: int = 5,
         head: bool = True,
-        method: TopoBlockSet = TopoBlockSet.AUTO,
         **kwargs,
     ):
 
-        if fractions is None:
-            fractions = []
+        # if fractions is None:
+        #     fractions = []
         self.clear()
         self.type = "star"
         blocks_info = self.stats(blocks, arm)
         if not head:
             blocks = blocks[::-1]
 
-        self.init_nodes(sum(blocks_info.values()) + 1)
-        if method == TopoBlockSet.AUTO and len(fractions) == 0:
-            fraction = np.around(1 / sum(blocks_info.values()), 3)
-            for a in range(arm):
-                for i, b in enumerate(blocks):
-                    idx_head = a * len(blocks) + i if i != 0 else 0
-                    idx_tail = a * len(blocks) + i + 1
-                    self.add_di_edge(
-                        (idx_head, idx_tail),
-                        fraction=fraction,
-                        name="_".join([b, str(idx_tail)]),
-                        kind=b,
-                    )
+        total_blocks = sum(blocks_info.values())
+        self.init_nodes(total_blocks + 1)
 
-        elif method == TopoBlockSet.MANUAL or len(fractions) != 0:
-            if len(fractions) * 5 != sum(blocks_info.values()):
+        if fractions is None:
+            fractions = np.around(1 / total_blocks, 3) * np.ones(total_blocks)
+        else:
+            if len(fractions) * arm != total_blocks:
                 raise ValueError(
                     f"Fractions for blocks (length={len(fractions)}*{arm}={len(fractions) * arm}) is not right!"
                 )
@@ -316,19 +290,21 @@ class TopoCreater(nx.DiGraph):
                 raise ValueError(
                     f"Fractions do not sum to one, value={round(sum(fractions) * arm, 3)}"
                 )
-            for a in range(arm):
-                for i, (b, f) in enumerate(zip(blocks, fractions)):
-                    idx_head = a * len(blocks) + i if i != 0 else 0
-                    idx_tail = a * len(blocks) + i + 1
-                    self.add_di_edge(
-                        (idx_head, idx_tail),
-                        fraction=f,
-                        name="_".join([b, str(idx_tail)]),
-                        kind=b,
-                        minlen=f,
-                    )
-        else:
-            raise NotImplementedError(method)
+            fractions = list(fractions) * arm
+
+        count = 0
+        for a in range(arm):
+            for i, b in enumerate(blocks):
+                idx_head = a * len(blocks) + i if i != 0 else 0
+                idx_tail = a * len(blocks) + i + 1
+                self.add_di_edge(
+                    (idx_head, idx_tail),
+                    fraction=fractions[count],
+                    name="_".join([b, str(idx_tail)]),
+                    kind=b,
+                )
+                count += 1
+
         self.get_info()
 
     @classmethod
@@ -398,12 +374,9 @@ class TopoCreater(nx.DiGraph):
         A_branch: int = 2,
         B_branch: int = 2,
         fractions: Optional[Sequence[Union[int, float, Symbol]]] = None,
-        method: TopoBlockSet = TopoBlockSet.AUTO,
         **kwargs,
     ):
 
-        # if fractions is None:
-        #     fractions = []
         self.clear()
         self.type = "dendrimer"
         Ablock_num = self.count_nums(A_block_layer, A_branch)
@@ -439,9 +412,7 @@ class TopoCreater(nx.DiGraph):
                 count += 1
                 last_layer_nodes = [count]
             else:
-                this_layer_nodes = np.arange(
-                    count + 1, count + A_branch**i + 1, 1
-                )
+                this_layer_nodes = np.arange(count + 1, count + A_branch**i + 1, 1)
                 for j in last_layer_nodes:
                     tmp = 1
                     while tmp <= A_branch:
