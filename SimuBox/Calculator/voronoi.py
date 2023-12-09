@@ -131,7 +131,11 @@ class VoronoiCell:
         plt.yticks([])
         plt.tight_layout()
         plot_savefig(
-            cv_res, save=save, prefix="voronoi", suffix=str(cv_res.parsed_density.target[0]), **kwargs
+            cv_res,
+            save=save,
+            prefix="voronoi",
+            suffix=str(cv_res.parsed_density.target[0]),
+            **kwargs,
         )
         if interactive:
             plt.show()
@@ -186,7 +190,11 @@ class VoronoiCell:
         plt.yticks([])
         plt.tight_layout()
         plot_savefig(
-            cv_res, save=save, prefix="triangle", suffix=str(cv_res.parsed_density.target[0]), **kwargs
+            cv_res,
+            save=save,
+            prefix="triangle",
+            suffix=str(cv_res.parsed_density.target[0]),
+            **kwargs,
         )
         if interactive:
             plt.show()
@@ -280,12 +288,19 @@ class VoronoiCell:
         im = np.array(image)
         fig = plt.figure(figsize=kwargs.get("figsize", (5, 5)))
         ax = plt.gca()
-        plt.scatter(points[:, 0], points[:, 1], s=max(size) * 0.1, c="white", zorder=10)
+        plt.scatter(
+            points[:, 0],
+            points[:, 1],
+            s=max(size) * 0.1,
+            c="white",
+            zorder=10,
+            edgecolors="black",
+        )
         if plot == "imshow":
             if color_mode == ColorType.L:
-                plt.imshow(im, "gray", zorder=5)
+                plt.imshow(im, "gray", zorder=5, origin="lower")
             elif color_mode == ColorType.RGB:
-                plt.imshow(im, zorder=5)
+                plt.imshow(im, zorder=5, origin="lower")
         elif plot == "vertices":
             if color_mode == "RGB":
                 im = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)

@@ -194,12 +194,21 @@ elif main_mode == AnalyzeMode.WEIGHTED:
             ]
         )
         edited_df = st.data_editor(
-            df, num_rows="dynamic", hide_index=False, use_container_width=False
+            df,
+            num_rows="dynamic",
+            hide_index=False,
+            use_container_width=False,
+            width=290,
         )
-        plot = st.button("开始绘制")
+        sub_size_cols = st.columns(2)
+
+        width = sub_size_cols[0].number_input("图幅宽度", value=500, min_value=edited_df["x"].max() + 10)
+        height = sub_size_cols[1].number_input("图幅高度", value=500, min_value=edited_df["y"].max() + 10)
+
+        plot = st.button("开始绘制", use_container_width=True)
     with plot_col:
         if plot:
-            sub_plot_cols = st.columns([0.15,0.7,0.15])
+            sub_plot_cols = st.columns([0.15, 0.7, 0.15])
             with st.spinner("In progress..."):
                 fig, ax = VoronoiCell.weighted_voronoi_diagrams(
                     edited_df[["x", "y"]].values,
@@ -208,6 +217,7 @@ elif main_mode == AnalyzeMode.WEIGHTED:
                     method=sub_mode,
                     color_mode=color_mode,
                     linear=linear,
-                    interactive=False
+                    interactive=False,
+                    size=(width, height)
                 )
                 sub_plot_cols[1].pyplot(fig)
