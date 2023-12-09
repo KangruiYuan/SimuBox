@@ -37,12 +37,16 @@ with param_col:
 
     with sub_cols[1]:
         odt = st.checkbox("计算ODT", value=True)
+        show_nodes = st.checkbox("绘制节点信息", value=True)
         x_lim_max = st.number_input("X轴截止值", value=0.9, min_value=0.0, max_value=1.0)
         y_lim_max = st.number_input("Y轴截止值", value=100.0)
         xlabel = st.text_input("X标签", value=r"$f_{A}$")
 
+
+
     with sub_cols[0]:
         curve = st.checkbox("曲线形式", value=False)
+        show_edge_labels = st.checkbox("绘制边信息", value=True)
         x_lim_min = st.number_input(
             "X轴起始值", value=0.1, min_value=0.0, max_value=x_lim_max - 0.1
         )
@@ -50,6 +54,8 @@ with param_col:
             "Y轴起始值", value=0.0, min_value=0.0, max_value=y_lim_max
         )
         ylabel = st.text_input("Y标签", value=r"$\chi {\rm N}$")
+
+
 
     plot_button = st.button("绘制拓扑图/ODT", use_container_width=True)
 
@@ -91,10 +97,18 @@ with plot_col:
                     sub_input_cols[1].success("数据合法，请继续。")
     elif select_mode == TopoCreateMode.DENDRIMER:
         sub_dendri_cols = st.columns(4)
-        A_block_layer = sub_dendri_cols[0].number_input("A嵌段层数", value=1, min_value=0, key="A_block_layer")
-        A_block_branch = sub_dendri_cols[1].number_input("A嵌段支化度", value=1, min_value=1, key="A_block_branch")
-        B_block_layer = sub_dendri_cols[2].number_input("B嵌段层数", value=1, min_value=0, key="B_block_layer")
-        B_block_branch = sub_dendri_cols[3].number_input("B嵌段支化度", value=1, min_value=1, key="B_block_branch")
+        A_block_layer = sub_dendri_cols[0].number_input(
+            "A嵌段层数", value=1, min_value=0, key="A_block_layer"
+        )
+        A_block_branch = sub_dendri_cols[1].number_input(
+            "A嵌段支化度", value=1, min_value=1, key="A_block_branch"
+        )
+        B_block_layer = sub_dendri_cols[2].number_input(
+            "B嵌段层数", value=1, min_value=0, key="B_block_layer"
+        )
+        B_block_branch = sub_dendri_cols[3].number_input(
+            "B嵌段支化度", value=1, min_value=1, key="B_block_branch"
+        )
         fractions = st.text_input("嵌段分数，默认从第一个A嵌段开始，以英文逗号，其余位置不要使用空格", value="")
         fractions = list(map(eval, fractions.split(","))) if fractions else None
 
@@ -114,12 +128,19 @@ with plot_col:
                 B_block_layer=B_block_layer,
                 A_branch=A_block_branch,
                 B_branch=B_block_branch,
-                fractions=fractions
+                fractions=fractions,
             )
 
         frac = 0.48
         sub_plot_cols = st.columns([frac, 1 - frac])
-        topo_plot = tc.show_topo(colors=colors, curve=curve, interactive=False)
+        topo_plot = tc.show_topo(
+            colors=colors,
+            curve=curve,
+            interactive=False,
+            save=st.session_state.save_auto,
+            show_nodes=show_nodes,
+            show_edge_labels=show_edge_labels
+        )
         sub_plot_cols[0].pyplot(topo_plot.fig)
         if odt:
             tc.RPA()
@@ -132,6 +153,7 @@ with plot_col:
                 ylabel=ylabel,
                 x_lim=(max(x_lim_min - 0.1, 0.0), min(1.0, x_lim_max + 0.1)),
                 y_lim=(y_lim_min, y_lim_max),
+                save=st.session_state.save_auto,
             )
             if len(np.unique(odt_plot.xN)) != 1:
                 sub_plot_cols[1].pyplot(odt_plot.fig)

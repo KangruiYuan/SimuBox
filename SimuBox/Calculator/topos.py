@@ -9,10 +9,11 @@ import numpy as np
 import scipy.optimize as opt
 import sympy as sym
 from sympy import Symbol
-from ..Artist import plot_locators, plot_legend
-from ..Schema import TopoBlockSet, ODTResult, TopoShow
 
-__all__ = ["TopoCreater", "fA", "fB", "x", "Joint"]
+from ..Artist import plot_locators, plot_legend, plot_savefig
+from ..Schema import ODTResult, TopoShow
+
+__all__ = ["TopoCreater", "fA", "fB", "fC", "x", "Joint"]
 
 fA = Symbol("fA", real=True, postive=True)
 fB = Symbol("fB", real=True, postive=True)
@@ -554,7 +555,7 @@ class TopoCreater(nx.DiGraph):
             linewidths=linewidths,
         )
 
-        if show_node_labels:
+        if show_node_labels and show_nodes:
             nx.draw_networkx_labels(
                 self,
                 pos,
@@ -570,6 +571,8 @@ class TopoCreater(nx.DiGraph):
                 self, pos, edge_labels=nx.get_edge_attributes(self, "fraction"), ax=ax
             )
         plt.axis(False)
+        plt.tight_layout()
+        plot_savefig(prefix=kwargs.get("prefix","topo"), save=save)
         if interactive:
             plt.show()
         return TopoShow(fig=fig, ax=ax, kind_color=kind_color, rad=rad)
@@ -715,6 +718,8 @@ class TopoCreater(nx.DiGraph):
                 ax.set_xlabel(xlabel, fontsize=fontsize)
             if ylabel:
                 ax.set_ylabel(ylabel, fontsize=fontsize)
+            plt.tight_layout()
+            plot_savefig(save=save, prefix=kwargs.get("prefix", "odt"))
             if interactive:
                 plt.show()
 
