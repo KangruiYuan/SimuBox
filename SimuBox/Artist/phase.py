@@ -9,7 +9,7 @@ from numpy.polynomial import Chebyshev
 from scipy.io import loadmat
 
 from .PlotUtils import plot_locators, plot_savefig, generate_colors
-from ..Schema import DetectionMode, CompareResult, PointInfo, CommonLabels, PathType
+from ..Schema import DetectionMode, CompareResult, PhasePointData, CommonLabels, PathLike
 from ..Toolkits import read_csv
 
 PHASE_PLOT_CONFIG = {
@@ -41,7 +41,7 @@ PHASE_PLOT_CONFIG = {
 class PhaseDiagram:
     def __init__(
         self,
-        path: PathType,
+        path: PathLike,
         xlabel: str,
         ylabel: str,
         colors: Optional[dict] = None,
@@ -106,7 +106,7 @@ class PhaseDiagram:
 
         exclude = kwargs.get("exclude", [])
 
-        mat = np.zeros((len(y_set), len(x_set)), dtype=PointInfo)
+        mat = np.zeros((len(y_set), len(x_set)), dtype=PhasePointData)
         for i, y in enumerate(y_set):
             for j, x in enumerate(x_set):
                 phase = "unknown"
@@ -157,7 +157,7 @@ class PhaseDiagram:
                             phase = min_label[0]
                     else:
                         phase = "_".join([phase, min_label[0]])
-                mat[i][j] = PointInfo(phase=phase, x=x, y=y, freeEnergy=freeE)
+                mat[i][j] = PhasePointData(phase=phase, x=x, y=y, val=freeE)
                 if phase in plot_dict:
                     for attr, val in zip(
                         [self.xlabel, self.ylabel, "freeE", "lylz", "lxly"],
@@ -312,15 +312,15 @@ class PhaseDiagram:
     @classmethod
     def check_phase(
         cls,
-        point: PointInfo,
-        point_other: Optional[PointInfo] = None,
+        point: PhasePointData,
+        point_other: Optional[PhasePointData] = None,
         ignore: Optional[Union[str, list[str]]] = None,
     ):
         if ignore is None:
             ignore = []
         if point_other is None:
             return (
-                not isinstance(point, PointInfo)
+                not isinstance(point, PhasePointData)
                 or "unknown" in point.phase
                 or point.phase in ignore
             )
@@ -348,8 +348,8 @@ class PhaseDiagram:
                 line = mat[idx]
                 line = line[line != 0]
                 for ele_idx in range(len(line) - 1):
-                    ele_left_1: PointInfo = line[ele_idx]
-                    ele_right_1: PointInfo = line[ele_idx + 1]
+                    ele_left_1: PhasePointData = line[ele_idx]
+                    ele_right_1: PhasePointData = line[ele_idx + 1]
                     if self.check_phase(ele_left_1, ele_right_1, ignore):
                         continue
                     ele_left_2: pd.DataFrame = self.query_point(
@@ -369,11 +369,11 @@ class PhaseDiagram:
                         continue
                     x0, _ = self.cross_point(
                         ele_left_1.x,
-                        ele_left_1.freeEnergy,
+                        ele_left_1.val,
                         ele_right_2[self.xlabel].values[0],
                         ele_right_2.freeE.values[0],
                         ele_right_1.x,
-                        ele_right_1.freeEnergy,
+                        ele_right_1.val,
                         ele_left_2[self.xlabel].values[0],
                         ele_left_2.freeE.values[0],
                     )
@@ -384,8 +384,8 @@ class PhaseDiagram:
                 line = mat[:, idx]
                 line = line[line != 0]
                 for ele_idx in range(len(line) - 1):
-                    ele_left_1: PointInfo = line[ele_idx]
-                    ele_right_1: PointInfo = line[ele_idx + 1]
+                    ele_left_1: PhasePointData = line[ele_idx]
+                    ele_right_1: PhasePointData = line[ele_idx + 1]
                     if self.check_phase(ele_left_1, ele_right_1, ignore):
                         continue
 
@@ -407,11 +407,11 @@ class PhaseDiagram:
 
                     y0, _ = self.cross_point(
                         ele_left_1.y,
-                        ele_left_1.freeEnergy,
+                        ele_left_1.val,
                         float(ele_right_2[self.ylabel].values),
                         float(ele_right_2.freeE.values),
                         ele_right_1.y,
-                        ele_right_1.freeEnergy,
+                        ele_right_1.val,
                         float(ele_left_2[self.ylabel].values),
                         float(ele_left_2.freeE.values),
                     )
@@ -491,8 +491,8 @@ class PhaseDiagram:
             col = mat[:, col_idx] if axis == 1 else mat[col_idx, :]
             col = col[col != 0]
             for ele_idx in range(len(col) - 1):
-                ele_1: PointInfo = col[ele_idx]
-                ele_2: PointInfo = col[ele_idx + 1]
+                ele_1: PhasePointData = col[ele_idx]
+                ele_2: PhasePointData = col[ele_idx + 1]
                 if self.check_phase(ele_1, ele_2, ignore):
                     continue
 
@@ -531,7 +531,7 @@ class PhaseDiagram:
                 if mode == DetectionMode.INTERP:
                     x, y, _ = calculate_intersection_point_xy_plane(
                         point1=(ele_1.x, ele_1.y, 0),
-                        point2=(ele_2.x, ele_2.y, ele_2.freeEnergy - ele_1.freeEnergy),
+                        point2=(ele_2.x, ele_2.y, ele_2.val - ele_1.val),
                     )
                     edge_data.append([x, y])
                 elif mode == DetectionMode.MIX:

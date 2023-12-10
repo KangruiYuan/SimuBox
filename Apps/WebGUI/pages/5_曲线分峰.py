@@ -2,7 +2,7 @@ import warnings
 
 import pandas as pd
 import streamlit as st
-from SimuBox import PeakInfo, peak_fit
+from SimuBox import PeakData, peak_fit
 
 warnings.filterwarnings("ignore")
 
@@ -163,7 +163,7 @@ with plot_col:
             row = row.tolist()
             # print(row[1], type(row[1]))
             peaks.append(
-                PeakInfo(
+                PeakData(
                     amplitude=row[0],
                     center=row[1],
                     width=row[2],

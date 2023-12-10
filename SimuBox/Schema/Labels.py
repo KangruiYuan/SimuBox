@@ -53,5 +53,5 @@ DiffLabels = {
 }
 
 
-AbsCommon = ChainMap(CommonLabels, AbsLabels)
-DiffCommon = ChainMap(CommonLabels, DiffLabels)
+AbsCommonLabels = ChainMap(CommonLabels, AbsLabels)
+DiffCommonLabels = ChainMap(CommonLabels, DiffLabels)

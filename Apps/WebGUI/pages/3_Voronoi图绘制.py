@@ -10,8 +10,8 @@ from SimuBox import (
     read_printout,
     AnalyzeMode,
     VoronoiCell,
-    WeightedMethod,
-    ColorType,
+    WeightedMode,
+    ColorMode,
 )
 
 warnings.filterwarnings("ignore")
@@ -175,16 +175,16 @@ if uploaded_phout and main_mode != AnalyzeMode.WEIGHTED:
 elif main_mode == AnalyzeMode.WEIGHTED:
     with info_col:
         sub_mode = st.selectbox(
-            "请选择加权方式", options=WeightedMethod.values(), index=0, key="sub_mode"
+            "请选择加权方式", options=WeightedMode.values(), index=0, key="sub_mode"
         )
         color_mode = st.selectbox(
             "请选择颜色模式",
-            options=[ColorType.L.value, ColorType.RGB.value],
+            options=[ColorMode.L.value, ColorMode.RGB.value],
             index=0,
             key="color_mode",
         )
         linear = st.checkbox("颜色线性变化 (目前仅对灰度图有效)", value=True)
-        init_weight = 100 if sub_mode == WeightedMethod.additive else 1e4
+        init_weight = 100 if sub_mode == WeightedMode.additive else 1e4
         df = pd.DataFrame(
             [
                 {"x": 100, "y": 350, "weight": init_weight},

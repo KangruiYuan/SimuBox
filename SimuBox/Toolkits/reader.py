@@ -1,19 +1,17 @@
 import json
 import re
 from collections import OrderedDict
+from io import BytesIO, TextIOWrapper
 from pathlib import Path
 from typing import Optional, Iterable, Union, Sequence
-from io import BytesIO, TextIOWrapper
-from copy import deepcopy
-import tempfile
 
 import numpy as np
 import pandas as pd
 
-from ..Schema import Printout, Density, PathType, FetData, DensityParseResult
+from ..Schema import Printout, Density, PathLike, FetData, DensityParseResult
 
 
-def read_file(path: PathType, default_name: Optional[str] = None, **kwargs):
+def read_file(path: PathLike, default_name: Optional[str] = None, **kwargs):
     encoding = kwargs.get("encoding", "utf-8")
     if isinstance(path, BytesIO):
         with TextIOWrapper(path, encoding=encoding) as txt:
@@ -29,13 +27,13 @@ def read_file(path: PathType, default_name: Optional[str] = None, **kwargs):
     return content, path
 
 
-def read_json(path: PathType):
+def read_json(path: PathLike):
     with open(path, mode="r") as fp:
         dic = json.load(fp, object_pairs_hook=OrderedDict)
     return dic
 
 
-def read_printout(path: PathType, **kwargs):
+def read_printout(path: PathLike, **kwargs):
     cont, path = read_file(
         path, default_name=kwargs.get("default_name", "printout.txt")
     )
@@ -58,7 +56,7 @@ def read_printout(path: PathType, **kwargs):
     )
 
 
-def read_density(path: PathType, parse_N: bool = True, parse_L: bool = False, **kwargs):
+def read_density(path: PathLike, parse_N: bool = True, parse_L: bool = False, **kwargs):
     """
     for phout, component, block
     :param parse_L:
@@ -97,7 +95,7 @@ def read_density(path: PathType, parse_N: bool = True, parse_L: bool = False, **
     return Density(path=path, data=data, NxNyNz=NxNyNz, lxlylz=lxlylz, shape=shape)
 
 
-def read_csv(path: PathType, **kwargs):
+def read_csv(path: PathLike, **kwargs):
 
     df = pd.read_csv(path)
     if subset := kwargs.get("subset", ["phase", "freeE"]):
@@ -113,7 +111,7 @@ def read_csv(path: PathType, **kwargs):
     return df
 
 
-def read_fet(path: PathType, **kwargs):
+def read_fet(path: PathLike, **kwargs):
     cont, path = read_file(path, default_name=kwargs.get("default_name", "fet.dat"))
 
     with open(path, mode="r") as fp:

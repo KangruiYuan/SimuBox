@@ -7,7 +7,7 @@ import scipy.signal as sg
 
 from .peak import gaussian_expansion
 from ..Artist import plot_locators, plot_savefig
-from ..Schema import ScatterResult, ScatterPlots, Density, PathType
+from ..Schema import ScatterResult, ScatterPlot, Density, PathLike
 from ..Toolkits import parse_density
 
 SCATTER_PLOT_CONFIG = {
@@ -129,7 +129,7 @@ class Scatter:
         step: int = 2000,
         cutoff: int = 20,
         min_height: int = 1,
-        save: Optional[Union[PathType, bool]] = False,
+        save: Optional[Union[PathLike, bool]] = False,
         interactive: bool = False,
         **kwargs,
     ):
@@ -168,7 +168,7 @@ class Scatter:
         )
         if interactive:
             plt.show()
-        return ScatterPlots(
+        return ScatterPlot(
             peaks_location=x[peaks_location],
             fig=fig,
             ax=ax,

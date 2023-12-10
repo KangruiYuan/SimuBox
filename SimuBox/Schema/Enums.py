@@ -23,7 +23,7 @@ class IntEnum(int, ExtendedEnum):
     ...
 
 
-class ColorType(StrEnum):
+class ColorMode(StrEnum):
     RGB = "RGB"
     HEX = "HEX"
     L = "L"
@@ -58,6 +58,6 @@ class AnalyzeMode(StrEnum):
     WEIGHTED = "weighted"
 
 
-class WeightedMethod(StrEnum):
+class WeightedMode(StrEnum):
     additive = "additive"
     power = "power"

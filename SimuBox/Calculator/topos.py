@@ -11,7 +11,7 @@ import sympy as sym
 from sympy import Symbol
 
 from ..Artist import plot_locators, plot_legend, plot_savefig
-from ..Schema import ODTResult, TopoShow
+from ..Schema import ODTResult, TopoPlot
 
 __all__ = ["TopoCreater", "fA", "fB", "fC", "x", "Joint"]
 
@@ -575,7 +575,7 @@ class TopoCreater(nx.DiGraph):
         plot_savefig(prefix=kwargs.get("prefix","topo"), save=save)
         if interactive:
             plt.show()
-        return TopoShow(fig=fig, ax=ax, kind_color=kind_color, rad=rad)
+        return TopoPlot(fig=fig, ax=ax, kind_color=kind_color, rad=rad)
 
     @classmethod
     def h(cls, f, x=x):

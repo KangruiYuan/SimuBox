@@ -10,7 +10,7 @@ from cycler import cycler
 from collections import ChainMap
 
 from ..Toolkits import read_csv
-from ..Schema import AbsCommon, DiffCommon, LineCompareResult, LineInfo
+from ..Schema import AbsCommonLabels, DiffCommonLabels, LineCompareResult, LineData, PathLike
 from .PlotUtils import plot_trans, plot_legend, plot_locators, plot_savefig
 
 COMPARE_PLOT_CONFIG = {
@@ -71,10 +71,10 @@ class CompareJudger:
         self.path = path if isinstance(path, Path) else Path(path)
         self.div = div
         self.diff_labels = (
-            ChainMap(diff_labels, DiffCommon) if diff_labels is not None else DiffCommon
+            ChainMap(diff_labels, DiffCommonLabels) if diff_labels is not None else DiffCommonLabels
         )
         self.abs_labels = (
-            ChainMap(abs_labels, AbsCommon) if abs_labels is not None else AbsCommon
+            ChainMap(abs_labels, AbsCommonLabels) if abs_labels is not None else AbsCommonLabels
         )
 
     def data(self, **kwargs):
@@ -87,7 +87,7 @@ class CompareJudger:
         xlabel: str,
         ylabel: Union[str, list[str]],
         horiline: Literal["all", "mask", None] = "all",
-        save: Optional[bool] = True,
+        save: Optional[Union[bool, PathLike]] = True,
         data: Optional[pd.DataFrame] = None,
         interactive: bool = True,
         **kwargs,
@@ -140,7 +140,7 @@ class CompareJudger:
                 alpha=1.0,
             )
             lines.append(
-                LineInfo(x=o_xticks, y=o_yticks, label=self.diff_labels.get(o, o))
+                LineData(x=o_xticks, y=o_yticks, label=self.diff_labels.get(o, o))
             )
 
         if horiline:
@@ -169,7 +169,7 @@ class CompareJudger:
                 alpha=0.8,
             )
             lines.append(
-                LineInfo(
+                LineData(
                     x=horiline_xticks,
                     y=horiline_yticks,
                     label=self.diff_labels.get(base, base),
@@ -203,7 +203,7 @@ class CompareJudger:
         xlabel: str,
         ylabel: Union[str, list[str]],
         phases: Optional[Union[list[str], str]] = None,
-        save: Optional[Union[Path, str, bool]] = True,
+        save: Optional[Union[PathLike, bool]] = True,
         data: Optional[pd.DataFrame] = None,
         interactive: bool = True,
         **kwargs,
@@ -241,7 +241,7 @@ class CompareJudger:
                 lw=2.5,
                 markersize=8,
             )
-            lines.append(LineInfo(x=x, y=y, label=self.abs_labels.get(p, p)))
+            lines.append(LineData(x=x, y=y, label=self.abs_labels.get(p, p)))
 
         plt.xlabel(self.abs_labels.get(xlabel, xlabel), fontsize=30)
         plt.ylabel(self.abs_labels.get(ylabel, ylabel), fontsize=30)
@@ -273,7 +273,7 @@ class CompareJudger:
         xlabel: str,
         ylabels: Union[str, list[str]],
         ylabel_name: str,
-        save: Optional[bool] = True,
+        save: Optional[Union[PathLike, bool]] = True,
         data: Optional[pd.DataFrame] = None,
         interactive: bool = True,
         **kwargs,
@@ -314,7 +314,7 @@ class CompareJudger:
                 alpha=1.0,
             )
             lines.append(
-                LineInfo(x=o_xticks, y=o_yticks, label=self.diff_labels.get(yl, yl))
+                LineData(x=o_xticks, y=o_yticks, label=self.diff_labels.get(yl, yl))
             )
 
         plot_trans(**kwargs)

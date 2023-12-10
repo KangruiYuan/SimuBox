@@ -1,7 +1,7 @@
+from collections import ChainMap
 from decimal import Decimal
-from functools import cached_property
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional, Union, Sequence, Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -9,27 +9,26 @@ import pandas as pd
 from scipy.interpolate import griddata
 from shapely.geometry import Polygon
 
-from collections import ChainMap
 from .PlotUtils import plot_locators, plot_savefig
-from ..Schema import LandscapeResult, PathType, CommonLabels
+from ..Schema import LandscapeResult, PathLike, CommonLabels, Numeric, Vector
 from ..Toolkits import read_csv
 
 LAND_PLOT_CONFIG = {
     "font.family": "Times New Roman",
-    "font.size": 30,
+    "font.size": 16,
     "mathtext.fontset": "stix",
     "font.serif": ["SimSun"],
     "axes.unicode_minus": False,
     "xtick.direction": "out",
     "ytick.direction": "out",
-    "xtick.major.width": 4,
-    "xtick.minor.width": 4,
-    "xtick.major.size": 12,
-    "xtick.minor.size": 6,
-    "ytick.major.width": 4,
-    "ytick.minor.width": 4,
-    "ytick.major.size": 12,
-    "ytick.minor.size": 6,
+    "xtick.major.width": 3,
+    "xtick.minor.width": 3,
+    "xtick.major.size": 10,
+    "xtick.minor.size": 5,
+    "ytick.major.width": 3,
+    "ytick.minor.width": 3,
+    "ytick.major.size": 10,
+    "ytick.minor.size": 5,
     "axes.linewidth": 2,
     "legend.frameon": False,
     "legend.fontsize": "small",
@@ -37,7 +36,7 @@ LAND_PLOT_CONFIG = {
 
 
 class Landscaper:
-    def __init__(self, path: PathType, labels: Optional[dict[str, str]] = None):
+    def __init__(self, path: PathLike, labels: Optional[dict[str, str]] = None):
         self.path = Path(path)
         self.labels = (
             ChainMap(labels, CommonLabels) if labels is not None else CommonLabels
@@ -49,12 +48,12 @@ class Landscaper:
         return read_csv(self.path, **kwargs)
 
     @staticmethod
-    def get_w_s(num: np.ndarray, Res: int):
+    def get_step_for_discrete(num: np.ndarray, precision: int):
         xs = Decimal(str(num.min())).as_tuple()
-        return 10 ** (-abs(xs[2]) - Res)  # type: ignore
+        return 10 ** (-abs(xs[2]) - precision)
 
     @staticmethod
-    def levels_IQ(contour_set, levels: list[float] = None, **kwargs):
+    def levels_IQ(contour_set, levels: Sequence[float] = None, **kwargs):
         # 获取等高面的信息
         if levels is None:
             levels = [0.001, 0.01]
@@ -64,9 +63,9 @@ class Landscaper:
             if level not in levels:
                 continue
             collection = contour_set.collections[i]
-            path_list = collection.get_paths()
-            for path in path_list:
-                vertices = path.vertices
+            contour_paths = collection.get_paths()
+            for contour_path in contour_paths:
+                vertices = contour_path.vertices
                 polygon = Polygon(vertices)
                 area = polygon.area
                 length = polygon.length
@@ -76,73 +75,102 @@ class Landscaper:
 
     def prospect(
         self,
-        AxisX: str = "ly",
-        AxisY: str = "lz",
-        Vals: str = "freeE",
+        x_axis: str = "ly",
+        y_axis: str = "lz",
+        target: str = "freeE",
+        levels: Optional[Vector] = None,
         precision: int = 3,
         save: Optional[bool] = True,
-        tick_num: int = 11,
-        asp: Union[str, float, int] = 1,
+        tick_num: Optional[int] = None,
+        aspect: Union[Literal["auto", "equal", "square"], Numeric] = 1,
+        relative: bool = True,
+        IQ: bool = True,
+        interactive: bool = True,
         **kwargs,
     ):
         df: pd.DataFrame = self.data(**kwargs)
-        ly = np.sort(df[AxisX].unique())
-        lz = np.sort(df[AxisY].unique())
-        min_data = df[df[Vals] == df[Vals].min()]
+        x_ticks = np.sort(df[x_axis].unique())
+        y_ticks = np.sort(df[y_axis].unique())
+        min_data = df[df[target] == df[target].min()]
 
-        min_data = min_data.drop_duplicates(subset=["lz", "ly"])
+        min_data = min_data.drop_duplicates(subset=[x_axis, y_axis])
 
         for idx in min_data.index:
             print(
-                "极小值点: ly: {}, lz:{}, freeE: {}".format(
-                    min_data.loc[idx, AxisX],
-                    min_data.loc[idx, AxisY],
-                    min_data.loc[idx, Vals],
-                )
+                f"极小值点: {x_axis}: {min_data.loc[idx, x_axis]}, {y_axis}:{min_data.loc[idx, y_axis]}, {target}: {min_data.loc[idx, target]}"
             )
 
-        y_all = df[AxisX].values.reshape(-1, 1)  # type: ignore
-        x_all = df[AxisY].values.reshape(-1, 1)  # type: ignore
-        yx_all = np.hstack([y_all, x_all])
-        step_ly = self.get_w_s(ly, precision)
-        step_lz = self.get_w_s(lz, precision)
-        grid_ly, grid_lz = np.mgrid[
-            ly.min() : ly.max() : step_ly, lz.min() : lz.max() : step_lz
+        x_all_point = df[x_axis].values.reshape(-1, 1)
+        y_all_point = df[y_axis].values.reshape(-1, 1)
+        xy_all_point = np.hstack([x_all_point, y_all_point])
+        step_x = self.get_step_for_discrete(x_ticks, precision)
+        step_y = self.get_step_for_discrete(y_ticks, precision)
+        grid_x, grid_y = np.mgrid[
+            x_ticks.min() : x_ticks.max() : step_x,
+            y_ticks.min() : y_ticks.max() : step_y,
         ]
         # print(grid_ly.shape)
-        grid_freeE = griddata(
-            yx_all, df[Vals].values, (grid_ly, grid_lz), method="cubic"
+        grid_target = griddata(
+            xy_all_point, df[target].values, (grid_x, grid_y), method="cubic"
         )
 
-        freeEMat = grid_freeE.copy()
-        print(f"Free energy mat shape: {grid_freeE.shape}")
-        ly = np.unique(grid_ly)
-        lz = np.unique(grid_lz)
+        target_mat = grid_target.copy()
+        print(f"{target} mat shape: {grid_target.shape}")
+        x_ticks = np.sort(grid_x[:, 0])
+        y_ticks = np.sort(grid_y[0, :])
 
-        if kwargs.get("relative", True):
-            freeEMat = freeEMat - freeEMat.min()
+        if relative:
+            target_mat = target_mat - target_mat.min()
 
-        if levels := kwargs.get("levels", []):
-            # levels = kwargs.get("levels", False)
+        if levels is not None:
             levels = np.array(levels)
-            ticks = levels
 
         else:
-            levels = np.linspace(np.min(freeEMat), np.max(freeEMat), tick_num)
-            ticks = levels
+            assert tick_num is not None
+            levels = np.linspace(np.min(target_mat), np.max(target_mat), tick_num)
+        ticks = levels
 
-        fig = plt.figure(figsize=kwargs.get("figsize", (16, 12)))
+        fig = plt.figure(figsize=kwargs.get("figsize", (8, 6)))
         ax = plt.gca()
-        reverse = kwargs.get("reverse", 3)
-        contourf_fig = plt.contourf(lz, ly, freeEMat, levels=levels, cmap="viridis")
-        contour_fig = plt.contour(contourf_fig, colors="w", linewidths=2.5)
-        self.levels_IQ(contour_fig)
 
-        if manual := kwargs.get("manual", []):
+        cmap_kind = kwargs.get("cmap", "viridis")
+        cmap = plt.colormaps.get_cmap(cmap_kind)
+        colors = [cmap(i / len(levels)) for i in range(len(levels))]
+        contourf_fig = plt.contourf(
+            y_ticks, x_ticks, target_mat, levels=levels, colors=colors
+        )
+        contour_fig = plt.contour(contourf_fig, colors="w", linewidths=2.5)
+
+        if IQ:
+            self.levels_IQ(contour_fig)
+
+        inverse_color = kwargs.get("inverse_color", 0)
+        clabel_fontsize = kwargs.get("clabel_fontsize", 15)
+        manual = kwargs.get("manual", ())
+
+        if manual == "auto":
+            from ..Toolkits import find_nearest_1d
+            diag = np.diagonal(target_mat)
+            half_length = len(diag) // 2
+            front_half = diag[:half_length]
+            back_half = diag[half_length:]
+            mark_coords = []
+            exclude = kwargs.get("exclude", (min(levels), max(levels)))
+            for _level in levels:
+                if _level in exclude:
+                    continue
+                front_idx = find_nearest_1d(front_half, _level)
+                mark_coords.append((x_ticks[front_idx], y_ticks[front_idx]))
+                back_idx = find_nearest_1d(back_half, _level) + half_length
+                mark_coords.append((x_ticks[back_idx], y_ticks[back_idx]))
+            manual = mark_coords
+
+        if isinstance(manual, Sequence) and manual:
+            print(manual)
             plt.clabel(
                 contour_fig,
-                fontsize=30,
-                colors=["w"] * (len(ticks) - reverse) + ["k"] * reverse,
+                fontsize=clabel_fontsize,
+                colors=["w"] * (len(ticks) - inverse_color) + ["k"] * inverse_color,
                 fmt="%g",
                 manual=manual,
                 zorder=7,
@@ -150,31 +178,37 @@ class Landscaper:
         else:
             plt.clabel(
                 contour_fig,
-                fontsize=30,
-                colors=["w"] * (len(ticks) - reverse) + ["k"] * reverse,
+                fontsize=clabel_fontsize,
+                colors=["w"] * (len(ticks) - inverse_color) + ["k"] * inverse_color,
                 fmt="%g",
+                zorder=7,
             )
 
+        colorbar_fontsize = kwargs.get("colorbar_fontsize", 20)
+        colorbar_accuracy = kwargs.get("colorbar_accuracy", 6)
+        colorbar_pad = kwargs.get("colorbar_pad", 0.15)
         shrink = kwargs.get("shrink", 1.0)
-        clb = plt.colorbar(contourf_fig, ticks=ticks, shrink=shrink, pad=-0.15)
-        clb.set_ticklabels(np.around(ticks, kwargs.get("clb_acc", 6)), fontsize=35)
+        clb = plt.colorbar(contourf_fig, ticks=ticks, shrink=shrink, pad=colorbar_pad)
+        clb.set_ticklabels(
+            np.around(ticks, colorbar_accuracy), fontsize=colorbar_fontsize
+        )
         # clb.set_ylabel(r'$\Delta F/k_{\rm{B}}T$', fontsize=20)
-        clb.ax.set_title(r"$\Delta F/nk_{B}T$", fontsize=40, pad=18)
+        if colorbar_title := kwargs.get("colorbar_title", r"$\Delta F/nk_{\rm B}T$"):
+            clb.ax.set_title(colorbar_title, fontsize=colorbar_fontsize, pad=18)
         clb.ax.tick_params(which="major", width=2)
 
-        plt.xlabel(self.labels[AxisY], fontdict={"size": 45})
-        plt.ylabel(self.labels[AxisX], fontdict={"size": 45})
+        label_fontsize = kwargs.get("label_fontsize", 15)
+        plt.xlabel(self.labels.get(x_axis, x_axis), fontsize=label_fontsize)
+        plt.ylabel(self.labels.get(y_axis, y_axis), fontsize=label_fontsize)
 
-        if asp is not None:
-            if asp == "auto":
-                ax.set_aspect(1.0 / ax.get_data_ratio())
-            elif asp == "square" or asp == "equal":
-                plt.axis(asp)
-            else:
-                ax.set_aspect(asp)
+        if aspect == "auto":
+            ax.set_aspect(1.0 / ax.get_data_ratio())
+        elif aspect in ("square", "equal"):
+            plt.axis(aspect)
+        elif aspect is not None:
+            ax.set_aspect(aspect)
 
         if point_list := kwargs.get("point_list", []):
-            # p = [x, y, marker, c, size]
             for p in point_list:
                 plt.scatter(
                     p[0], p[1], s=p[-1], c=p[-2], marker=p[2], alpha=1, zorder=6
@@ -184,12 +218,13 @@ class Landscaper:
 
         plt.tight_layout()
         plot_savefig(self, save=save, **kwargs)
-        plt.show()
+        if interactive:
+            plt.show()
 
         return LandscapeResult(
-            freeEMat=freeEMat,
-            ly=ly,
-            lz=lz,
+            mat=target_mat,
+            x_ticks=x_ticks,
+            y_ticks=y_ticks,
             levels=levels,
             ticks=ticks,
             fig=fig,

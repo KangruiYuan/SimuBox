@@ -8,7 +8,7 @@ import re
 from itertools import product
 import xml
 
-from ..Schema import XMLRaw, XMLTransform
+from ..Schema import XMLRaw, XMLTransResult
 
 
 class XmlTransformer:
@@ -114,4 +114,4 @@ class XmlTransformer:
             mask = dis <= r_cut
             for grid in grids[mask]:
                 phi[t[i]][grid[0]][grid[1]][grid[2]] += 1
-        return XMLTransform(xml=xml, phi=phi)
+        return XMLTransResult(xml=xml, phi=phi)

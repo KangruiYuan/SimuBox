@@ -5,7 +5,7 @@ from typing import Optional
 
 import numpy as np
 from matplotlib.ticker import AutoMinorLocator, MultipleLocator
-from ..Schema import PathType, ColorType
+from ..Schema import PathLike, ColorMode
 from typing import Union
 
 
@@ -70,7 +70,7 @@ def plot_savefig(
     middle: str = "",
     suffix: str = "",
     dpi: int = 150,
-    save: Union[PathType, bool] = False,
+    save: Union[PathLike, bool] = False,
     **kwargs,
 ):
     if isinstance(save, bool):
@@ -81,7 +81,7 @@ def plot_savefig(
                 print("不支持自动保存，请传递路径信息给参数save")
                 return
             path = Path(obj.path)
-    elif isinstance(save, PathType):
+    elif isinstance(save, PathLike):
         path = Path(save)
     else:
         raise ValueError(f"save类型应为[Path, str, bool], 而当前是{type(save)}")
@@ -98,19 +98,19 @@ def plot_savefig(
 
 
 def generate_colors(
-    mode: Union[str, ColorType] = ColorType.RGB,
+    mode: Union[str, ColorMode] = ColorMode.RGB,
     num: int = 1,
     linear: bool = True,
     **kwargs,
 ):
-    if mode == ColorType.RGB:
+    if mode == ColorMode.RGB:
         color = [tuple(i) for i in np.random.choice(range(256), size=(num, 3))]
-    elif mode == ColorType.HEX:
+    elif mode == ColorMode.HEX:
         color = [
             "#" + "".join(i)
             for i in np.random.choice(list("0123456789ABCDEF"), size=(num, 6))
         ]
-    elif mode == ColorType.L:
+    elif mode == ColorMode.L:
         if linear:
             color = np.linspace(0, 255, num, dtype=int).tolist()
         else:

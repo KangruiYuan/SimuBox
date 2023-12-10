@@ -14,12 +14,12 @@ from tqdm import tqdm
 from ..Artist import generate_colors
 from ..Schema import (
     Density,
-    CVResult,
+    OpenCVResult,
     AnalyzeMode,
-    ColorType,
-    WeightedMethod,
-    AnalyzeResult,
-    PathType,
+    ColorMode,
+    WeightedMode,
+    VoronoiAnalyzeResult,
+    PathLike,
 )
 from ..Toolkits import parse_density
 from ..Artist import plot_savefig
@@ -59,7 +59,7 @@ class VoronoiCell:
         centers = np.array(centers, dtype=float)
         # facets = np.array(facets, dtype=int)
 
-        return CVResult(
+        return OpenCVResult(
             path=density.path,
             parsed_density=parsed,
             facets=facets,
@@ -107,10 +107,10 @@ class VoronoiCell:
     @classmethod
     def voronoi(
         cls,
-        cv_res: CVResult,
+        cv_res: OpenCVResult,
         centers: np.ndarray,
         interactive: bool = True,
-        save: Union[PathType, bool] = False,
+        save: Union[PathLike, bool] = False,
         **kwargs,
     ):
         point_color = kwargs.get("pc", "b")
@@ -139,17 +139,17 @@ class VoronoiCell:
         )
         if interactive:
             plt.show()
-        return AnalyzeResult(
+        return VoronoiAnalyzeResult(
             path=cv_res.path, cv_result=cv_res, fig=fig, ax=ax, voronoi=vor
         )
 
     @classmethod
     def triangle(
         cls,
-        cv_res: CVResult,
+        cv_res: OpenCVResult,
         centers: np.ndarray,
         interactive: bool = True,
-        save: Union[PathType, bool] = False,
+        save: Union[PathLike, bool] = False,
         **kwargs,
     ):
         point_color = kwargs.get("pc", "b")
@@ -198,7 +198,7 @@ class VoronoiCell:
         )
         if interactive:
             plt.show()
-        return AnalyzeResult(
+        return VoronoiAnalyzeResult(
             path=cv_res.path,
             cv_result=cv_res,
             fig=fig,
@@ -208,7 +208,7 @@ class VoronoiCell:
         )
 
     @classmethod
-    def set_point_limits(cls, density: CVResult, centers: np.ndarray, **kwargs):
+    def set_point_limits(cls, density: OpenCVResult, centers: np.ndarray, **kwargs):
         point_xlim = cls.get_lim_attributes(
             "point_xlim", (-0.1, 1.1), density.parsed_density.expand[0], **kwargs
         )
@@ -225,7 +225,7 @@ class VoronoiCell:
         return centers_cut
 
     @classmethod
-    def set_axis_limits(cls, density: CVResult, **kwargs):
+    def set_axis_limits(cls, density: OpenCVResult, **kwargs):
         axis_xlim = cls.get_lim_attributes(
             "axis_xlim", (-0.5, 1.5), density.parsed_density.expand[0], **kwargs
         )
@@ -254,9 +254,9 @@ class VoronoiCell:
         cls,
         points: Union[list, np.ndarray],
         weights: Optional[Union[float, int, list, np.ndarray]] = 0,
-        method: WeightedMethod = "additive",
+        method: WeightedMode = "additive",
         size: Tuple = (500, 500),
-        color_mode: ColorType = "L",
+        color_mode: ColorMode = "L",
         interactive: bool = True,
         **kwargs,
     ):
@@ -278,7 +278,7 @@ class VoronoiCell:
         arrs = np.array(list(product(range(imgx), range(imgy))), dtype=int)
 
         func = getattr(
-            cls, method.value if isinstance(method, WeightedMethod) else method
+            cls, method.value if isinstance(method, WeightedMode) else method
         )
         for arr in tqdm(arrs):
             dis = func(points, arr, weights)
@@ -297,9 +297,9 @@ class VoronoiCell:
             edgecolors="black",
         )
         if plot == "imshow":
-            if color_mode == ColorType.L:
+            if color_mode == ColorMode.L:
                 plt.imshow(im, "gray", zorder=5, origin="lower")
-            elif color_mode == ColorType.RGB:
+            elif color_mode == ColorMode.RGB:
                 plt.imshow(im, zorder=5, origin="lower")
         elif plot == "vertices":
             if color_mode == "RGB":

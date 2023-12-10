@@ -4,17 +4,17 @@ from typing import Optional, Sequence
 
 import numpy as np
 
-from ..Schema import NumericType, VectorType, PathType
+from ..Schema import Numeric, Vector, PathLike
 
 
-def find_nearest_1d(array: VectorType, value: NumericType) -> NumericType:
+def find_nearest_1d(array: Vector, value: Numeric) -> Numeric:
     if not isinstance(array, np.ndarray):
         array = np.asarray(array)
     idx = (np.abs(array - value)).argmin()
     return idx
 
 
-def replace_target(path: PathType, target: str, key: str = "phase") -> Optional[Path]:
+def replace_target(path: PathLike, target: str, key: str = "phase") -> Optional[Path]:
     path = str(path)
     pattern = re.compile(key + r"(\w+)_?")
     match = pattern.search(path)

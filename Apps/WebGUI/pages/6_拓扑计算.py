@@ -37,7 +37,7 @@ with param_col:
 
     with sub_cols[1]:
         odt = st.checkbox("计算ODT", value=True)
-        show_nodes = st.checkbox("绘制节点信息", value=True)
+        show_nodes = st.checkbox("节点信息", value=True)
         x_lim_max = st.number_input("X轴截止值", value=0.9, min_value=0.0, max_value=1.0)
         y_lim_max = st.number_input("Y轴截止值", value=100.0)
         xlabel = st.text_input("X标签", value=r"$f_{A}$")
@@ -46,7 +46,7 @@ with param_col:
 
     with sub_cols[0]:
         curve = st.checkbox("曲线形式", value=False)
-        show_edge_labels = st.checkbox("绘制边信息", value=True)
+        show_edge_labels = st.checkbox("边信息", value=True)
         x_lim_min = st.number_input(
             "X轴起始值", value=0.1, min_value=0.0, max_value=x_lim_max - 0.1
         )

@@ -9,12 +9,25 @@ from pydantic import BaseModel
 from scipy.spatial import Voronoi
 
 
-class ExtendedModel(BaseModel):
+class MixinBaseModel(BaseModel):
     class Config:
         arbitrary_types_allowed = True
 
 
-class Printout(ExtendedModel):
+class FigureAxesMixin(MixinBaseModel):
+
+    fig: Optional[Figure] = None
+    ax: Optional[Axes] = None
+
+class PointMixin(MixinBaseModel):
+
+    x :Optional[float] = None
+    y :Optional[float] = None
+    z :Optional[float] = None
+    value: Optional[float] = None
+
+
+class Printout(MixinBaseModel):
     path: Optional[Path] = None
     box: np.ndarray
     lxlylz: np.ndarray
@@ -26,7 +39,8 @@ class Printout(ExtendedModel):
     freeU: float
     inCompMax: float
 
-class FetData(ExtendedModel):
+
+class FetData(MixinBaseModel):
     path: Optional[Path] = None
     xACN: Optional[float] = None
     xCAN: Optional[float] = None
@@ -61,7 +75,7 @@ class FetData(ExtendedModel):
     activity0: Optional[float] = None
 
 
-class Density(ExtendedModel):
+class Density(MixinBaseModel):
     path: Optional[Path] = None
     data: pd.DataFrame
     NxNyNz: Optional[np.ndarray] = None
@@ -87,8 +101,7 @@ class Density(ExtendedModel):
             self.lxlylz = lxlylz if mask is None else lxlylz[mask]
 
 
-
-class Summation(ExtendedModel):
+class Summation(MixinBaseModel):
     path: Optional[Path] = None
     box: Optional[np.ndarray] = None
     NxNyNz: Optional[np.ndarray] = None
@@ -104,35 +117,31 @@ class Summation(ExtendedModel):
     inCompMax: float
 
 
-class CompareResult(ExtendedModel):
+class CompareResult(FigureAxesMixin):
     df: pd.DataFrame
     plot_dict: dict
     mat: np.ndarray
-    fig: Optional[Figure] = None
-    ax: Optional[Axes] = None
 
 
-class LandscapeResult(ExtendedModel):
-    freeEMat: np.ndarray
-    ly: np.ndarray
-    lz: np.ndarray
+class LandscapeResult(FigureAxesMixin):
+    mat: np.ndarray
+    x_ticks: np.ndarray
+    y_ticks: np.ndarray
     levels: np.ndarray
     ticks: np.ndarray
-    fig: Optional[Figure] = None
-    ax: Optional[Axes] = None
     contourf_fig: Optional[Any] = None
     contour_fig: Optional[Any] = None
     clb: Optional[Any] = None
 
 
-class PointInfo(ExtendedModel):
+class PhasePointData(MixinBaseModel):
     phase: str
     x: float
     y: float
-    freeEnergy: float
+    val: float
 
-from pydantic import Field
-class PeakInfo(ExtendedModel):
+
+class PeakData(MixinBaseModel):
 
     center: Optional[float]
     amplitude: Optional[float] = None
@@ -141,21 +150,20 @@ class PeakInfo(ExtendedModel):
     fix: Optional[Sequence[bool]] = (False, False, False)
     area: Optional[float] = None
 
-class PeakFitResult(ExtendedModel):
+
+class PeakFitResult(FigureAxesMixin):
 
     x: np.ndarray
     y: np.ndarray
-    peaks: Sequence[PeakInfo]
+    peaks: Sequence[PeakData]
     fitted_curve: np.ndarray
     split_curve: np.ndarray
     r2: float
     adj_r2: float
     area: float
-    fig: Optional[Figure] = None
-    ax: Optional[Axes] = None
 
 
-class DensityParseResult(ExtendedModel):
+class DensityParseResult(MixinBaseModel):
     path: Path
     raw_NxNyNz: np.ndarray
     raw_lxlylz: np.ndarray
@@ -166,37 +174,36 @@ class DensityParseResult(ExtendedModel):
     expand: np.ndarray
     target: list[int]
 
-class ScatterResult(ExtendedModel):
+
+class ScatterResult(MixinBaseModel):
     parsed_density: DensityParseResult
     q_Intensity: np.ndarray
     q_idx: dict
 
-class ScatterPlots(ExtendedModel):
+
+class ScatterPlot(FigureAxesMixin):
     peaks_location: np.ndarray
     peaks_height: dict
     plot_y: np.ndarray
     plot_x: np.ndarray
-    fig: Optional[Figure] = None
-    ax: Optional[Axes] = None
 
-class CVResult(ExtendedModel):
+
+class OpenCVResult(MixinBaseModel):
     path: Path
     parsed_density: DensityParseResult
     facets: list
     centers: np.ndarray
 
-class AnalyzeResult(ExtendedModel):
+
+class VoronoiAnalyzeResult(FigureAxesMixin):
     path: Path
-    cv_result: CVResult
-    fig: Optional[Figure] = None
-    ax: Optional[Axes] = None
+    cv_result: OpenCVResult
     voronoi: Optional[Voronoi] = None
     triangle: Optional[list] = None
     coord_dict: Optional[dict] = None
 
 
-
-class XMLRaw(ExtendedModel):
+class XMLRaw(MixinBaseModel):
     path: Path
     NxNyNz: np.ndarray
     lxlylz: np.ndarray
@@ -206,7 +213,7 @@ class XMLRaw(ExtendedModel):
     atoms_mapping: dict[str, int]
 
 
-class XMLTransform(ExtendedModel):
+class XMLTransResult(MixinBaseModel):
     xml: XMLRaw
     phi: np.ndarray
 
@@ -233,22 +240,21 @@ class XMLTransform(ExtendedModel):
             comments="",
         )
 
-class LineInfo(ExtendedModel):
+
+class LineData(MixinBaseModel):
     x: np.ndarray
     y: np.ndarray
     label: str
 
-class LineCompareResult(ExtendedModel):
-    fig: Optional[Figure]
-    ax: Optional[Axes]
-    lines: list[LineInfo]
+
+class LineCompareResult(FigureAxesMixin):
+    lines: list[LineData]
     xlabel: str
     ylabel: str
 
-class ODTResult(ExtendedModel):
 
-    fig: Optional[Figure]
-    ax: Optional[Axes]
+class ODTResult(FigureAxesMixin):
+
     xN: np.ndarray
     f: np.ndarray
     expression: Any
@@ -256,9 +262,6 @@ class ODTResult(ExtendedModel):
     ylabel: str
 
 
-class TopoShow(ExtendedModel):
-    fig: Optional[Figure]
-    ax: Optional[Axes]
+class TopoPlot(FigureAxesMixin):
     kind_color: dict[str, str]
     rad: float
-

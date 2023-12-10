@@ -1,26 +1,25 @@
-from typing import List, Union, Iterable, Optional, Tuple, Sequence
+from typing import Union, Iterable, Optional, Tuple, Sequence, Literal
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import pyvista as pv
-
 from skimage.measure import marching_cubes
 
-from ..Schema import Density, NumericType, PathType
-from ..Toolkits import parse_density
 from .PlotUtils import plot_savefig
+from ..Schema import Density, Numeric, PathLike
+from ..Toolkits import parse_density
 
 
 def iso3D(
     density: Density,
     target: Optional[Union[int, Iterable[int]]] = 0,
     permute: Optional[Iterable[int]] = None,
-    level: Union[float, List[float]] = 0.5,
-    backend: str = "vista",
+    level: Union[float, Iterable[float]] = 0.5,
+    backend: Literal["vista", "mpl"] = "vista",
     interactive: bool = True,
     frame: bool = True,
-    save: Optional[PathType] = None,
+    save: Optional[PathLike] = None,
     **kwargs,
 ):
     parsed = parse_density(density, target, permute, **kwargs)
@@ -98,11 +97,11 @@ def iso2D(
     permute: Optional[Iterable[int]] = None,
     slices: Optional[tuple[int, int]] = None,
     titles: Optional[Sequence[str]] = None,
-    norm: Optional[Tuple[NumericType, NumericType]] = None,
+    norm: Optional[Tuple[Numeric, Numeric]] = None,
     label: bool = True,
     colorbar: bool = False,
     interactive: bool = True,
-    save: Union[PathType, bool] = False,
+    save: Union[PathLike, bool] = False,
     **kwargs,
 ):
 

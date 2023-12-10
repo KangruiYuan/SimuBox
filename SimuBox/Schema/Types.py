@@ -1,7 +1,7 @@
 from pathlib import Path
-from typing import Union, Iterable, BinaryIO
+from typing import Union, Iterable, BinaryIO, Sequence
 
-NumericType = Union[int, float]
-VectorType = Iterable[NumericType]
-PathType = Union[Path, str, BinaryIO]
+Numeric = Union[int, float]
+Vector = Union[Sequence[Numeric], Iterable[Numeric]]
+PathLike = Union[Path, str, BinaryIO]
 

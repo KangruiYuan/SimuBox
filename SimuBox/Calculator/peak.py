@@ -3,21 +3,21 @@ from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 from typing import Iterable, Union, Callable, Sequence
-from ..Schema import NumericType, PeakInfo, PeakFitResult
+from ..Schema import Numeric, PeakData, PeakFitResult
 from ..Artist import plot_legend, plot_savefig, plot_locators
 from sklearn.metrics import r2_score
 
 
 def gaussian_expansion(
-    array: Union[Iterable, NumericType],
-    amp: NumericType,
-    ctr: NumericType,
-    wid: NumericType,
+    array: Union[Iterable, Numeric],
+    amp: Numeric,
+    ctr: Numeric,
+    wid: Numeric,
 ):
     return amp * np.exp(-(((array - ctr) / wid) ** 2))
 
 
-def curve_function(x: Union[Iterable, NumericType], *params):
+def curve_function(x: Union[Iterable, Numeric], *params):
 
     assert len(params) % 3 == 1
 
@@ -44,7 +44,7 @@ def fix_param(params: np.ndarray, fix: Sequence):
         fixed.append(-1)
     fixed = np.array(fixed)
 
-    def curve(x: Union[Iterable, NumericType], *args):
+    def curve(x: Union[Iterable, Numeric], *args):
         args = np.array(args)
         args[fixed != -1] = fixed[fixed != -1]
         res = 0
@@ -55,7 +55,7 @@ def fix_param(params: np.ndarray, fix: Sequence):
     return curve
 
 
-def curve_split(x: Union[Iterable, NumericType], *params):
+def curve_split(x: Union[Iterable, Numeric], *params):
     assert len(params) % 3 == 1
     res = []
     for i in range(0, len(params) - 1, 3):
@@ -69,7 +69,7 @@ def curve_split(x: Union[Iterable, NumericType], *params):
 def peak_fit(
     x: np.ndarray,
     y: np.ndarray,
-    peaks: Sequence[PeakInfo],
+    peaks: Sequence[PeakData],
     func: Callable = curve_function,
     fix_background: bool = False,
     xlabel: str = r"Wavenumbers/${\rm cm}^{-1}$",
@@ -152,7 +152,7 @@ def peak_fit(
     res_peaks = []
     for i_r, i_p in enumerate(range(0, len(popt) - 1, 3)):
         res_peaks.append(
-            PeakInfo(
+            PeakData(
                 amplitude=popt[i_p],
                 center=popt[i_p + 1],
                 width=popt[i_p + 2],
