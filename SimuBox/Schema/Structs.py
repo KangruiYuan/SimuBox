@@ -123,22 +123,11 @@ class CompareResult(FigureAxesMixin):
     mat: np.ndarray
 
 
-class LandscapeResult(FigureAxesMixin):
-    mat: np.ndarray
-    x_ticks: np.ndarray
-    y_ticks: np.ndarray
-    levels: np.ndarray
-    ticks: np.ndarray
-    contourf_fig: Optional[Any] = None
-    contour_fig: Optional[Any] = None
-    clb: Optional[Any] = None
 
 
-class PhasePointData(MixinBaseModel):
+
+class PhasePointData(PointMixin):
     phase: str
-    x: float
-    y: float
-    val: float
 
 
 class PeakData(MixinBaseModel):
@@ -265,3 +254,21 @@ class ODTResult(FigureAxesMixin):
 class TopoPlot(FigureAxesMixin):
     kind_color: dict[str, str]
     rad: float
+
+class IQResult(MixinBaseModel):
+
+    level: float
+    area: float
+    length: float
+    IQ: float
+
+class LandscapeResult(FigureAxesMixin):
+    mat: np.ndarray
+    x_ticks: np.ndarray
+    y_ticks: np.ndarray
+    levels: np.ndarray
+    ticks: np.ndarray
+    contourf_fig: Optional[Any] = None
+    contour_fig: Optional[Any] = None
+    clb: Optional[Any] = None
+    IQs: Optional[list[IQResult]] = None

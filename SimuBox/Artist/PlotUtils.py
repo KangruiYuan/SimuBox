@@ -52,6 +52,7 @@ def plot_locators(
     ymajor: Optional[int] = None,
     **kwargs,
 ):
+    # print(xmajor)
     if ax is None:
         ax = plt.gca()
     if xminor is not None:
@@ -59,7 +60,7 @@ def plot_locators(
     if yminor is not None:
         ax.yaxis.set_minor_locator(AutoMinorLocator(yminor))
     if xmajor is not None:
-        ax.yaxis.set_major_locator(MultipleLocator(xmajor))
+        ax.xaxis.set_major_locator(MultipleLocator(xmajor))
     if ymajor is not None:
         ax.yaxis.set_major_locator(MultipleLocator(ymajor))
 

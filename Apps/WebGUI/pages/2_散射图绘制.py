@@ -5,12 +5,19 @@ from pathlib import Path
 import numpy as np
 import pyecharts.options as opts
 import streamlit as st
-from SimuBox import read_density, read_printout, Scatter
+from SimuBox import (
+    read_density,
+    read_printout,
+    Scatter,
+    SCATTER_PLOT_CONFIG,
+    init_plot_config,
+)
 from pyecharts.charts import Line
 from streamlit_echarts import st_pyecharts
 
 warnings.filterwarnings("ignore")
 
+init_plot_config(SCATTER_PLOT_CONFIG)
 
 st.set_page_config(layout="wide")
 st.title(":blue[SimuBox] :red[Visual] : 散射图绘制")

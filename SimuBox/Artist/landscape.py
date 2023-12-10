@@ -10,7 +10,7 @@ from scipy.interpolate import griddata
 from shapely.geometry import Polygon
 
 from .PlotUtils import plot_locators, plot_savefig
-from ..Schema import LandscapeResult, PathLike, CommonLabels, Numeric, Vector
+from ..Schema import LandscapeResult, PathLike, CommonLabels, Numeric, Vector, IQResult
 from ..Toolkits import read_csv
 
 LAND_PLOT_CONFIG = {
@@ -57,6 +57,7 @@ class Landscaper:
         # 获取等高面的信息
         if levels is None:
             levels = [0.001, 0.01]
+        IQs = []
         for i in range(len(contour_set.collections)):
             # for collection in contour_set.collections:
             level = contour_set.levels[i]
@@ -64,6 +65,7 @@ class Landscaper:
                 continue
             collection = contour_set.collections[i]
             contour_paths = collection.get_paths()
+
             for contour_path in contour_paths:
                 vertices = contour_path.vertices
                 polygon = Polygon(vertices)
@@ -72,6 +74,8 @@ class Landscaper:
                 IQ = 4 * area * np.pi / length**2
                 # centroid = polygon.centroid
                 print("level: ", level, "面积：", area, "周长：", length, "IQ: ", IQ)
+                IQs.append(IQResult(level=level, area=area, length=length, IQ=IQ))
+        return IQs
 
     def prospect(
         self,
@@ -86,9 +90,10 @@ class Landscaper:
         relative: bool = True,
         IQ: bool = True,
         interactive: bool = True,
+        data: Optional[pd.DataFrame] = None,
         **kwargs,
     ):
-        df: pd.DataFrame = self.data(**kwargs)
+        df: pd.DataFrame = self.data(**kwargs) if data is None else data.copy()
         x_ticks = np.sort(df[x_axis].unique())
         y_ticks = np.sort(df[y_axis].unique())
         min_data = df[df[target] == df[target].min()]
@@ -142,7 +147,9 @@ class Landscaper:
         contour_fig = plt.contour(contourf_fig, colors="w", linewidths=2.5)
 
         if IQ:
-            self.levels_IQ(contour_fig)
+            IQs = self.levels_IQ(contour_fig, levels=kwargs.get("levels_for_IQ"))
+        else:
+            IQs = []
 
         inverse_color = kwargs.get("inverse_color", 0)
         clabel_fontsize = kwargs.get("clabel_fontsize", 15)
@@ -150,6 +157,7 @@ class Landscaper:
 
         if manual == "auto":
             from ..Toolkits import find_nearest_1d
+
             diag = np.diagonal(target_mat)
             half_length = len(diag) // 2
             front_half = diag[:half_length]
@@ -166,7 +174,7 @@ class Landscaper:
             manual = mark_coords
 
         if isinstance(manual, Sequence) and manual:
-            print(manual)
+            # print(manual)
             plt.clabel(
                 contour_fig,
                 fontsize=clabel_fontsize,
@@ -184,9 +192,9 @@ class Landscaper:
                 zorder=7,
             )
 
-        colorbar_fontsize = kwargs.get("colorbar_fontsize", 20)
-        colorbar_accuracy = kwargs.get("colorbar_accuracy", 6)
-        colorbar_pad = kwargs.get("colorbar_pad", 0.15)
+        colorbar_fontsize = kwargs.get("colorbar_fontsize", 15)
+        colorbar_accuracy = kwargs.get("colorbar_accuracy", 8)
+        colorbar_pad = kwargs.get("colorbar_pad", 0.1)
         shrink = kwargs.get("shrink", 1.0)
         clb = plt.colorbar(contourf_fig, ticks=ticks, shrink=shrink, pad=colorbar_pad)
         clb.set_ticklabels(
@@ -197,7 +205,7 @@ class Landscaper:
             clb.ax.set_title(colorbar_title, fontsize=colorbar_fontsize, pad=18)
         clb.ax.tick_params(which="major", width=2)
 
-        label_fontsize = kwargs.get("label_fontsize", 15)
+        label_fontsize = kwargs.get("label_fontsize", 20)
         plt.xlabel(self.labels.get(x_axis, x_axis), fontsize=label_fontsize)
         plt.ylabel(self.labels.get(y_axis, y_axis), fontsize=label_fontsize)
 
@@ -214,6 +222,7 @@ class Landscaper:
                     p[0], p[1], s=p[-1], c=p[-2], marker=p[2], alpha=1, zorder=6
                 )
 
+        # print(kwargs["xmajor"])
         plot_locators(**kwargs)
 
         plt.tight_layout()
@@ -232,4 +241,5 @@ class Landscaper:
             contourf_fig=contourf_fig,
             contour_fig=contour_fig,
             clb=clb,
+            IQs=IQs,
         )

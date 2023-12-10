@@ -4,10 +4,11 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 import json
-from SimuBox import TopoCreateMode, TopoCreater, fA, fB
-
+from SimuBox import TopoCreateMode, TopoCreater, fA, fB, COMPARE_PLOT_CONFIG, init_plot_config
 
 warnings.filterwarnings("ignore")
+
+init_plot_config(COMPARE_PLOT_CONFIG)
 
 
 st.set_page_config(layout="wide")
@@ -42,8 +43,6 @@ with param_col:
         y_lim_max = st.number_input("Y轴截止值", value=100.0)
         xlabel = st.text_input("X标签", value=r"$f_{A}$")
 
-
-
     with sub_cols[0]:
         curve = st.checkbox("曲线形式", value=False)
         show_edge_labels = st.checkbox("边信息", value=True)
@@ -54,8 +53,6 @@ with param_col:
             "Y轴起始值", value=0.0, min_value=0.0, max_value=y_lim_max
         )
         ylabel = st.text_input("Y标签", value=r"$\chi {\rm N}$")
-
-
 
     plot_button = st.button("绘制拓扑图/ODT", use_container_width=True)
 
@@ -133,16 +130,26 @@ with plot_col:
 
         frac = 0.48
         sub_plot_cols = st.columns([frac, 1 - frac])
+        topo_save_path = (
+            st.session_state.cache_dir / f"{tc.type}.png"
+            if st.session_state.save_auto
+            else False
+        )
         topo_plot = tc.show_topo(
             colors=colors,
             curve=curve,
             interactive=False,
-            save=st.session_state.save_auto,
+            save=topo_save_path,
             show_nodes=show_nodes,
-            show_edge_labels=show_edge_labels
+            show_edge_labels=show_edge_labels,
         )
         sub_plot_cols[0].pyplot(topo_plot.fig)
         if odt:
+            odt_save_path = (
+                st.session_state.cache_dir / f"{tc.type}.png"
+                if st.session_state.save_auto
+                else False
+            )
             tc.RPA()
             odt_plot = tc.ODT(
                 fs=np.linspace(x_lim_min, x_lim_max, 20),
@@ -153,7 +160,7 @@ with plot_col:
                 ylabel=ylabel,
                 x_lim=(max(x_lim_min - 0.1, 0.0), min(1.0, x_lim_max + 0.1)),
                 y_lim=(y_lim_min, y_lim_max),
-                save=st.session_state.save_auto,
+                save=odt_save_path,
             )
             if len(np.unique(odt_plot.xN)) != 1:
                 sub_plot_cols[1].pyplot(odt_plot.fig)

@@ -4,10 +4,11 @@ from copy import deepcopy
 import pandas as pd
 import plotly.graph_objs as go
 import streamlit as st
-from SimuBox import CompareJudger, CompareMode
+from SimuBox import CompareJudger, CompareMode, COMPARE_PLOT_CONFIG, init_plot_config
 
 warnings.filterwarnings("ignore")
 
+init_plot_config(COMPARE_PLOT_CONFIG)
 
 st.set_page_config(layout="wide")
 st.title(":blue[SimuBox] :red[Visual] : 曲线比较")

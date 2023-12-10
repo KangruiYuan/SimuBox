@@ -157,7 +157,7 @@ class PhaseDiagram:
                             phase = min_label[0]
                     else:
                         phase = "_".join([phase, min_label[0]])
-                mat[i][j] = PhasePointData(phase=phase, x=x, y=y, val=freeE)
+                mat[i][j] = PhasePointData(phase=phase, x=x, y=y, value=freeE)
                 if phase in plot_dict:
                     for attr, val in zip(
                         [self.xlabel, self.ylabel, "freeE", "lylz", "lxly"],
@@ -369,11 +369,11 @@ class PhaseDiagram:
                         continue
                     x0, _ = self.cross_point(
                         ele_left_1.x,
-                        ele_left_1.val,
+                        ele_left_1.value,
                         ele_right_2[self.xlabel].values[0],
                         ele_right_2.freeE.values[0],
                         ele_right_1.x,
-                        ele_right_1.val,
+                        ele_right_1.value,
                         ele_left_2[self.xlabel].values[0],
                         ele_left_2.freeE.values[0],
                     )
@@ -407,11 +407,11 @@ class PhaseDiagram:
 
                     y0, _ = self.cross_point(
                         ele_left_1.y,
-                        ele_left_1.val,
+                        ele_left_1.value,
                         float(ele_right_2[self.ylabel].values),
                         float(ele_right_2.freeE.values),
                         ele_right_1.y,
-                        ele_right_1.val,
+                        ele_right_1.value,
                         float(ele_left_2[self.ylabel].values),
                         float(ele_left_2.freeE.values),
                     )
@@ -531,7 +531,7 @@ class PhaseDiagram:
                 if mode == DetectionMode.INTERP:
                     x, y, _ = calculate_intersection_point_xy_plane(
                         point1=(ele_1.x, ele_1.y, 0),
-                        point2=(ele_2.x, ele_2.y, ele_2.val - ele_1.val),
+                        point2=(ele_2.x, ele_2.y, ele_2.value - ele_1.value),
                     )
                     edge_data.append([x, y])
                 elif mode == DetectionMode.MIX:

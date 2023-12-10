@@ -2,7 +2,9 @@ import warnings
 
 import pandas as pd
 import streamlit as st
-from SimuBox import PeakData, peak_fit
+from SimuBox import PeakData, peak_fit, SCATTER_PLOT_CONFIG, init_plot_config
+
+init_plot_config(SCATTER_PLOT_CONFIG)
 
 warnings.filterwarnings("ignore")
 

@@ -338,6 +338,7 @@ class TopoCreater(nx.DiGraph):
         return topo_mat
 
     def fromJson(self, path: Union[Path, str, Mapping], **kwargs):
+        self.type = "json"
         topo_mat = self.parseJson(path)
         edges_info: dict[tuple, dict] = defaultdict(dict)
         count = 1
