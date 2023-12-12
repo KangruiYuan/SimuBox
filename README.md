@@ -8,7 +8,7 @@
 
 ## 框架 Framework
 
-![本地路径](./Docs/Figures/Summary.png)
+![Framework](https://github.com/KangruiYuan/SimuBox/blob/main/Docs/Figures/summary.png)
 
 
 ## 愿景 Purpose
