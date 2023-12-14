@@ -4,7 +4,7 @@ from pathlib import Path
 
 import numpy as np
 import streamlit as st
-from SimuBox import read_density, read_printout, iso2D, iso3D
+from SimuBox import read_density, read_printout, iso2D, iso3D, check_state
 from stpyvista import stpyvista
 
 warnings.filterwarnings("ignore")
@@ -13,14 +13,19 @@ warnings.filterwarnings("ignore")
 st.set_page_config(layout="wide")
 st.title(":blue[SimuBox] :red[Visual] : 结构图绘制")
 
+check_state(Path(__file__).parents[1])
+
 with st.expander("结构图绘制使用说明"):
     st.markdown(
         """
             ### 密度文件可视化
             - 通用文件类型：phout.txt, block.txt, joint.txt 或者其他符合相同格式的文本文件
             - 参数类型：
-                - target: 绘制图像的第几列，对于二维图形可以选择多项，对于三维图像每次仅能绘制单列。
-            """
+                - target: 绘制图像的第几列（从0开始编号），可以选择多列。
+                - permute: 调换后的坐标轴顺序。
+                - expand: 向外延申的比例（原点为几何中心）。
+                - slices: 切片信息(index, axis), 意为取axis轴上索引为index的片层
+        """
     )
 
 left_upload_col, middle_upload_col, right_upload_col = st.columns(3)
@@ -99,7 +104,7 @@ if uploaded_phout:
     slices = list(map(int, slices.split())) if slices else None
 
     expand = multi_select_cols[3].number_input(
-        label="延拓信息", value=1, min_value=1, max_value=3
+        label="延拓信息", value=1.0, min_value=1.0, max_value=3.0
     )
 
     if len(density.shape) == 2 or slices:

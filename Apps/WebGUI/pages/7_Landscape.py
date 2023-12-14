@@ -1,12 +1,14 @@
 import warnings
+from pathlib import Path
 
 import pandas as pd
 import streamlit as st
-from SimuBox import Landscaper, LAND_PLOT_CONFIG, init_plot_config
+from SimuBox import Landscaper, LAND_PLOT_CONFIG, init_plot_config, check_state
 
 warnings.filterwarnings("ignore")
 
 init_plot_config(LAND_PLOT_CONFIG)
+check_state(Path(__file__).parents[1])
 
 st.set_page_config(layout="wide")
 st.title(":blue[SimuBox] :red[Visual] : Landscape")

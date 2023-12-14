@@ -19,7 +19,7 @@
 但依旧希望能够帮到部分人。
 
 
-## 安装引导 Installation
+## 安装引导 Installation 
 
 - 方法一：从仓库克隆
 

@@ -8,7 +8,7 @@ from typing import Optional, Iterable, Union, Sequence
 import numpy as np
 import pandas as pd
 
-from ..Schema import Printout, Density, PathLike, FetData, DensityParseResult
+from ..Schema import Printout, Density, PathLike, FetData, DensityParseResult, Numeric
 
 
 def read_file(path: PathLike, default_name: Optional[str] = None, **kwargs):
@@ -120,6 +120,7 @@ def read_fet(path: PathLike, **kwargs):
     res = dict([[c[0], float(c[1])] for c in res])
     return FetData(path=path, **res)
 
+
 def periodic_extension(arr: np.ndarray, periods: Sequence[int]):
     """
     对三维数组进行周期性延拓
@@ -148,12 +149,13 @@ def periodic_extension(arr: np.ndarray, periods: Sequence[int]):
 
     return result
 
+
 def parse_density(
     density: Density,
     target: Union[int, Iterable[int]] = 0,
     permute: Optional[Iterable[int]] = None,
     slices: Optional[tuple[int, int]] = None,
-    expand: Union[int, Sequence[int]] = 1,
+    expand: Union[Numeric, Sequence[Numeric]] = 1,
     **kwargs,
 ):
     assert density.shape is not None, "需要指定shape属性"
@@ -168,6 +170,7 @@ def parse_density(
         ), f"length of permute({len(permute)}) and shape({len(shape)}) mismatch"
     shape = shape[permute]
     lxlylz = lxlylz[permute]
+
     if slices is not None:
         f_mat = lambda x: np.take(x, indices=slices[0], axis=slices[1])
         f_vec = lambda x: np.delete(x, obj=slices[1])
@@ -180,11 +183,14 @@ def parse_density(
     shape = f_vec(shape)
     lxlylz = f_vec(lxlylz)
 
-    if isinstance(expand, int):
-        expand = np.array([expand] * len(shape))
+    if isinstance(expand, Numeric):
+        expand = np.array([max(expand, 1)] * len(shape))
     else:
         assert len(expand) == len(shape), f"当前矩阵维度为3，拓展信息长度为{len(expand)}, 不匹配"
         expand = np.array(expand)
+        expand[expand < 1] = 1
+
+    expand_for_pad = np.around((expand - 1) / 2 * shape).astype(int)
 
     return DensityParseResult(
         path=density.path,
@@ -192,9 +198,12 @@ def parse_density(
         raw_lxlylz=lxlylz.copy(),
         raw_mat=np.stack(mats),
         lxlylz=lxlylz * expand,
-        NxNyNz=shape * expand,
-        mat=np.stack([np.tile(mat, expand) for mat in mats]),
+        NxNyNz=shape + expand_for_pad * 2,
+        mat=np.stack(
+            [np.pad(mat, [(e, e) for e in expand_for_pad], "wrap") for mat in mats]
+        ),
+        # mat=np.stack([np.tile(mat, expand) for mat in mats]),
         # mat=np.stack([periodic_extension(mat, expand) for mat in mats]),
         expand=expand.copy(),
-        target = [int(i) for i in target]
+        target=[int(i) for i in target],
     )

@@ -11,12 +11,14 @@ from SimuBox import (
     Scatter,
     SCATTER_PLOT_CONFIG,
     init_plot_config,
+    check_state,
 )
 from pyecharts.charts import Line
 from streamlit_echarts import st_pyecharts
 
 warnings.filterwarnings("ignore")
 
+check_state(Path(__file__).parents[1])
 init_plot_config(SCATTER_PLOT_CONFIG)
 
 st.set_page_config(layout="wide")
@@ -25,11 +27,14 @@ st.title(":blue[SimuBox] :red[Visual] : 散射图绘制")
 with st.expander("散射图绘制使用说明"):
     st.markdown(
         """
-            ### 散射图可视化
-            - 通用文件类型：phout.txt, block.txt, joint.txt 或者其他符合相同格式的文本文件
-            - 参数类型：
-                - target: 绘制图像的第几列，对于二维图形可以选择多项，对于三维图像每次仅能绘制单列。
-            """
+        ### 散射图绘制
+        - 通用文件类型：phout.txt, block.txt, joint.txt 或者其他符合相同格式的文本文件
+        - 参数类型：
+            - target: 对密度的第几列进行散射，仅能选择一列。
+            - permute: 调换后的坐标轴顺序。
+            - expand: 向外延申的比例（原点为几何中心）。
+            - slices: 切片信息(index, axis), 意为取axis轴上索引为index的片层
+        """
     )
 
 left_upload_col, middle_upload_col, right_upload_col = st.columns(3)

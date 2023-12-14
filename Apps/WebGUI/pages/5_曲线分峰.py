@@ -1,13 +1,20 @@
 import warnings
+from pathlib import Path
 
 import pandas as pd
 import streamlit as st
-from SimuBox import PeakData, peak_fit, SCATTER_PLOT_CONFIG, init_plot_config
+from SimuBox import (
+    PeakData,
+    peak_fit,
+    SCATTER_PLOT_CONFIG,
+    init_plot_config,
+    check_state,
+)
 
 init_plot_config(SCATTER_PLOT_CONFIG)
 
 warnings.filterwarnings("ignore")
-
+check_state(Path(__file__).parents[1])
 
 st.set_page_config(layout="wide")
 st.title(":blue[SimuBox] :red[Visual] : 曲线分峰")
@@ -16,8 +23,9 @@ with st.expander("曲线分峰使用说明"):
     st.markdown(
         """
         ### 曲线比较
-        - 通用文件类型：csv
+        - 通用文件类型：csv, xlsx。需确保第一列为峰位，第二列为峰高。Excel可有多个sheet。
         - 参数类型
+            
         """
     )
 
@@ -185,22 +193,37 @@ with info_col:
     if plot_button and uploaded_csv and peaks_res is not None:
 
         sub_write_cols = st.columns(2)
-        sub_write_cols[0].markdown(f"### $R^2$={peaks_res.r2: .3f}")
-        sub_write_cols[1].markdown(f"### $Adj.R^2$={peaks_res.adj_r2: .3f}")
+        sub_write_cols[0].markdown(f"### $R^2$={peaks_res.r2: .4f}")
+        sub_write_cols[1].markdown(f"### $Adj.R^2$={peaks_res.adj_r2: .4f}")
 
         fitted_peaks = peaks_res.peaks
         fitted_peaks.sort(key=lambda x: x.center)
         peaks_print_cols = st.columns(3)
+
+        collect_data_output = []
         for i in range(len(fitted_peaks)):
             temp_peak = fitted_peaks[i]
             peaks_print_cols[i % 3].metric(
-                f"Peak {i}", round(temp_peak.center, 2), round(temp_peak.center - peaks[i].center, 2)
+                f"Peak {i}",
+                round(temp_peak.center, 4),
+                round(temp_peak.center - peaks[i].center, 4),
             )
             peaks_print_cols[i % 3].markdown(
                 f"""
-                **amplitude**={temp_peak.amplitude: .2f}\n
-                **width**={temp_peak.width: .2f}\n
-                **area%**={temp_peak.area / peaks_res.area: .2%}
+                **amplitude**={temp_peak.amplitude: .4f}\n
+                **width**={temp_peak.width: .4f}\n
+                **area%**={temp_peak.area / peaks_res.area: .4%}
                 """
             )
-            # ** center **= {temp_peak.center: .2f}\n
+            collect_data_output.append(
+                {
+                    "amplitude": temp_peak.amplitude,
+                    "center": temp_peak.center,
+                    "width": temp_peak.width,
+                    "background": temp_peak.background,
+                    "area": temp_peak.area / peaks_res.area * 100,
+                }
+            )
+        collect_output_df = pd.DataFrame(collect_data_output)
+        st.dataframe(collect_output_df, use_container_width=True)
+        # ** center **= {temp_peak.center: .2f}\n

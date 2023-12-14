@@ -1,15 +1,24 @@
 import warnings
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import streamlit as st
 import json
-from SimuBox import TopoCreateMode, TopoCreater, fA, fB, COMPARE_PLOT_CONFIG, init_plot_config
+from SimuBox import (
+    TopoCreateMode,
+    TopoCreater,
+    fA,
+    fB,
+    COMPARE_PLOT_CONFIG,
+    init_plot_config,
+    check_state,
+)
 
 warnings.filterwarnings("ignore")
 
 init_plot_config(COMPARE_PLOT_CONFIG)
-
+check_state(Path(__file__).parents[1])
 
 st.set_page_config(layout="wide")
 st.title(":blue[SimuBox] :red[Visual] : 拓扑计算")

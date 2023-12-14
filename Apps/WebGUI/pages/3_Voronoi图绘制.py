@@ -12,22 +12,26 @@ from SimuBox import (
     VoronoiCell,
     WeightedMode,
     ColorMode,
+    check_state,
 )
 
 warnings.filterwarnings("ignore")
 
-
+check_state(Path(__file__).parents[1])
 st.set_page_config(layout="wide")
 st.title(":blue[SimuBox] :red[Visual] : Voronoi图绘制")
 
 with st.expander("Voronoi图绘制使用说明"):
     st.markdown(
         """
-            ### Voronoi图绘制
-            - 通用文件类型：phout.txt, block.txt, joint.txt 或者其他符合相同格式的文本文件
-            - 参数类型：
-                - target: 绘制图像的第几列，对于二维图形可以选择多项，对于三维图像每次仅能绘制单列。
-            """
+        ### Voronoi图绘制
+        - 通用文件类型：phout.txt, block.txt, joint.txt 或者其他符合相同格式的文本文件
+        - 参数类型：
+            - target: 对密度的第几列进行剖分，仅能选择一列。
+            - permute: 调换后的坐标轴顺序。
+            - expand: 向外延申的比例（原点为几何中心）。
+            - slices: 切片信息(index, axis), 意为取axis轴上索引为index的片层
+        """
     )
 
 left_upload_col, middle_upload_col, right_upload_col = st.columns(3)
@@ -59,13 +63,7 @@ repair_from_fet = right_sub_cols[1].checkbox(
     "从SCFT输出补充信息", value=False, key="repair_from_fet"
 )
 
-plot_col, info_col = st.columns([0.75, 0.25])
-main_mode = info_col.selectbox(
-    "请选择分析模式", options=AnalyzeMode.values(), index=0, key="main mode"
-)
-info_col.divider()
-
-if uploaded_phout and main_mode != AnalyzeMode.WEIGHTED:
+if uploaded_phout:
     with tempfile.NamedTemporaryFile(
         delete=False, mode="w+", encoding="utf-8", dir=st.session_state.cache_dir
     ) as temp_file:
@@ -99,13 +97,13 @@ if uploaded_phout and main_mode != AnalyzeMode.WEIGHTED:
 
     multi_select_cols = st.columns(4)
     targets = multi_select_cols[0].selectbox(
-        label="请选择需要绘制的列号", options=list(range(density.data.shape[1])), index=0
+            label="请选择需要绘制的列号", options=list(range(density.data.shape[1])), index=0
     )
     targets = int(targets)
 
     base_permute = list(range(len(density.shape)))
     permute = multi_select_cols[1].text_input(
-        label=f"请指定坐标轴{base_permute}的顺序，以空格为间隔", value=""
+            label=f"请指定坐标轴{base_permute}的顺序，以空格为间隔", value=""
     )
     permute = np.array(list(map(int, permute.split()))) if permute else base_permute
 
@@ -113,10 +111,19 @@ if uploaded_phout and main_mode != AnalyzeMode.WEIGHTED:
     slices = list(map(int, slices.split())) if slices else None
 
     expand = multi_select_cols[3].number_input(
-        label="延拓信息", value=3, min_value=1, max_value=5
+            label="延拓信息", value=5, min_value=3
     )
 
-    half_expand = expand / 2
+
+plot_col, info_col = st.columns([0.6, 0.4])
+main_mode = info_col.selectbox(
+    "请选择分析模式", options=AnalyzeMode.values(), index=0, key="main mode"
+)
+info_col.divider()
+
+if uploaded_phout and main_mode != AnalyzeMode.WEIGHTED:
+
+
     with info_col:
         point_color = st.text_input("请输入节点颜色", value="b")
         line_color = st.text_input("请输入边线颜色", value="k")
@@ -168,7 +175,7 @@ if uploaded_phout and main_mode != AnalyzeMode.WEIGHTED:
                 point_ylim=point_ylim,
                 axis_xlim=axis_xlim,
                 axis_ylim=axis_ylim,
-                figsize=(4, 4),
+                # figsize=(4, 4),
             )
             st.pyplot(vc.fig)
 
@@ -202,8 +209,12 @@ elif main_mode == AnalyzeMode.WEIGHTED:
         )
         sub_size_cols = st.columns(2)
 
-        width = sub_size_cols[0].number_input("图幅宽度", value=500, min_value=edited_df["x"].max() + 10)
-        height = sub_size_cols[1].number_input("图幅高度", value=500, min_value=edited_df["y"].max() + 10)
+        width = sub_size_cols[0].number_input(
+            "图幅宽度", value=500, min_value=edited_df["x"].max() + 10
+        )
+        height = sub_size_cols[1].number_input(
+            "图幅高度", value=500, min_value=edited_df["y"].max() + 10
+        )
 
         plot = st.button("开始绘制", use_container_width=True)
     with plot_col:
@@ -218,6 +229,6 @@ elif main_mode == AnalyzeMode.WEIGHTED:
                     color_mode=color_mode,
                     linear=linear,
                     interactive=False,
-                    size=(width, height)
+                    size=(width, height),
                 )
                 sub_plot_cols[1].pyplot(fig)

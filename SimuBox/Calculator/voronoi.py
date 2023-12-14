@@ -119,7 +119,8 @@ class VoronoiCell:
 
         vor = Voronoi(centers, incremental=True)
         asp = cv_res.parsed_density.lxlylz[1] / cv_res.parsed_density.lxlylz[0]
-        plt.figure(figsize=kwargs.get("figsize", (6, 6 / asp)))
+        plt.figure()
+        # plt.figure(figsize=kwargs.get("figsize", (6, 6 / asp)))
         ax = plt.gca()
         fig = voronoi_plot_2d(
             vor, ax, show_points=False, show_vertices=False, line_colors=line_color
@@ -127,6 +128,7 @@ class VoronoiCell:
         if kwargs.get("point", True):
             plt.scatter(centers_cut[:, 0], centers_cut[:, 1], s=20, c=point_color)
         cls.set_axis_limits(cv_res, **kwargs)
+        ax.set_aspect(1 / asp)
         plt.xticks([])
         plt.yticks([])
         plt.tight_layout()
@@ -180,14 +182,16 @@ class VoronoiCell:
 
         asp = cv_res.parsed_density.lxlylz[1] / cv_res.parsed_density.lxlylz[0]
         fig = plt.figure(figsize=kwargs.get("figsize", (6, 6 / asp)))
-        if kwargs.get("point", True):
-            plt.scatter(centers_cut[:, 0], centers_cut[:, 1], s=20, c=point_color)
+        ax = plt.gca()
         plt.triplot(
             centers[:, 0], centers[:, 1], triangles, linewidth=1, color=line_color
         )
+        if kwargs.get("point", True):
+            plt.scatter(centers_cut[:, 0], centers_cut[:, 1], s=20, c=point_color, z=8)
         cls.set_axis_limits(cv_res, **kwargs)
         plt.xticks([])
         plt.yticks([])
+        ax.set_aspect(asp)
         plt.tight_layout()
         plot_savefig(
             cv_res,
@@ -202,7 +206,7 @@ class VoronoiCell:
             path=cv_res.path,
             cv_result=cv_res,
             fig=fig,
-            ax=plt.gca(),
+            ax=ax,
             triangle=triangles,
             coord_dict=coord_dict,
         )
