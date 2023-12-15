@@ -11,7 +11,7 @@ from collections import ChainMap
 
 from ..Toolkits import read_csv
 from ..Schema import AbsCommonLabels, DiffCommonLabels, LineCompareResult, LineData, PathLike
-from .PlotUtils import plot_trans, plot_legend, plot_locators, plot_savefig
+from .plotter import plot_trans, plot_legend, plot_locators, plot_savefig
 
 COMPARE_PLOT_CONFIG = {
     "font.family": "Times New Roman",

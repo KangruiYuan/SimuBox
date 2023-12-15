@@ -16,5 +16,5 @@ if __name__ == "__main__":
         choices=["error", "warning", "info", "debug"],
     )
     args = parser.parse_args()
-    app_path = Path(__file__).parent / "WebGUI" / args.app
+    app_path = Path(__file__).parent / "Web" / args.app
     os.system(f"python -m streamlit run {app_path} --server.port {args.port}")

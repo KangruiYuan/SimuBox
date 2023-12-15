@@ -8,7 +8,7 @@ import pandas as pd
 from numpy.polynomial import Chebyshev
 from scipy.io import loadmat
 
-from .PlotUtils import plot_locators, plot_savefig, generate_colors
+from .plotter import plot_locators, plot_savefig, generate_colors
 from ..Schema import DetectionMode, CompareResult, PhasePointData, CommonLabels, PathLike
 from ..Toolkits import read_csv
 

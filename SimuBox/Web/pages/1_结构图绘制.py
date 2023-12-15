@@ -4,7 +4,9 @@ from pathlib import Path
 
 import numpy as np
 import streamlit as st
-from SimuBox import read_density, read_printout, iso2D, iso3D, check_state
+
+from SimuBox import check_state, read_density, read_printout, iso2D, iso3D
+
 from stpyvista import stpyvista
 
 warnings.filterwarnings("ignore")
@@ -40,20 +42,20 @@ uploaded_fet = right_upload_col.file_uploader(
 )
 st.divider()
 left_sub_cols = left_upload_col.columns(2)
-parse_N = left_sub_cols[0].checkbox("从密度解析格点数", value=True, key="parse_N")
-colorbar = left_sub_cols[0].checkbox("显示数值条", value=True, key="colorbar")
+parse_N = left_sub_cols[0].toggle("从密度解析格点数", value=True, key="parse_N")
+colorbar = left_sub_cols[0].toggle("显示数值条", value=True, key="colorbar")
 
-parse_L = left_sub_cols[1].checkbox("从密度解析周期", value=False, key="parse_L")
-use_lxlylz = left_sub_cols[1].checkbox("使用手动输入的周期", value=False, key="use_lxlylz")
+parse_L = left_sub_cols[1].toggle("从密度解析周期", value=False, key="parse_L")
+use_lxlylz = left_sub_cols[1].toggle("使用手动输入的周期", value=False, key="use_lxlylz")
 
 lxlylz = middle_upload_col.text_input("请输入绘制结构的周期（空格间隔）", value="")
 lxlylz = np.array(list(map(float, lxlylz.split()))) if lxlylz else None
 
 right_sub_cols = right_upload_col.columns(2)
-repair_from_printout = right_sub_cols[0].checkbox(
-    "从TOPS标准输出补充信息", value=False, key="repair_from_printout"
+repair_from_printout = right_sub_cols[0].toggle(
+    "从TOPS输出补充信息", value=False, key="repair_from_printout"
 )
-repair_from_fet = right_sub_cols[1].checkbox(
+repair_from_fet = right_sub_cols[1].toggle(
     "从SCFT输出补充信息", value=False, key="repair_from_fet"
 )
 
@@ -161,7 +163,7 @@ if uploaded_phout:
             opacity = st.number_input(
                 "请输入透明度（0-1）", value=0.8, min_value=0.0, max_value=1.0
             )
-            frame = st.checkbox("是否需要外部框体", value=True)
+            frame = st.toggle("是否需要外部框体", value=True)
             style = st.selectbox(
                 "选择绘图模式",
                 options=["surface", "wireframe", "points", "points_gaussian"],

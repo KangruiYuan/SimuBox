@@ -9,9 +9,9 @@ import pandas as pd
 from scipy.interpolate import griddata
 from shapely.geometry import Polygon
 
-from .PlotUtils import plot_locators, plot_savefig
+from .plotter import plot_locators, plot_savefig
 from ..Schema import LandscapeResult, PathLike, CommonLabels, Numeric, Vector, IQResult
-from ..Toolkits import read_csv
+from ..Toolkits import read_csv, find_nearest_1d
 
 LAND_PLOT_CONFIG = {
     "font.family": "Times New Roman",
@@ -156,8 +156,6 @@ class Landscaper:
         manual = kwargs.get("manual", ())
 
         if manual == "auto":
-            from ..Toolkits import find_nearest_1d
-
             diag = np.diagonal(target_mat)
             half_length = len(diag) // 2
             front_half = diag[:half_length]

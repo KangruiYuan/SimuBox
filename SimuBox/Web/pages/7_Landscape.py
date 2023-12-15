@@ -3,7 +3,8 @@ from pathlib import Path
 
 import pandas as pd
 import streamlit as st
-from SimuBox import Landscaper, LAND_PLOT_CONFIG, init_plot_config, check_state
+from SimuBox import check_state, Landscaper, LAND_PLOT_CONFIG, init_plot_config
+
 
 warnings.filterwarnings("ignore")
 

@@ -4,13 +4,15 @@ from pathlib import Path
 import pandas as pd
 import plotly.graph_objs as go
 import streamlit as st
+
 from SimuBox import (
-    CompareJudger,
-    CompareMode,
-    COMPARE_PLOT_CONFIG,
-    init_plot_config,
     check_state,
+    CompareJudger,
+    init_plot_config,
+    COMPARE_PLOT_CONFIG,
+    CompareMode,
 )
+
 
 warnings.filterwarnings("ignore")
 
@@ -51,7 +53,7 @@ if uploaded_csv:
             "请选择比较模式", options=[CompareMode.DIFF.value, CompareMode.ABS.value], index=0
         )
         plot_button = st.button("绘制图像")
-        interactive = st.checkbox("开启交互式绘图", value=False)
+        interactive = st.toggle("开启交互式绘图", value=False)
 
         st.divider()
         xlabel = st.selectbox("请选择横坐标", options=edit_data.columns, index=0)

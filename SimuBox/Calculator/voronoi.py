@@ -187,7 +187,7 @@ class VoronoiCell:
             centers[:, 0], centers[:, 1], triangles, linewidth=1, color=line_color
         )
         if kwargs.get("point", True):
-            plt.scatter(centers_cut[:, 0], centers_cut[:, 1], s=20, c=point_color, z=8)
+            plt.scatter(centers_cut[:, 0], centers_cut[:, 1], s=20, c=point_color)
         cls.set_axis_limits(cv_res, **kwargs)
         plt.xticks([])
         plt.yticks([])

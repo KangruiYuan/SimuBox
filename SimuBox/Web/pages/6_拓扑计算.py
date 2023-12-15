@@ -6,14 +6,15 @@ import pandas as pd
 import streamlit as st
 import json
 from SimuBox import (
-    TopoCreateMode,
+    check_state,
     TopoCreater,
     fA,
     fB,
     COMPARE_PLOT_CONFIG,
     init_plot_config,
-    check_state,
+    TopoCreateMode,
 )
+
 
 warnings.filterwarnings("ignore")
 
@@ -46,15 +47,15 @@ with param_col:
     sub_cols = st.columns(2)
 
     with sub_cols[1]:
-        odt = st.checkbox("计算ODT", value=True)
-        show_nodes = st.checkbox("节点信息", value=True)
+        odt = st.toggle("计算ODT", value=True)
+        show_nodes = st.toggle("节点信息", value=True)
         x_lim_max = st.number_input("X轴截止值", value=0.9, min_value=0.0, max_value=1.0)
         y_lim_max = st.number_input("Y轴截止值", value=100.0)
         xlabel = st.text_input("X标签", value=r"$f_{A}$")
 
     with sub_cols[0]:
-        curve = st.checkbox("曲线形式", value=False)
-        show_edge_labels = st.checkbox("边信息", value=True)
+        curve = st.toggle("曲线形式", value=False)
+        show_edge_labels = st.toggle("边信息", value=True)
         x_lim_min = st.number_input(
             "X轴起始值", value=0.1, min_value=0.0, max_value=x_lim_max - 0.1
         )

@@ -1,6 +1,6 @@
 import re
 from pathlib import Path
-from typing import Optional, Sequence
+from typing import Optional
 
 import numpy as np
 
@@ -40,3 +40,4 @@ def match_path(paths, **kwargs):
             return Path(path)
     print(f"{criteria}匹配失败。")
     return
+

@@ -4,11 +4,11 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 from SimuBox import (
-    PeakData,
-    peak_fit,
-    SCATTER_PLOT_CONFIG,
-    init_plot_config,
     check_state,
+    SCATTER_PLOT_CONFIG,
+    peak_fit,
+    PeakData,
+    init_plot_config,
 )
 
 init_plot_config(SCATTER_PLOT_CONFIG)
@@ -157,7 +157,7 @@ with param_col:
     #     max_value=max_x,
     #     value=(max(fit_min_x, min_x), min(fit_max_x, max_x)),
     # )
-    interactive = st.checkbox("交互式绘图", value=False)
+    interactive = st.toggle("交互式绘图", value=False)
     plot_button = st.button("绘制图像", use_container_width=True)
 
 st.divider()

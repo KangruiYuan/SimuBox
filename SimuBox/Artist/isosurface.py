@@ -6,7 +6,7 @@ import numpy as np
 import pyvista as pv
 from skimage.measure import marching_cubes
 
-from .PlotUtils import plot_savefig
+from .plotter import plot_savefig
 from ..Schema import Density, Numeric, PathLike
 from ..Toolkits import parse_density
 

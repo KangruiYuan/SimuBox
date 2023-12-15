@@ -6,14 +6,15 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 from SimuBox import (
+    check_state,
     read_density,
     read_printout,
+    ColorMode,
+    WeightedMode,
     AnalyzeMode,
     VoronoiCell,
-    WeightedMode,
-    ColorMode,
-    check_state,
 )
+
 
 warnings.filterwarnings("ignore")
 
@@ -46,20 +47,20 @@ uploaded_fet = right_upload_col.file_uploader(
 )
 st.divider()
 left_sub_cols = left_upload_col.columns(2)
-parse_N = left_sub_cols[0].checkbox("从密度解析格点数", value=True, key="parse_N")
-colorbar = left_sub_cols[0].checkbox("显示数值条", value=True, key="colorbar")
+parse_N = left_sub_cols[0].toggle("从密度解析格点数", value=True, key="parse_N")
+# colorbar = left_sub_cols[0].toggle("显示数值条", value=True, key="colorbar")
 
-parse_L = left_sub_cols[1].checkbox("从密度解析周期", value=False, key="parse_L")
-use_lxlylz = left_sub_cols[1].checkbox("使用手动输入的周期", value=False, key="use_lxlylz")
+parse_L = left_sub_cols[1].toggle("从密度解析周期", value=False, key="parse_L")
+use_lxlylz = left_sub_cols[1].toggle("使用手动输入的周期", value=False, key="use_lxlylz")
 
 lxlylz = middle_upload_col.text_input("请输入绘制结构的周期（空格间隔）", value="")
 lxlylz = np.array(list(map(float, lxlylz.split()))) if lxlylz else None
 
 right_sub_cols = right_upload_col.columns(2)
-repair_from_printout = right_sub_cols[0].checkbox(
-    "从TOPS标准输出补充信息", value=False, key="repair_from_printout"
+repair_from_printout = right_sub_cols[0].toggle(
+    "从TOPS输出补充信息", value=False, key="repair_from_printout"
 )
-repair_from_fet = right_sub_cols[1].checkbox(
+repair_from_fet = right_sub_cols[1].toggle(
     "从SCFT输出补充信息", value=False, key="repair_from_fet"
 )
 
@@ -97,22 +98,20 @@ if uploaded_phout:
 
     multi_select_cols = st.columns(4)
     targets = multi_select_cols[0].selectbox(
-            label="请选择需要绘制的列号", options=list(range(density.data.shape[1])), index=0
+        label="请选择需要绘制的列号", options=list(range(density.data.shape[1])), index=0
     )
     targets = int(targets)
 
     base_permute = list(range(len(density.shape)))
     permute = multi_select_cols[1].text_input(
-            label=f"请指定坐标轴{base_permute}的顺序，以空格为间隔", value=""
+        label=f"请指定坐标轴{base_permute}的顺序，以空格为间隔", value=""
     )
     permute = np.array(list(map(int, permute.split()))) if permute else base_permute
 
     slices = multi_select_cols[2].text_input(label="请输入切片信息，格式为: index ais", value=None)
     slices = list(map(int, slices.split())) if slices else None
 
-    expand = multi_select_cols[3].number_input(
-            label="延拓信息", value=5, min_value=3
-    )
+    expand = multi_select_cols[3].number_input(label="延拓信息", value=5, min_value=3)
 
 
 plot_col, info_col = st.columns([0.6, 0.4])
@@ -122,7 +121,6 @@ main_mode = info_col.selectbox(
 info_col.divider()
 
 if uploaded_phout and main_mode != AnalyzeMode.WEIGHTED:
-
 
     with info_col:
         point_color = st.text_input("请输入节点颜色", value="b")
@@ -190,7 +188,7 @@ elif main_mode == AnalyzeMode.WEIGHTED:
             index=0,
             key="color_mode",
         )
-        linear = st.checkbox("颜色线性变化 (目前仅对灰度图有效)", value=True)
+        linear = st.toggle("颜色线性变化 (目前仅对灰度图有效)", value=True)
         init_weight = 100 if sub_mode == WeightedMode.additive else 1e4
         df = pd.DataFrame(
             [

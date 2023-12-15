@@ -52,7 +52,7 @@ def plot_locators(
     ymajor: Optional[int] = None,
     **kwargs,
 ):
-    # print(xmajor)
+
     if ax is None:
         ax = plt.gca()
     if xminor is not None:
