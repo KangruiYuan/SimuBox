@@ -1,16 +1,18 @@
+
+# py cache
 __pycache__/
-.idea/
-pyproject.toml
-SimuBox/SimuBox.egg-info/
-SimuBox.egg-info/
 */*__pycache__/
-/Apps/WebGUI/Contents/cache/
+.idea/
+
+
+# dev docs
 /Docs/build_flow.md
 
+# build dist
 /build/
 /dist/
+SimuBox/SimuBox.egg-info/
+SimuBox.egg-info/
 
 # possible cache directory
-/SimuBox/Apps/WebGUI/cache/
-/Apps/WebGUI/cache/
 /SimuBox/Web/cache/

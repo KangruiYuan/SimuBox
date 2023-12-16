@@ -1,0 +1,47 @@
+[tool.poetry]
+name = "SimuBox"
+version = "0.1.16"
+description = "Free python package to do some science calculation."
+authors = ["Alkaid Yuan <kryuan@qq.com>"]
+maintainers = ["Alkaid Yuan <kryuan@qq.com>"]
+license = "file <LICENSE>"
+readme = "README.md"
+repository  = "https://github.com/KangruiYuan/SimuBox"
+homepage = "https://pypi.org/project/SimuBox/"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+scipy = "^1.11.4"
+pandas = "^2.1.4"
+shapely = "^2.0.2"
+pyvista = "^0.43.1"
+scikit-image = "^0.22.0"
+scikit-learn = "^1.3.2"
+streamlit = "^1.29.0"
+stpyvista = "^0.0.11"
+numpy = "^1.26.2"
+matplotlib = "^3.8.2"
+simplejson = "^3.19.2"
+tqdm = "^4.66.1"
+sympy = "^1.12"
+poetry-plugin-export = "^1.6.0"
+
+[tool.poetry.group.dev.dependencies]
+streamlit-echarts = "^0.4.0"
+plotly = "^5.18.0"
+openpyxl = "^3.1.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[[tool.poetry.source]]
+name = "tsinghua-source"
+url = "https://pypi.tuna.tsinghua.edu.cn/simple/"
+priority = "primary"
+
+
+[[tool.poetry.source]]
+name = "PyPI"
+priority = "primary"
+
