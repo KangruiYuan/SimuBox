@@ -1,11 +1,11 @@
 [tool.poetry]
 name = "SimuBox"
-version = "0.1.16"
+version = "0.1.17"
 description = "Free python package to do some science calculation."
 authors = ["Alkaid Yuan <kryuan@qq.com>"]
 maintainers = ["Alkaid Yuan <kryuan@qq.com>"]
-license = "file <LICENSE>"
-readme = "README.md"
+license = "./LICENSE"
+readme = "./README.md"
 repository  = "https://github.com/KangruiYuan/SimuBox"
 homepage = "https://pypi.org/project/SimuBox/"
 
@@ -40,8 +40,7 @@ name = "tsinghua-source"
 url = "https://pypi.tuna.tsinghua.edu.cn/simple/"
 priority = "primary"
 
-
 [[tool.poetry.source]]
 name = "PyPI"
-priority = "primary"
+priority = "supplemental"
 
