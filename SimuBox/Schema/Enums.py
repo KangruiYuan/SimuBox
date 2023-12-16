@@ -61,3 +61,21 @@ class AnalyzeMode(StrEnum):
 class WeightedMode(StrEnum):
     additive = "additive"
     power = "power"
+
+
+class Operator(StrEnum):
+    add = "+"
+    sub = "-"
+    mul = "*"
+    div = "/"
+    pow = "**"
+    mod = "%"
+
+OPERATOR_FUNCTION_MAP = {
+    Operator.add: lambda a, b: a + b,
+    Operator.sub: lambda a, b: a - b,
+    Operator.mul: lambda a, b: a * b,
+    Operator.div: lambda a, b: a / b,
+    Operator.pow: lambda a, b: a ** b,
+    Operator.mod: lambda a, b: a % b
+}

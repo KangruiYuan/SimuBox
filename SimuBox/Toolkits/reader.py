@@ -3,42 +3,72 @@ import re
 from collections import OrderedDict
 from io import BytesIO, TextIOWrapper
 from pathlib import Path
-from typing import Optional, Iterable, Union, Sequence
+from typing import Optional, Iterable, Union, Sequence, Callable
 
 import numpy as np
 import pandas as pd
 
-from ..Schema import Printout, Density, PathLike, FetData, DensityParseResult, Numeric
+from ..Schema import (
+    Printout,
+    Density,
+    Fet,
+    DensityParseResult,
+    Numeric,
+    FileLike,
+    PathLike,
+    Operation,
+    Operator,
+)
+from .function import process_dataframe
 
 
-def read_file(path: PathLike, default_name: Optional[str] = None, **kwargs):
-    encoding = kwargs.get("encoding", "utf-8")
+def read_file(
+    path: FileLike,
+    default_name: Optional[str] = None,
+    mode: str = "r",
+    encoding: str = "utf-8",
+    hook: Optional[Callable] = None,
+):
     if isinstance(path, BytesIO):
         with TextIOWrapper(path, encoding=encoding) as txt:
             content = txt.readlines()
-    elif isinstance(path, (Path, str)):
+    elif isinstance(path, PathLike):
         path = Path(path)
         if not path.is_file():
-            assert default_name is not None
+            assert default_name is not None, f"当前路径({path})下未检测到相应文件"
             path = path / default_name
-        content = path.open("r", encoding=encoding).readlines()
+            assert path.is_file(), f"当前路径({path})下未检测到相应文件"
+        if path.suffix == ".txt":
+            content = path.open(mode, encoding=encoding).readlines()
+        elif path.suffix == ".json":
+            if hook is None:
+                hook = OrderedDict
+            with open(path, mode=mode) as fp:
+                content = json.load(fp, object_pairs_hook=hook)
     else:
         raise NotImplementedError(f"{type(path)}的读取方式尚未建立。")
     return content, path
 
 
-def read_json(path: PathLike):
-    with open(path, mode="r") as fp:
-        dic = json.load(fp, object_pairs_hook=OrderedDict)
-    return dic
-
-
-def read_printout(path: PathLike, **kwargs):
-    cont, path = read_file(
-        path, default_name=kwargs.get("default_name", "printout.txt")
+def read_json(
+    path: PathLike,
+    default_name: Optional[str] = "input.json",
+    mode: str = "r",
+    hook: Optional[Callable] = OrderedDict,
+    **kwargs,
+):
+    content, _ = read_file(
+        path=path, default_name=default_name, mode=mode, hook=hook, **kwargs
     )
+    return content
+
+
+def read_printout(
+    path: FileLike, default_name: str = "printout.txt", mode: str = "r", **kwargs
+):
+    cont, path = read_file(path, default_name=default_name, mode=mode, **kwargs)
     box = np.array(list(map(float, cont[-3].strip().split(" "))))
-    lxlylz = box[:3]
+    lxlylz = box[:3].copy()
     uws = re.findall("[.0-9e+-]+", cont[-1])
     uws = list(map(float, uws))
 
@@ -56,15 +86,15 @@ def read_printout(path: PathLike, **kwargs):
     )
 
 
-def read_density(path: PathLike, parse_N: bool = True, parse_L: bool = False, **kwargs):
-    """
-    for phout, component, block
-    :param parse_L:
-    :param parse_N:
-    :param path:
-    :return:
-    """
-    cont, path = read_file(path, default_name=kwargs.get("default_name", "phout.txt"))
+def read_density(
+    path: FileLike,
+    parse_N: bool = True,
+    parse_L: bool = False,
+    default_name: Optional[str] = "phout.txt",
+    mode: str = "r",
+    **kwargs,
+):
+    cont, path = read_file(path, default_name=default_name, mode=mode, **kwargs)
 
     skip = 0
     if parse_N:
@@ -83,8 +113,18 @@ def read_density(path: PathLike, parse_N: bool = True, parse_L: bool = False, **
         data = pd.read_csv(
             path, skiprows=skip, header=None, sep=r"[ ]+", engine="python"
         )
-    except:
-        return read_density(path, parse_N=True, parse_L=True, **kwargs)
+    except pd.errors.ParserError as pe:
+        if not parse_L or not parse_N:
+            return read_density(
+                path,
+                parse_N=True,
+                parse_L=True,
+                default_name=default_name,
+                mode=mode,
+                **kwargs,
+            )
+        else:
+            raise pe
 
     if NxNyNz is not None:
         shape = NxNyNz[NxNyNz != 1]
@@ -95,30 +135,65 @@ def read_density(path: PathLike, parse_N: bool = True, parse_L: bool = False, **
     return Density(path=path, data=data, NxNyNz=NxNyNz, lxlylz=lxlylz, shape=shape)
 
 
-def read_csv(path: PathLike, **kwargs):
+def read_csv(
+    path: Union[FileLike, pd.DataFrame],
+    skiprows: int = 0,
+    accuracy: int = 3,
+    Operations: Optional[Union[Operation, Sequence[Operation]]] = None,
+    subset: Optional[Union[str, Sequence[str]]] = ("phase", "freeE"),
+    **kwargs,
+):
+    if not isinstance(path, pd.DataFrame):
+        data = pd.read_csv(path, skiprows=skiprows)
+    else:
+        data = path.copy()
+    if subset is not None:
+        data = data.drop_duplicates(subset=subset)
 
-    df = pd.read_csv(path)
-    if subset := kwargs.get("subset", ["phase", "freeE"]):
-        df = df.drop_duplicates(subset=subset)
-    df["lylz"] = np.around(df["ly"].values / df["lz"].values, kwargs.get("acc", 3))
-    df["lxly"] = np.around(df["lx"].values / df["ly"].values, kwargs.get("acc", 3))
-    try:
-        df[kwargs.get("var", "chiN")] = df[kwargs.get("var", "chiN")] / kwargs.get(
-            "factor", 1
-        )
-    except KeyError:
-        pass
-    return df
+    if Operations is None:
+        Operations = [
+            Operation(
+                left="ly",
+                right="lz",
+                operator=Operator.div,
+                accuracy=accuracy,
+                _name="lylz",
+            ),
+            Operation(
+                left="lx",
+                right="ly",
+                operator=Operator.div,
+                accuracy=accuracy,
+                _name="lxly",
+            ),
+            Operation(
+                left=kwargs.get("var", "chiN"),
+                factor=kwargs.get("factor", 1),
+                operator=Operator.div,
+                accuracy=accuracy,
+                _name="lxly",
+            ),
+        ]
+    elif isinstance(Operations, Operation):
+        Operations = [Operations]
+
+    for Opr in Operations:
+        try:
+            data = process_dataframe(data, Opr)
+        except KeyError:
+            continue
+
+    return data
 
 
-def read_fet(path: PathLike, **kwargs):
+def read_fet(path: FileLike, **kwargs):
     cont, path = read_file(path, default_name=kwargs.get("default_name", "fet.dat"))
 
     with open(path, mode="r") as fp:
         cont = fp.readlines()
     res = [c.strip().split()[1:] for c in cont if c.strip()]
     res = dict([[c[0], float(c[1])] for c in res])
-    return FetData(path=path, **res)
+    return Fet(path=path, **res)
 
 
 def periodic_extension(arr: np.ndarray, periods: Sequence[int]):

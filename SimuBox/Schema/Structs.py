@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Optional, Any, Sequence, Union
+from typing import Optional, Any, Sequence, Union, Literal
 
 import numpy as np
 import pandas as pd
@@ -7,6 +7,7 @@ from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from pydantic import BaseModel
 from scipy.spatial import Voronoi
+from .Enums import Operator
 
 
 class MixinBaseModel(BaseModel):
@@ -40,7 +41,7 @@ class Printout(MixinBaseModel):
     inCompMax: float
 
 
-class FetData(MixinBaseModel):
+class Fet(MixinBaseModel):
     path: Optional[Path] = None
     xACN: Optional[float] = None
     xCAN: Optional[float] = None
@@ -90,7 +91,7 @@ class Density(MixinBaseModel):
         if self.lxlylz is None or (all(self.lxlylz == 1) and any(printout.lxlylz != 1)):
             self.lxlylz = printout.lxlylz if mask is None else printout.lxlylz[mask]
 
-    def repair_from_fet(self, fet: FetData):
+    def repair_from_fet(self, fet: Fet):
         if self.NxNyNz is not None:
             if self.NxNyNz is not None:
                 mask = self.NxNyNz != 1
@@ -101,20 +102,6 @@ class Density(MixinBaseModel):
             self.lxlylz = lxlylz if mask is None else lxlylz[mask]
 
 
-class Summation(MixinBaseModel):
-    path: Optional[Path] = None
-    box: Optional[np.ndarray] = None
-    NxNyNz: Optional[np.ndarray] = None
-    lxlylz: Optional[np.ndarray] = None
-    shape: Optional[np.ndarray] = None
-    data: pd.DataFrame
-    step: int
-    freeEnergy: float
-    freeW: float
-    freeS: float
-    freeWS: float
-    freeU: float
-    inCompMax: float
 
 
 class CompareResult(FigureAxesMixin):
@@ -124,11 +111,8 @@ class CompareResult(FigureAxesMixin):
 
 
 
-
-
 class PhasePointData(PointMixin):
     phase: str
-
 
 class PeakData(MixinBaseModel):
 
@@ -272,3 +256,20 @@ class LandscapeResult(FigureAxesMixin):
     contour_fig: Optional[Any] = None
     clb: Optional[Any] = None
     IQs: Optional[list[IQResult]] = None
+
+
+class Operation(MixinBaseModel):
+
+    left: str
+    right: Optional[str] = None
+    factor: Optional[float] = None
+    operator: Operator
+    _name: Optional[str] = None
+
+    @property
+    def name(self):
+        if self._name is not None:
+            return self._name
+        assert self.right is not None or self.factor is not None
+        return self.left + self.operator.value + str(self.factor) if self.right is None else self.right
+

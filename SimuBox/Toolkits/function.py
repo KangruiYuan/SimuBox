@@ -3,9 +3,9 @@ from pathlib import Path
 from typing import Optional
 
 import numpy as np
+import pandas as pd
 
-from ..Schema import Numeric, Vector, PathLike
-
+from ..Schema import Numeric, Vector, PathLike, Operation, OPERATOR_FUNCTION_MAP
 
 def find_nearest_1d(array: Vector, value: Numeric) -> Numeric:
     if not isinstance(array, np.ndarray):
@@ -40,4 +40,22 @@ def match_path(paths, **kwargs):
             return Path(path)
     print(f"{criteria}匹配失败。")
     return
+
+def process_dataframe(data: pd.DataFrame, operation: Operation, accuracy:int = 3):
+
+    if operation.left in data.columns:
+        left = data[operation.left].values
+        if operation.right in data.columns:
+            right = data[operation.right].values
+        elif operation.factor is not None:
+            right = operation.factor
+        else:
+            raise KeyError(f"right: {operation.right} 或 factor: {operation.factor} 应至少有一个有效")
+
+        data[operation.name] = np.around(OPERATOR_FUNCTION_MAP[operation.operator](left, right), accuracy)
+        return data
+    else:
+        raise KeyError(f"left: {operation.left}不是有效数据列")
+
+
 
