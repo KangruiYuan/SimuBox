@@ -5,6 +5,7 @@ import pandas as pd
 import streamlit as st
 from SimuBox import (
     check_state,
+    add_logo,
     SCATTER_PLOT_CONFIG,
     peak_fit,
     PeakData,
@@ -14,10 +15,12 @@ from SimuBox import (
 init_plot_config(SCATTER_PLOT_CONFIG)
 
 warnings.filterwarnings("ignore")
-check_state(Path(__file__).parents[1])
 
 st.set_page_config(layout="wide")
 st.title(":blue[SimuBox] :red[Visual] : 曲线分峰")
+check_state()
+add_logo()
+
 
 with st.expander("曲线分峰使用说明"):
     st.markdown(

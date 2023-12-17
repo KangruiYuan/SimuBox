@@ -8,6 +8,7 @@ import streamlit as st
 
 from SimuBox import (
     check_state,
+    add_logo,
     read_density,
     read_printout,
     Scatter,
@@ -21,11 +22,14 @@ from streamlit_echarts import st_pyecharts
 
 warnings.filterwarnings("ignore")
 
-check_state(Path(__file__).parents[1])
-init_plot_config(SCATTER_PLOT_CONFIG)
-
 st.set_page_config(layout="wide")
 st.title(":blue[SimuBox] :red[Visual] : 散射图绘制")
+
+check_state()
+add_logo()
+init_plot_config(SCATTER_PLOT_CONFIG)
+
+
 
 with st.expander("散射图绘制使用说明"):
     st.markdown(

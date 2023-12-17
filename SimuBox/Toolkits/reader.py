@@ -7,6 +7,7 @@ from typing import Optional, Iterable, Union, Sequence, Callable
 
 import numpy as np
 import pandas as pd
+import os
 
 from ..Schema import (
     Printout,
@@ -32,19 +33,25 @@ def read_file(
     if isinstance(path, BytesIO):
         with TextIOWrapper(path, encoding=encoding) as txt:
             content = txt.readlines()
+    elif isinstance(path, bytes):
+        content = path
     elif isinstance(path, PathLike):
         path = Path(path)
         if not path.is_file():
             assert default_name is not None, f"当前路径({path})下未检测到相应文件"
             path = path / default_name
             assert path.is_file(), f"当前路径({path})下未检测到相应文件"
-        if path.suffix == ".txt":
+        if path.suffix in (".txt", ""):
             content = path.open(mode, encoding=encoding).readlines()
         elif path.suffix == ".json":
             if hook is None:
                 hook = OrderedDict
             with open(path, mode=mode) as fp:
                 content = json.load(fp, object_pairs_hook=hook)
+        elif path.suffix == ".bin":
+            content = path
+        else:
+            raise NotImplementedError(f"{path.suffix}格式的文件读取方式尚未建立。")
     else:
         raise NotImplementedError(f"{type(path)}的读取方式尚未建立。")
     return content, path
@@ -96,35 +103,83 @@ def read_density(
 ):
     cont, path = read_file(path, default_name=default_name, mode=mode, **kwargs)
 
+    path = path if isinstance(path, PathLike) else None
+
+    if isinstance(cont, list):
+        txt_flag = True
+    else:
+        txt_flag = False
+        if isinstance(cont, bytes):
+            bin_read_function = np.frombuffer
+        elif isinstance(cont, PathLike):
+            bin_read_function = np.fromfile
+        else:
+            raise NotImplementedError(f"二进制型{type(path)}读取方式有误")
+
+    def _validate(vec: np.ndarray):
+        return any(vec > 1000) or any(vec <= 0)
+
     skip = 0
+    offset = 0
     if parse_N:
-        NxNyNz = np.array(list(map(int, cont[skip].strip().split(" "))))
+        if txt_flag:
+            NxNyNz = np.array(list(map(int, cont[skip].strip().split(" "))))
+        else:
+            # int32 for scft
+            NxNyNz = bin_read_function(cont, dtype=np.int32, count=3)
+            if _validate(NxNyNz):
+                # int64 for tops
+                NxNyNz = bin_read_function(cont, dtype=np.int64, count=3)
+                if _validate(NxNyNz):
+                    raise ValueError(f"NxNyNz解析错误: {NxNyNz}")
+                offset += 3 * 8
+            else:
+                offset += 3 * 4
+
         skip += 1
     else:
         NxNyNz = kwargs.get("NxNyNz")
 
     if parse_L:
-        lxlylz = np.array(list(map(float, cont[skip].strip().split(" "))))
+        if txt_flag:
+            lxlylz = np.array(list(map(float, cont[skip].strip().split(" "))))
+        else:
+            lxlylz = bin_read_function(cont, dtype=np.float64, count=3, offset=offset)
+            offset += 3 * 8
         skip += 1
     else:
-        lxlylz = kwargs.get("lxlylz", np.array([1, 1, 1]))
+        lxlylz = kwargs.get("lxlylz", np.ones(3))
 
-    try:
-        data = pd.read_csv(
-            path, skiprows=skip, header=None, sep=r"[ ]+", engine="python"
-        )
-    except pd.errors.ParserError as pe:
-        if not parse_L or not parse_N:
-            return read_density(
-                path,
-                parse_N=True,
-                parse_L=True,
-                default_name=default_name,
-                mode=mode,
-                **kwargs,
+    if txt_flag:
+        try:
+            data = pd.read_csv(
+                path, skiprows=skip, header=None, sep=r"[ ]+", engine="python"
             )
+        except pd.errors.ParserError as pe:
+            if not parse_L or not parse_N:
+                return read_density(
+                    path,
+                    parse_N=True,
+                    parse_L=True,
+                    default_name=default_name,
+                    mode=mode,
+                    **kwargs,
+                )
+            else:
+                raise pe
+    else:
+        if isinstance(cont, PathLike):
+            count = os.path.getsize(cont)
         else:
-            raise pe
+            count = len(cont)
+        count -= offset
+        count //= 8
+
+        data = bin_read_function(cont, dtype=np.float64, count=count, offset=offset)
+        assert NxNyNz is not None
+        data = pd.DataFrame(
+            data.reshape((int(np.prod(NxNyNz)), -1), order=kwargs.get("order", "F"))
+        )
 
     if NxNyNz is not None:
         shape = NxNyNz[NxNyNz != 1]
@@ -186,13 +241,15 @@ def read_csv(
     return data
 
 
-def read_fet(path: FileLike, **kwargs):
-    cont, path = read_file(path, default_name=kwargs.get("default_name", "fet.dat"))
+def read_fet(
+    path: FileLike, default_name: Optional[str] = "fet.dat", mode: str = "r", **kwargs
+):
+    cont, path = read_file(path, default_name=default_name, mode=mode, **kwargs)
 
-    with open(path, mode="r") as fp:
-        cont = fp.readlines()
-    res = [c.strip().split()[1:] for c in cont if c.strip()]
-    res = dict([[c[0], float(c[1])] for c in res])
+    cont = [c.strip().split()[1:] for c in cont if c.strip()]
+    res = dict()
+    for key, val in cont:
+        res[key] = float(val)
     return Fet(path=path, **res)
 
 

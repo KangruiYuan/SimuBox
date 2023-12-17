@@ -7,6 +7,7 @@ import pandas as pd
 import streamlit as st
 from SimuBox import (
     check_state,
+    add_logo,
     read_density,
     read_printout,
     ColorMode,
@@ -15,12 +16,12 @@ from SimuBox import (
     VoronoiCell,
 )
 
-
 warnings.filterwarnings("ignore")
 
-check_state(Path(__file__).parents[1])
 st.set_page_config(layout="wide")
 st.title(":blue[SimuBox] :red[Visual] : Voronoi图绘制")
+check_state()
+add_logo()
 
 with st.expander("Voronoi图绘制使用说明"):
     st.markdown(

@@ -7,6 +7,7 @@ import streamlit as st
 import json
 from SimuBox import (
     check_state,
+    add_logo,
     TopoCreater,
     fA,
     fB,
@@ -19,10 +20,12 @@ from SimuBox import (
 warnings.filterwarnings("ignore")
 
 init_plot_config(COMPARE_PLOT_CONFIG)
-check_state(Path(__file__).parents[1])
-
 st.set_page_config(layout="wide")
 st.title(":blue[SimuBox] :red[Visual] : 拓扑计算")
+
+check_state()
+add_logo()
+
 
 with st.expander("拓扑计算使用说明"):
     st.markdown(

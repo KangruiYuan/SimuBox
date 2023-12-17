@@ -1,6 +1,8 @@
 import streamlit as st
 from datetime import datetime
 from pathlib import Path
+from SimuBox import add_logo, check_state
+
 
 st.set_page_config(
     page_title="SimuBox Visual",
@@ -12,6 +14,9 @@ st.set_page_config(
         "Report a bug": "https://github.com/KangruiYuan/SimuBox/issues",
     },
 )
+check_state()
+add_logo()
+
 
 st.title(":blue[SimuBox] :red[Visual] :sunglasses:")
 st.header('特别鸣谢复旦大学李卫华教授及全体同门', divider='rainbow')
@@ -41,6 +46,7 @@ clear_button = cols[1].button(label="清空所有缓存", use_container_width=Tr
 if clear_button:
     for file in st.session_state.cache_dir.iterdir():
         file.unlink()
+
 
 
 st.markdown(

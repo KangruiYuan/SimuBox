@@ -7,6 +7,7 @@ import streamlit as st
 
 from SimuBox import (
     check_state,
+    add_logo,
     CompareJudger,
     init_plot_config,
     COMPARE_PLOT_CONFIG,
@@ -17,10 +18,12 @@ from SimuBox import (
 warnings.filterwarnings("ignore")
 
 init_plot_config(COMPARE_PLOT_CONFIG)
-check_state(Path(__file__).parents[1])
 
 st.set_page_config(layout="wide")
 st.title(":blue[SimuBox] :red[Visual] : 曲线比较")
+check_state()
+add_logo()
+
 
 with st.expander("曲线比较使用说明"):
     st.markdown(
