@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "SimuBox"
-version = "0.1.17"
+version = "0.1.18"
 description = "Free python package to do some science calculation."
 authors = ["Alkaid Yuan <kryuan@qq.com>"]
 maintainers = ["Alkaid Yuan <kryuan@qq.com>"]
@@ -27,6 +27,9 @@ sympy = "^1.12"
 poetry-plugin-export = "^1.6.0"
 streamlit-nested-layout = "^0.1.1"
 streamlit-extras = "^0.3.6"
+pydantic = "^2.5.2"
+opencv-python = "^4.8.1.78"
+opencv-python-headless = "^4.8.1.78"
 
 [tool.poetry.group.dev.dependencies]
 streamlit-echarts = "^0.4.0"
@@ -45,4 +48,3 @@ priority = "primary"
 [[tool.poetry.source]]
 name = "PyPI"
 priority = "supplemental"
-
