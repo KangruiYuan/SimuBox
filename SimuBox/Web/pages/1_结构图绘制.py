@@ -79,8 +79,8 @@ with plot_col:
             binary_data = uploaded_phout.read()
             density = read_density(binary_data, parse_N=parse_N, parse_L=parse_L)
             density.path = save
-            density.data = density.data.div(density.data.sum(axis=0))
-            density.data = density.data.div(density.data.sum(axis=1), axis=0)
+            # density.data = density.data.div(density.data.sum(axis=0))
+            # density.data = density.data.div(density.data.sum(axis=1), axis=0)
 
         if use_lxlylz and lxlylz is not None:
             density.lxlylz = lxlylz

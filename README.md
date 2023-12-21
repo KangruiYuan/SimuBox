@@ -23,6 +23,12 @@
 
 `pip install SimuBox`
 
+> TIPS: 安装后配置环境推荐使用poetry，依次执行以下python指令
+> 
+> `pip install poetry`
+> 
+> `poetry install`
+
 ## 使用示例 Demos
 
 示例请见[`/Demos/Scripts.ipynb`](https://github.com/KangruiYuan/SimuBox/blob/main/Demos/Scripts.ipynb)

@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Optional, Any, Sequence, Union, Literal
+from typing import Optional, Any, Sequence, Union
 
 import numpy as np
 import pandas as pd
@@ -7,7 +7,9 @@ from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from pydantic import BaseModel
 from scipy.spatial import Voronoi
+
 from .Enums import Operator
+from .Types import Vector
 
 
 class MixinBaseModel(BaseModel):
@@ -20,11 +22,12 @@ class FigureAxesMixin(MixinBaseModel):
     fig: Optional[Figure] = None
     ax: Optional[Axes] = None
 
+
 class PointMixin(MixinBaseModel):
 
-    x :Optional[float] = None
-    y :Optional[float] = None
-    z :Optional[float] = None
+    x: Optional[float] = None
+    y: Optional[float] = None
+    z: Optional[float] = None
     value: Optional[float] = None
 
 
@@ -93,15 +96,38 @@ class Density(MixinBaseModel):
 
     def repair_from_fet(self, fet: Fet):
         if self.NxNyNz is not None:
-            if self.NxNyNz is not None:
-                mask = self.NxNyNz != 1
-            else:
-                mask = None
+            mask = self.NxNyNz != 1
+        else:
+            mask = None
         lxlylz = np.array([fet.lx, fet.ly, fet.lz])
         if self.lxlylz is None or (all(self.lxlylz == 1) and any(lxlylz != 1)):
             self.lxlylz = lxlylz if mask is None else lxlylz[mask]
 
+    def repair_data(self, inputs: Union[dict, Vector, str], specy: Optional[dict] = None, constriant: Optional[Vector] = None):
+        self.data = self.data.div(self.data.sum(axis=0))
+        if isinstance(inputs, dict):
+            if specy is None:
+                specy = dict([(s["SpecyID"], s["VolumeFraction"]) for s in inputs["Specy"]])
+            blocks = [
+                round(block["ContourLength"] * specy[block["SpecyID"]], 6)
+                for block in inputs["Block"]
+            ]
+        elif isinstance(inputs, str) and inputs == "auto":
+            self.data = self.data * np.prod(self.shape)
+            col_num = self.data.shape[1]
+            if constriant is None:
+                constriant= np.ones(col_num)
+            else:
+                assert len(constriant) == col_num
+            solve_A = np.vstack([self.data.iloc[:col_num - 1, :].values, constriant])
+            solve_b = np.ones(col_num)
+            blocks = np.linalg.solve(solve_A, solve_b)
+        else:
+            blocks = inputs
 
+        blocks = np.array(blocks)
+        self.data = self.data * blocks
+        self.data = self.data.div(self.data.sum(axis=1), axis=0)
 
 
 class CompareResult(FigureAxesMixin):
@@ -110,9 +136,9 @@ class CompareResult(FigureAxesMixin):
     mat: np.ndarray
 
 
-
 class PhasePointData(PointMixin):
     phase: str
+
 
 class PeakData(MixinBaseModel):
 
@@ -239,12 +265,14 @@ class TopoPlot(FigureAxesMixin):
     kind_color: dict[str, str]
     rad: float
 
+
 class IQResult(MixinBaseModel):
 
     level: float
     area: float
     length: float
     IQ: float
+
 
 class LandscapeResult(FigureAxesMixin):
     mat: np.ndarray
@@ -271,5 +299,8 @@ class Operation(MixinBaseModel):
         if self._name is not None:
             return self._name
         assert self.right is not None or self.factor is not None
-        return self.left + self.operator.value + str(self.factor) if self.right is None else self.right
-
+        return (
+            self.left + self.operator.value + str(self.factor)
+            if self.right is None
+            else self.right
+        )

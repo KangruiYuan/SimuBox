@@ -10,6 +10,7 @@ from PIL import Image
 from scipy.spatial import Voronoi, voronoi_plot_2d
 from scipy.spatial import distance, Delaunay
 from tqdm import tqdm
+from concurrent.futures import ThreadPoolExecutor
 
 from ..Artist import generate_colors
 from ..Schema import (
@@ -262,6 +263,7 @@ class VoronoiCell:
         size: Tuple = (500, 500),
         color_mode: ColorMode = "L",
         interactive: bool = True,
+        num_threads: int = 8,
         **kwargs,
     ):
         image = Image.new(color_mode, size)
@@ -288,6 +290,16 @@ class VoronoiCell:
             dis = func(points, arr, weights)
             min_idx = np.argmin(dis)
             putpixel(arr, colors[min_idx])
+
+        # def process_arr(arr):
+        #     nonlocal func
+        #     dis = func(points, arr, weights)
+        #     min_idx = np.argmin(dis)
+        #     putpixel(arr, colors[min_idx])
+        #
+        # with ThreadPoolExecutor(max_workers=num_threads) as executor:
+        #     executor.map(process_arr, arrs)
+
         plot = kwargs.get("plot", "imshow")
         im = np.array(image)
         fig = plt.figure(figsize=kwargs.get("figsize", (5, 5)))
