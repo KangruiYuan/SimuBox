@@ -292,12 +292,12 @@ class Operation(MixinBaseModel):
     right: Optional[str] = None
     factor: Optional[float] = None
     operator: Operator
-    _name: Optional[str] = None
+    name: Optional[str] = None
 
     @property
-    def name(self):
-        if self._name is not None:
-            return self._name
+    def _name(self):
+        if self.name is not None:
+            return self.name
         assert self.right is not None or self.factor is not None
         return (
             self.left + self.operator.value + str(self.factor)

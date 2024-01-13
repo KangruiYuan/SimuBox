@@ -202,7 +202,7 @@ def read_csv(
         data = pd.read_csv(path, skiprows=skiprows)
     else:
         data = path.copy()
-    if subset is not None:
+    if subset:
         data = data.drop_duplicates(subset=subset)
 
     if Operations is None:
@@ -212,21 +212,21 @@ def read_csv(
                 right="lz",
                 operator=Operator.div,
                 accuracy=accuracy,
-                _name="lylz",
+                name="lylz",
             ),
             Operation(
                 left="lx",
                 right="ly",
                 operator=Operator.div,
                 accuracy=accuracy,
-                _name="lxly",
+                name="lxly",
             ),
             Operation(
                 left=kwargs.get("var", "chiN"),
                 factor=kwargs.get("factor", 1),
                 operator=Operator.div,
                 accuracy=accuracy,
-                _name="lxly",
+                name=kwargs.get("var", "chiN"),
             ),
         ]
     elif isinstance(Operations, Operation):

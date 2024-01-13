@@ -13,16 +13,15 @@ import numpy as np
 
 
 def arange(
-    start: Union[int, float], end: Union[int, float], step: Union[int, float], **kwargs
+    start: Union[int, float], end: Union[int, float], step: Union[int, float], accuracy: int = 6
 ):
-    acc = kwargs.get("acc", 6)
     if start > end:
         start, end = end, start
     gap = end - start
     num = gap // abs(step) + 1
     asc = np.arange(num) * abs(step)
 
-    res = np.around(asc + start, acc)
+    res = np.around(asc + start, accuracy)
     if end not in res:
         res = np.append(res, end)
     return np.sort(res)
@@ -66,12 +65,6 @@ class Options:
     init_phin: list[str] = []
     gpuTOPS_require: list[str] = []
     gpuSCFT_require: list[str] = []
-
-    # worker: dict[str, str] = dict(
-    #     cpuTOPS=f"srun --partition=intel_2080ti,amd_3090,intel_Xeon --cpus-per-task=2 /home/share/TOPS2020/TOPS2020 -j -i={json_name} >aa.txt 2>&1 &",
-    #     gpuSCFT=f"srun --partition=intel_2080,intel_2080ti,amd_3090 --nodes=1 --gpus=1 /home/share/scft2022 -i={json_name} >aa.txt 2>&1 &",
-    #     gpuTOPS=f"srun --gpus=rtx_3090:1 --cpus-per-gpu=1 --partition=amd_3090 --gpus=1 -w gpu04 /home/share/TOPS2020/TOPS_device -j -i={json_name} > aa.txt 2>&1 &",
-    # )
 
     which: Servers = Servers.cpuTOPS
 

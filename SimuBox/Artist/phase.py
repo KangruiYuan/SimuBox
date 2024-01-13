@@ -88,6 +88,8 @@ class PhaseDiagram:
         path: Optional[Union[str, Path]] = None,
         plot: bool = True,
         acc: int = 3,
+        xlabel: Optional[str] = None,
+        ylabel: Optional[str] = None,
         **kwargs,
     ):
         if path is None:
@@ -97,12 +99,14 @@ class PhaseDiagram:
             if not isinstance(path, Path):
                 path = Path(path)
 
-        df = read_csv(path=path, acc=acc)
+        df = read_csv(path=path, acc=acc, **kwargs)
         print(f"Include phase: {set(df['phase'].values)}")
 
         plot_dict = dict()
-        y_set = np.sort(df[self.ylabel].unique())
-        x_set = np.sort(df[self.xlabel].unique())
+        xlabel = xlabel if xlabel is not None else self.xlabel
+        ylabel = ylabel if ylabel is not None else self.ylabel
+        y_set = np.sort(df[ylabel].unique())
+        x_set = np.sort(df[xlabel].unique())
 
         exclude = kwargs.get("exclude", [])
 
@@ -110,7 +114,7 @@ class PhaseDiagram:
         for i, y in enumerate(y_set):
             for j, x in enumerate(x_set):
                 phase = "unknown"
-                temp_data = df[(df[self.ylabel] == y) & (df[self.xlabel] == x)]
+                temp_data = df[(df[ylabel] == y) & (df[xlabel] == x)]
                 min_data = temp_data[temp_data["freeE"] == temp_data["freeE"].min()]
                 if len(min_data) == 0:
                     continue
@@ -160,14 +164,14 @@ class PhaseDiagram:
                 mat[i][j] = PhasePointData(phase=phase, x=x, y=y, value=freeE)
                 if phase in plot_dict:
                     for attr, val in zip(
-                        [self.xlabel, self.ylabel, "freeE", "lylz", "lxly"],
+                        [xlabel, ylabel, "freeE", "lylz", "lxly"],
                         [x, y, freeE, lylz, lxly],
                     ):
                         plot_dict[phase][attr].append(val)
                 else:
                     plot_dict[phase] = {
-                        self.xlabel: [x],
-                        self.ylabel: [y],
+                        xlabel: [x],
+                        ylabel: [y],
                         "freeE": [freeE],
                         "lylz": [lylz],
                         "lxly": [lxly],
@@ -181,8 +185,8 @@ class PhaseDiagram:
                 if key not in self.colors:
                     self.colors[key] = generate_colors(mode="HEX")[0]
                 ax.scatter(
-                    value[self.xlabel],
-                    value[self.ylabel],
+                    value[xlabel],
+                    value[ylabel],
                     c=self.colors[key],
                     label=key,
                 )
@@ -190,10 +194,10 @@ class PhaseDiagram:
             ax.tick_params(which="both", width=2, length=4, direction="in")
             plot_locators(**kwargs)
             ax.set_xlabel(
-                self.labels.get(self.xlabel, self.xlabel), fontdict={"size": 20}
+                self.labels.get(xlabel, xlabel), fontdict={"size": 20}
             )
             ax.set_ylabel(
-                self.labels.get(self.ylabel, self.ylabel), fontdict={"size": 20}
+                self.labels.get(ylabel, ylabel), fontdict={"size": 20}
             )
             ax.legend(frameon=False, loc="upper left", bbox_to_anchor=(0.98, 0.8))
             fig.tight_layout()

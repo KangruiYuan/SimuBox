@@ -116,8 +116,8 @@ class ABC_ABC(MixinAgent):
                 input_dict["Initializer"]["Mode"] = "MODEL"
                 input_dict["Solver"]["PseudospectralMethod"]["SpaceGridSize"] = [
                     1,
-                    64,
-                    64,
+                    96,
+                    96,
                 ]
 
         elif pn in Cells.__members__.keys():

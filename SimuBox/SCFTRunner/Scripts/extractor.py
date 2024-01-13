@@ -42,9 +42,6 @@ def check_result(res: dict):
 
 def stats_component(inputs: dict):
     total_stats = {}
-    # specy_stats = inputs["Specy"]
-    # for specy in specy_stats:
-    #     total_stats[f"phi{specy['SpecyID']}"] = specy["VolumeFraction"]
 
     comp_stats = defaultdict(float)
     for i in inputs["Block"]:
@@ -75,6 +72,18 @@ def collect(
     subdirectories: list[Path],
     args: Namespace,
 ):
+    """
+    :param subdirectories: 需要进行信息收集
+    :param args: 命令行参数，用于操控信息收集的行为
+    :return:
+        datas
+            每个文件夹对应的数据信息
+        columns
+            数据表的列名
+        missions_list
+            需要进行下一步处理的数据信息
+
+    """
     missions_list = list()
     columns: set[str] = set()
     datas: list[dict[str, Any]] = []
@@ -170,7 +179,7 @@ def collect(
                         data.get(n, 0)
                         for n in ["lx", "ly", "lz", "alpha", "beta", "gamma"]
                     ],
-                    "step": data.get("step", 2000),
+                    "step": max(data.get("step", 2000), 2000),
                     "server": server_before,
                 }
             )
