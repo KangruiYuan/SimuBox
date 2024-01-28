@@ -83,7 +83,7 @@ class Landscaper:
         y_axis: str = "lz",
         target: str = "freeE",
         levels: Optional[Vector] = None,
-        precision: int = 3,
+        precision: int = -3,
         save: Optional[bool] = True,
         tick_num: Optional[int] = None,
         aspect: Union[Literal["auto", "equal", "square"], Numeric] = 1,
@@ -201,7 +201,7 @@ class Landscaper:
         # clb.set_ylabel(r'$\Delta F/k_{\rm{B}}T$', fontsize=20)
         if colorbar_title := kwargs.get("colorbar_title", r"$\Delta F/nk_{\rm B}T$"):
             clb.ax.set_title(colorbar_title, fontsize=colorbar_fontsize, pad=18)
-        clb.ax.tick_params(which="major", width=2)
+        clb.ax.tick_params(which="major")
 
         label_fontsize = kwargs.get("label_fontsize", 20)
         plt.xlabel(self.labels.get(x_axis, x_axis), fontsize=label_fontsize)
@@ -220,8 +220,11 @@ class Landscaper:
                     p[0], p[1], s=p[-1], c=p[-2], marker=p[2], alpha=1, zorder=6
                 )
 
-        # print(kwargs["xmajor"])
         plot_locators(**kwargs)
+        if xlim := kwargs.get("xlim"):
+            plt.xlim(xlim)
+        if ylim := kwargs.get("ylim"):
+            plt.ylim(ylim)
 
         plt.tight_layout()
         plot_savefig(self, save=save, **kwargs)

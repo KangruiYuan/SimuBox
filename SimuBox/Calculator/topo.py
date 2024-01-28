@@ -1,4 +1,5 @@
 import json
+import warnings
 from collections import Counter, defaultdict, OrderedDict
 from pathlib import Path
 from typing import Union, Dict, List, Tuple, Sequence, Optional, Any, Mapping
@@ -194,6 +195,7 @@ class TopoCreater(nx.DiGraph):
         self,
         blocks: Union[List[str], str, Dict],
         fractions: Optional[Sequence[Union[int, float, Symbol]]] = None,
+        ignore: bool = False,
         **kwargs,
     ):
         self.clear()
@@ -213,7 +215,7 @@ class TopoCreater(nx.DiGraph):
                 raise ValueError(
                     f"Fractions for blocks (length={len(fractions)}) is not right!"
                 )
-            if round(sum(fractions), 3) != 1:
+            if round(sum(fractions), 3) != 1 and not ignore:
                 raise ValueError(f"Fractions do not sum to one, value={sum(fractions)}")
 
         for i, b in enumerate(blocks):
@@ -230,6 +232,7 @@ class TopoCreater(nx.DiGraph):
         self,
         blocks: Union[str, List[str], Dict],
         fractions: Optional[Sequence[Union[int, float, Symbol]]] = None,
+        ignore: bool = False,
         **kwargs,
     ):
 
@@ -248,7 +251,7 @@ class TopoCreater(nx.DiGraph):
                 raise ValueError(
                     f"Fractions for blocks (length={len(fractions)}) is not right!"
                 )
-            if round(sum(fractions), 3) != 1:
+            if round(sum(fractions), 3) != 1 and not ignore:
                 raise ValueError(f"Fractions do not sum to one, value={sum(fractions)}")
 
         for i, b in enumerate(blocks):
@@ -266,6 +269,7 @@ class TopoCreater(nx.DiGraph):
         fractions: Optional[Sequence[Union[int, float, Symbol]]] = None,
         arm: int = 5,
         head: bool = True,
+        ignore: bool = False,
         **kwargs,
     ):
 
@@ -287,7 +291,7 @@ class TopoCreater(nx.DiGraph):
                 raise ValueError(
                     f"Fractions for blocks (length={len(fractions)}*{arm}={len(fractions) * arm}) is not right!"
                 )
-            if round(sum(fractions) * arm, 3) != 1:
+            if round(sum(fractions) * arm, 3) != 1 and not ignore:
                 raise ValueError(
                     f"Fractions do not sum to one, value={round(sum(fractions) * arm, 3)}"
                 )
@@ -459,6 +463,7 @@ class TopoCreater(nx.DiGraph):
         colors: Optional[Sequence[str]] = None,
         node_size: int = 200,
         node_color: str = "gray",
+        weight: Optional[str] = None,
         pos: Optional[dict] = None,
         figsize: Sequence[int] = (6, 6),
         interactive: bool = True,
@@ -475,8 +480,22 @@ class TopoCreater(nx.DiGraph):
             colors = ["b", "r", "g", "blueviolet", "cyan"]
         fig, ax = plt.subplots(figsize=figsize)
 
+
+        if weight is not None and isinstance(weight, str):
+            weights = nx.get_edge_attributes(self, weight)
+            weights_values = weights.values()
+            max_weight = max(weights_values)
+            min_weight = min(weights_values)
+            if not all([isinstance(frac, (float, int)) for frac in weights_values]):
+                weight = None
+                warnings.warn("weight reset to None")
+        else:
+            raise ValueError(f"weight should be NoneType or str type, got {type(weight)} instead.")
+
+
         if pos is None:
-            pos = nx.kamada_kawai_layout(self)
+            # print(f"Using {weight} as scaler.")
+            pos = nx.kamada_kawai_layout(self, weight=weight)
 
         kind_edges = list(self.kind_edges.items())
         kind_edges.sort(key=lambda x: x[0])
@@ -490,30 +509,22 @@ class TopoCreater(nx.DiGraph):
 
         if curve:
             rad_inverse_log = {}
-            for edge in self.edges():
-                source, target = edge
+            for source, target, edge_data in self.edges(data=True):
                 if target < source:
                     continue
                 if source not in rad_inverse_log:
                     flag = True
                 else:
                     flag = not rad_inverse_log[source]
+                frac = edge_data["fraction"]
                 rad_inverse_log[target] = flag
                 _rad = rad if flag else -rad
+                if weight is not None:
+                    _rad = (
+                        (frac - min_weight) / (max_weight - min_weight) + 0.5
+                    ) * _rad
                 _kind = edge_kind[(source, target)]
-                # nx.draw_networkx_edges(
-                #     self,
-                #     pos,
-                #     edgelist=[edge],
-                #     width=3,
-                #     alpha=1,
-                #     edge_color=kind_color[_kind],
-                #     label=_kind,
-                #     arrows=True,
-                #     connectionstyle=f"arc3,rad={_rad}",
-                #     arrowstyle="-",
-                #     ax=ax,
-                # )
+
                 arrow_props = dict(
                     arrowstyle="-",
                     color=kind_color[_kind],
@@ -525,7 +536,6 @@ class TopoCreater(nx.DiGraph):
                 ax.annotate(
                     "", xy=pos[source], xytext=pos[target], arrowprops=arrow_props
                 )
-            # print(rad_inverse_log)
         else:
             for i, (_kind, _edge) in enumerate(kind_edges):
                 nx.draw_networkx_edges(
@@ -568,12 +578,10 @@ class TopoCreater(nx.DiGraph):
             )
 
         if show_edge_labels:
-            nx.draw_networkx_edge_labels(
-                self, pos, edge_labels=nx.get_edge_attributes(self, "fraction"), ax=ax
-            )
+            nx.draw_networkx_edge_labels(self, pos, edge_labels=fractions, ax=ax)
         plt.axis(False)
         plt.tight_layout()
-        plot_savefig(prefix=kwargs.get("prefix","topo"), save=save)
+        plot_savefig(prefix=kwargs.get("prefix", "topo"), save=save)
         if interactive:
             plt.show()
         return TopoPlot(fig=fig, ax=ax, kind_color=kind_color, rad=rad)

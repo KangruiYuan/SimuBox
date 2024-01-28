@@ -179,7 +179,7 @@ def collect(
                         data.get(n, 0)
                         for n in ["lx", "ly", "lz", "alpha", "beta", "gamma"]
                     ],
-                    "step": max(data.get("step", 2000), 2000),
+                    "step": max(data.get("step", 2000), 5000),
                     "server": server_before,
                 }
             )
