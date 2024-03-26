@@ -10,8 +10,8 @@ import pandas as pd
 import os
 
 from ..Schema import (
-    Printout,
-    Density,
+    printout,
+    density,
     Fet,
     DensityParseResult,
     Numeric,
@@ -79,7 +79,7 @@ def read_printout(
     uws = re.findall("[.0-9e+-]+", cont[-1])
     uws = list(map(float, uws))
 
-    return Printout(
+    return printout(
         path=path,
         lxlylz=lxlylz,
         box=box,
@@ -100,7 +100,7 @@ def read_density(
     default_name: Optional[str] = "phout.txt",
     mode: str = "r",
     **kwargs,
-) -> Density:
+) -> density:
     cont, path = read_file(path, default_name=default_name, mode=mode, **kwargs)
 
     path = path if isinstance(path, PathLike) else None
@@ -187,7 +187,7 @@ def read_density(
     else:
         shape = kwargs.get("shape", NxNyNz)
 
-    return Density(path=path, data=data, NxNyNz=NxNyNz, lxlylz=lxlylz, shape=shape)
+    return density(path=path, data=data, NxNyNz=NxNyNz, lxlylz=lxlylz, shape=shape)
 
 
 def read_csv(
@@ -285,7 +285,7 @@ def periodic_extension(arr: np.ndarray, periods: Sequence[int]):
 
 
 def parse_density(
-    density: Density,
+    density: density,
     target: Union[int, Iterable[int], str] = 0,
     permute: Optional[Iterable[int]] = None,
     slices: Optional[tuple[int, int]] = None,

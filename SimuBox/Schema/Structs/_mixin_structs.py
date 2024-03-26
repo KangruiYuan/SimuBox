@@ -31,103 +31,13 @@ class PointMixin(MixinBaseModel):
     value: Optional[float] = None
 
 
-class Printout(MixinBaseModel):
-    path: Optional[Path] = None
-    box: np.ndarray
-    lxlylz: np.ndarray
-    step: int
-    freeEnergy: float
-    freeW: float
-    freeS: float
-    freeWS: float
-    freeU: float
-    inCompMax: float
 
 
-class Fet(MixinBaseModel):
-    path: Optional[Path] = None
-    xACN: Optional[float] = None
-    xCAN: Optional[float] = None
-    xABN: Optional[float] = None
-    xBAN: Optional[float] = None
-    xCBN: Optional[float] = None
-    xBCN: Optional[float] = None
-    stressX: Optional[float] = None
-    stressY: Optional[float] = None
-    stressZ: Optional[float] = None
-    lx: Optional[float] = None
-    ly: Optional[float] = None
-    lz: Optional[float] = None
-    lx_full: Optional[float] = None
-    ly_full: Optional[float] = None
-    lz_full: Optional[float] = None
-    freeEnergy: Optional[float] = None
-    freeAB_sum: Optional[float] = None
-    freeAB: Optional[float] = None
-    freeBA: Optional[float] = None
-    freeAC: Optional[float] = None
-    freeCA: Optional[float] = None
-    freeBC: Optional[float] = None
-    freeCB: Optional[float] = None
-    freeW: Optional[float] = None
-    freeS: Optional[float] = None
-    freeDiff: Optional[float] = None
-    inCompMax: Optional[float] = None
-    Q0: Optional[float] = None
-    VolumeFraction0: Optional[float] = None
-    sumVolume: Optional[float] = None
-    activity0: Optional[float] = None
 
 
-class Density(MixinBaseModel):
-    path: Optional[Path] = None
-    data: pd.DataFrame
-    NxNyNz: Optional[np.ndarray] = None
-    lxlylz: Optional[np.ndarray] = None
-    shape: Optional[np.ndarray] = None
 
-    def repair_from_printout(self, printout: Printout):
-        if self.NxNyNz is not None:
-            mask = self.NxNyNz != 1
-        else:
-            mask = None
-        if self.lxlylz is None or (all(self.lxlylz == 1) and any(printout.lxlylz != 1)):
-            self.lxlylz = printout.lxlylz if mask is None else printout.lxlylz[mask]
 
-    def repair_from_fet(self, fet: Fet):
-        if self.NxNyNz is not None:
-            mask = self.NxNyNz != 1
-        else:
-            mask = None
-        lxlylz = np.array([fet.lx, fet.ly, fet.lz])
-        if self.lxlylz is None or (all(self.lxlylz == 1) and any(lxlylz != 1)):
-            self.lxlylz = lxlylz if mask is None else lxlylz[mask]
 
-    def repair_data(self, inputs: Union[dict, Vector, str], specy: Optional[dict] = None, constriant: Optional[Vector] = None):
-        self.data = self.data.div(self.data.sum(axis=0))
-        if isinstance(inputs, dict):
-            if specy is None:
-                specy = dict([(s["SpecyID"], s["VolumeFraction"]) for s in inputs["Specy"]])
-            blocks = [
-                round(block["ContourLength"] * specy[block["SpecyID"]], 6)
-                for block in inputs["Block"]
-            ]
-        elif isinstance(inputs, str) and inputs == "auto":
-            self.data = self.data * np.prod(self.shape)
-            col_num = self.data.shape[1]
-            if constriant is None:
-                constriant= np.ones(col_num)
-            else:
-                assert len(constriant) == col_num
-            solve_A = np.vstack([self.data.iloc[:col_num - 1, :].values, constriant])
-            solve_b = np.ones(col_num)
-            blocks = np.linalg.solve(solve_A, solve_b)
-        else:
-            blocks = inputs
-
-        blocks = np.array(blocks)
-        self.data = self.data * blocks
-        self.data = self.data.div(self.data.sum(axis=1), axis=0)
 
 
 class CompareResult(FigureAxesMixin):

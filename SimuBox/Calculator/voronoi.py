@@ -14,7 +14,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from ..Artist import generate_colors
 from ..Schema import (
-    Density,
+    density,
     OpenCVResult,
     AnalyzeMode,
     ColorMode,
@@ -29,7 +29,7 @@ from ..Artist import plot_savefig
 class VoronoiCell:
     @staticmethod
     def OpenCV(
-        density: Density,
+        density: density,
         expand: Union[int, Sequence[int]] = 3,
         **kwargs,
     ):
@@ -77,7 +77,7 @@ class VoronoiCell:
         )
 
     @classmethod
-    def Analyze(cls, density: Density, mode: AnalyzeMode, **kwargs):
+    def Analyze(cls, density: density, mode: AnalyzeMode, **kwargs):
 
         cv_res = cls.OpenCV(density, **kwargs)
         if "expand" in kwargs:
