@@ -2,7 +2,7 @@ import json
 import warnings
 from collections import Counter, defaultdict, OrderedDict
 from pathlib import Path
-from typing import Union, Dict, List, Tuple, Sequence, Optional, Any, Mapping
+from typing import Union, Dict, List, Tuple, Sequence, Optional, Any, Mapping, Literal
 
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -142,6 +142,9 @@ class TopoCreater(nx.DiGraph):
         self.node_nums = None
         self.final_func = None
         self.verbose = verbose
+        self.fA_total = None
+        self.fB_total = None
+        self.fC_total = None
 
     def init_nodes(self, node_nums: int, node_names: list[str] = None):
         self.node_nums = node_nums
@@ -463,7 +466,7 @@ class TopoCreater(nx.DiGraph):
         colors: Optional[Sequence[str]] = None,
         node_size: int = 200,
         node_color: str = "gray",
-        weight: Optional[str] = None,
+        weight: Literal["weight", None] = None,
         pos: Optional[dict] = None,
         figsize: Sequence[int] = (6, 6),
         interactive: bool = True,
@@ -480,21 +483,20 @@ class TopoCreater(nx.DiGraph):
             colors = ["b", "r", "g", "blueviolet", "cyan"]
         fig, ax = plt.subplots(figsize=figsize)
 
-
-        if weight is not None and isinstance(weight, str):
-            weights = nx.get_edge_attributes(self, weight)
+        weights = nx.get_edge_attributes(self, "fraction")
+        if weight == "weight":
             weights_values = weights.values()
             max_weight = max(weights_values)
             min_weight = min(weights_values)
             if not all([isinstance(frac, (float, int)) for frac in weights_values]):
                 weight = None
                 warnings.warn("weight reset to None")
-        else:
+        elif weight is not None:
             raise ValueError(f"weight should be NoneType or str type, got {type(weight)} instead.")
 
 
         if pos is None:
-            # print(f"Using {weight} as scaler.")
+            print(f"Using {weight} as scaler.")
             pos = nx.kamada_kawai_layout(self, weight=weight)
 
         kind_edges = list(self.kind_edges.items())
@@ -578,7 +580,7 @@ class TopoCreater(nx.DiGraph):
             )
 
         if show_edge_labels:
-            nx.draw_networkx_edge_labels(self, pos, edge_labels=fractions, ax=ax)
+            nx.draw_networkx_edge_labels(self, pos, edge_labels=weights, ax=ax)
         plt.axis(False)
         plt.tight_layout()
         plot_savefig(prefix=kwargs.get("prefix", "topo"), save=save)
@@ -588,6 +590,12 @@ class TopoCreater(nx.DiGraph):
 
     @classmethod
     def h(cls, f, x=x):
+        """
+        Debye function
+        :param f: volume fraction between two points
+        :param x: q^2 \times R^2
+        :return:
+        """
         return 2 / (x**2) * (f * x + sym.exp(-f * x) - 1)
 
     @classmethod
@@ -698,10 +706,23 @@ class TopoCreater(nx.DiGraph):
         plot: bool = True,
         interactive: bool = True,
         xlabel: str = r"$f_{A}$",
-        ylabel: str = r"$\chi {\rm N}$",
+        ylabel: str = r"$\chi N$",
         save: Optional[Union[Path, str, bool]] = False,
         **kwargs,
     ):
+        """
+
+        :param fs:
+        :param symbol:
+        :param plot:
+        :param interactive:
+        :param xlabel:
+        :param ylabel:
+        :param save:
+        :param kwargs:
+        :return:
+        """
+        # TODO: 目前该函数的绘图还有一定问题，如fs的自动化适应，应当自动计算总fA
         global x
         xN = []
         x_lim = kwargs.get("x_lim", (0, 1))
@@ -709,7 +730,7 @@ class TopoCreater(nx.DiGraph):
         for i in fs:
             func = self.final_func.evalf(subs={symbol: i})
             func = sym.lambdify(x, func, "scipy")
-            xN.append(opt.fminbound(func, *y_lim, full_output=True, maxfun=2000)[1])
+            xN.append(opt.fminbound(func, 0, 50, full_output=True, maxfun=2000)[1])
         xN = np.array(xN)
 
         fig = ax = None

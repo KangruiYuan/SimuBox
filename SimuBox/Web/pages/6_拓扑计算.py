@@ -165,7 +165,7 @@ with plot_col:
             )
             tc.RPA()
             odt_plot = tc.ODT(
-                fs=np.linspace(x_lim_min, x_lim_max, 20),
+                fs=np.linspace(x_lim_min, x_lim_max, 51),
                 interactive=False,
                 plot=True,
                 figsize=(8, 8),
@@ -176,6 +176,13 @@ with plot_col:
                 save=odt_save_path,
             )
             if len(np.unique(odt_plot.xN)) != 1:
+                odt_xN_idx = np.argmin(odt_plot.xN)
+                sub_plot_cols[1].subheader(
+                        r"$f_{\rm A}=$" + str(round(odt_plot.f[odt_xN_idx], 3))
+                )
+                sub_plot_cols[1].subheader(
+                        r"$\chi N_{\rm ODT}=$" + str(round(odt_plot.xN[odt_xN_idx], 3))
+                )
                 sub_plot_cols[1].pyplot(odt_plot.fig)
             else:
                 sub_plot_cols[1].subheader(

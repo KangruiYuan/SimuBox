@@ -90,6 +90,7 @@ class CompareJudger:
         save: Optional[Union[bool, PathLike]] = True,
         data: Optional[pd.DataFrame] = None,
         interactive: bool = True,
+        fontsize:int = 20,
         **kwargs,
     ):
 
@@ -130,7 +131,14 @@ class CompareJudger:
             inverse_mask = np.in1d(base_xticks, o_xticks)
             base_xticks_mask = base_xticks[inverse_mask]
             base_yticks_mask = base_yticks[inverse_mask]
-            o_yticks = o_yticks - base_yticks_mask
+            try:
+                o_yticks = o_yticks - base_yticks_mask
+            except ValueError as ve:
+                print(f"In phase {o}:")
+                print("o_xticks：", o_xticks)
+                print("o_yticks：", o_yticks)
+                print("base_yticks_mask：", base_yticks_mask)
+                raise ve
             ax.plot(
                 o_xticks,
                 o_yticks,
@@ -148,7 +156,7 @@ class CompareJudger:
                 horiline_xticks = base_xticks
                 horiline_yticks = np.zeros_like(horiline_xticks)
             elif horiline == "mask":
-                rest = data[data["phase"] != base]
+                rest = data[(data["phase"] != base) & data["phase"].isin(others)]
                 rest_xticks = rest[xlabel].unique()
                 mask = np.in1d(base_xticks, rest_xticks)
                 horiline_xticks = base_xticks[mask]
@@ -180,14 +188,18 @@ class CompareJudger:
         plot_locators(ax=ax, **kwargs)
         plot_legend(**kwargs)
 
-        plt.tick_params(axis="both", labelsize=25, pad=8)
-        plt.ylabel(self.diff_labels.get(ylabel, ylabel), fontsize=30)
-        plt.xlabel(self.diff_labels.get(xlabel, xlabel), fontsize=30)
+        plt.tick_params(axis="both", labelsize=kwargs.get("labelsize", fontsize), pad=8)
+        plt.ylabel(self.diff_labels.get(ylabel, ylabel), fontsize=fontsize)
+        plt.xlabel(self.diff_labels.get(xlabel, xlabel), fontsize=fontsize)
 
         if margin := kwargs.get("margin", (0.15, 0.15)):
             plt.margins(*margin)
         plt.tight_layout()
-        plot_savefig(self, prefix="diff", suffix=ylabel, save=save, **kwargs)
+        suffix = kwargs.get("suffix", ylabel)
+        # print(kwargs)
+        if "suffix" in kwargs:
+            del kwargs["suffix"]
+        plot_savefig(self, prefix="diff", suffix=suffix, save=save, **kwargs)
         if interactive:
             plt.show()
         return LineCompareResult(

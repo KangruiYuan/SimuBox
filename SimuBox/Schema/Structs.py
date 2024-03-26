@@ -272,6 +272,7 @@ class IQResult(MixinBaseModel):
     area: float
     length: float
     IQ: float
+    vertices: Any
 
 
 class LandscapeResult(FigureAxesMixin):

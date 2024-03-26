@@ -29,9 +29,15 @@ def plot_trans(trans: Optional[dict] = None, **kwargs):
             plt.axvline(x=x, c=c, alpha=alpha, ls=ls, lw=lw)
 
 
-def plot_legend(legend: Optional[dict] = None, **kwargs):
-    if legend is None:
+def plot_legend(legend: Optional[Union[dict, bool]] = None, **kwargs):
+    if isinstance(legend, bool):
+        if legend:
+            legend = dict()
+        else:
+            return
+    elif legend is None:
         legend = dict()
+
     fontsize = legend.get("fontsize", 15)
     mode = legend.get("mode", "auto")
     if mode == "outside":
@@ -39,7 +45,8 @@ def plot_legend(legend: Optional[dict] = None, **kwargs):
         bbox_to_anchor = legend.get("bbox_to_anchor", (0.98, 0.8))
         plt.legend(fontsize=fontsize, loc=loc, bbox_to_anchor=bbox_to_anchor, frameon=False)
     elif mode == "auto":
-        plt.legend(fontsize=fontsize, loc="best", frameon=False)
+        loc = legend.get("loc", "best")
+        plt.legend(fontsize=fontsize, loc=loc, frameon=False)
     else:
         raise NotImplementedError("legend mode must be one of ['outside', 'auto']")
 
@@ -95,7 +102,7 @@ def plot_savefig(
     else:
         path = path.parent / ".".join((stem, kwargs.get("fig_format", "png")))
     print(f"Save to: {path}")
-    plt.savefig(path, dpi=dpi)
+    plt.savefig(path, dpi=dpi, bbox_inches='tight')
 
 
 def generate_colors(

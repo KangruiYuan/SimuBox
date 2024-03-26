@@ -310,7 +310,7 @@ class PhaseDiagram:
         ax.set_ylabel(self.labels[self.ylabel], fontdict={"size": 30})
         plt.tick_params(labelsize=20, pad=8)
         fig.tight_layout()
-        plot_savefig(self)
+        plot_savefig(obj=self, **kwargs)
         plt.show()
 
     @classmethod

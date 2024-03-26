@@ -1,4 +1,4 @@
-from typing import Union, Iterable, Optional, Tuple, Sequence, Literal
+from typing import Union, Iterable, Optional, Tuple, Sequence, Literal, List
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -7,7 +7,7 @@ import pyvista as pv
 from skimage.measure import marching_cubes
 
 from .plotter import plot_savefig
-from ..Schema import Density, Numeric, PathLike
+from ..Schema import Density, Numeric, PathLike, DensityParseResult
 from ..Toolkits import parse_density
 
 
@@ -92,41 +92,57 @@ def iso3D(
 
 
 def iso2D(
-    density: Density,
+    density: Union[Density, DensityParseResult],
     target: Optional[Union[int, Iterable[int]]] = 0,
     permute: Optional[Iterable[int]] = None,
     slices: Optional[tuple[int, int]] = None,
     titles: Optional[Sequence[str]] = None,
-    norm: Optional[Tuple[Numeric, Numeric]] = None,
+    norm: Union[Tuple[Numeric, Numeric], List[Tuple[Numeric, Numeric]]] = None,
     label: bool = True,
     colorbar: bool = False,
     interactive: bool = True,
     save: Union[PathLike, bool] = False,
+    fontsize: int = 25,
     **kwargs,
 ):
 
-    parsed = parse_density(density, target, permute, slices, **kwargs)
+    if not isinstance(density, DensityParseResult):
+        parsed = parse_density(density, target, permute, slices, **kwargs)
+    else:
+        parsed = density
     length = int(parsed.mat.shape[0])
 
     if titles is not None:
         assert len(titles) == length, "如果要指定titles，请与需要绘制的图幅相等"
 
-    fig, axes = plt.subplots(1, length, figsize=(4 * length, 3.5))
+    fig, axes = plt.subplots(1, length, figsize=kwargs.get("figsize", (4 * length, 3.5)))
     if length == 1:
         axes = [axes]
 
     asp = kwargs.get("asp", parsed.lxlylz[1] / parsed.lxlylz[0])
-    rotation = kwargs.get("rotation", 3)
+    rotation = kwargs.get("rotation", 1)
 
     if norm is not None:
-        normalizer = mpl.colors.Normalize(vmin=norm[0], vmax=norm[1])
-    else:
-        normalizer = lambda x: x
+        if isinstance(norm[0], (int, float)):
+            norms = length * [norm]
+        else:
+            norms = norm
 
     for i, (ax, phi) in enumerate(zip(axes, parsed.mat)):
         phi = np.rot90(phi, rotation)
+        if norm is not None:
+            normalizer = mpl.colors.Normalize(vmin=norms[i][0], vmax=norms[i][1])
+        else:
+            normalizer = lambda x: x
         phi = normalizer(phi)
-        im = ax.imshow(phi, cmap="jet", interpolation="spline36", aspect=asp)
+        im = ax.imshow(
+            phi,
+            cmap="jet",
+            interpolation="spline36",
+            aspect=asp,
+            # vmin=norms[i][0],
+            # vmax=norms[i][1],
+        )
         if titles is not None:
             ax.set_title(titles[i])
 
@@ -135,10 +151,15 @@ def iso2D(
         ax.yaxis.set_ticks([])  # type: ignore
         ax.xaxis.set_ticks([])
         if label:
-            ax.set_xlabel(r"{} $R_g$".format(round(parsed.lxlylz[0], 3)), fontsize=20)
-            ax.set_ylabel(r"{} $R_g$".format(round(parsed.lxlylz[1], 3)), fontsize=20)
+            ax.set_xlabel(
+                r"{} $R_g$".format(round(parsed.lxlylz[0], 3)), fontsize=fontsize
+            )
+            ax.set_ylabel(
+                r"{} $R_g$".format(round(parsed.lxlylz[1], 3)), fontsize=fontsize
+            )
         if colorbar:
-            plt.colorbar(im, ax=ax)
+            clb = plt.colorbar(im, ax=ax, fraction=kwargs.get('fraction', 0.05))
+            clb.ax.tick_params(labelsize=kwargs.get("clb_labelsize", fontsize-10))
 
     fig.tight_layout()
     plot_savefig(

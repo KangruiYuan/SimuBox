@@ -21,15 +21,15 @@ LAND_PLOT_CONFIG = {
     "axes.unicode_minus": False,
     "xtick.direction": "out",
     "ytick.direction": "out",
-    "xtick.major.width": 3,
-    "xtick.minor.width": 3,
+    "xtick.major.width": 2,
+    "xtick.minor.width": 2,
     "xtick.major.size": 10,
     "xtick.minor.size": 5,
-    "ytick.major.width": 3,
-    "ytick.minor.width": 3,
+    "ytick.major.width": 2,
+    "ytick.minor.width": 2,
     "ytick.major.size": 10,
     "ytick.minor.size": 5,
-    "axes.linewidth": 2,
+    "axes.linewidth": 2.5,
     "legend.frameon": False,
     "legend.fontsize": "small",
 }
@@ -53,28 +53,30 @@ class Landscaper:
         return 10 ** (-abs(xs[2]) - precision)
 
     @staticmethod
-    def levels_IQ(contour_set, levels: Sequence[float] = None, **kwargs):
+    def levels_IQ(contour_set, levels_for_IQ: Sequence[float] = None, **kwargs):
         # 获取等高面的信息
-        if levels is None:
-            levels = [0.001, 0.01]
+        if levels_for_IQ is None:
+            levels_for_IQ = [0.001, 0.01]
         IQs = []
         for i in range(len(contour_set.collections)):
             # for collection in contour_set.collections:
             level = contour_set.levels[i]
-            if level not in levels:
+            if level not in levels_for_IQ:
                 continue
             collection = contour_set.collections[i]
             contour_paths = collection.get_paths()
 
             for contour_path in contour_paths:
                 vertices = contour_path.vertices
+                if level in kwargs.get("split", []):
+                    vertices = vertices[vertices[:, 0] < vertices[:, 0].mean()]
                 polygon = Polygon(vertices)
                 area = polygon.area
                 length = polygon.length
                 IQ = 4 * area * np.pi / length**2
                 # centroid = polygon.centroid
                 print("level: ", level, "面积：", area, "周长：", length, "IQ: ", IQ)
-                IQs.append(IQResult(level=level, area=area, length=length, IQ=IQ))
+                IQs.append(IQResult(level=level, area=area, length=length, IQ=IQ, vertices=vertices))
         return IQs
 
     def prospect(
@@ -141,13 +143,28 @@ class Landscaper:
         cmap_kind = kwargs.get("cmap", "viridis")
         cmap = plt.colormaps.get_cmap(cmap_kind)
         colors = [cmap(i / len(levels)) for i in range(len(levels))]
+
+        mask = np.zeros_like(target_mat, dtype=bool)
+        rows, cols = target_mat.shape
+        mask_range = kwargs.get("mask_range", ("square", (0,0,0,0)))
+        if mask_range[0] == "square":
+            mask[
+                int(mask_range[1][0] * cols):int(mask_range[1][1] * cols),
+                int(mask_range[1][2] * rows):int(mask_range[1][3] * rows)
+            ] = True
+        elif mask_range[0] == "triangle":
+            pass
+        masked_target_mat = np.ma.masked_array(target_mat, mask)
+
+
+
         contourf_fig = plt.contourf(
-            y_ticks, x_ticks, target_mat, levels=levels, colors=colors
+            y_ticks, x_ticks, masked_target_mat, levels=levels, colors=colors
         )
         contour_fig = plt.contour(contourf_fig, colors="w", linewidths=2.5)
 
         if IQ:
-            IQs = self.levels_IQ(contour_fig, levels=kwargs.get("levels_for_IQ"))
+            IQs = self.levels_IQ(contour_fig, **kwargs)
         else:
             IQs = []
 
@@ -191,6 +208,7 @@ class Landscaper:
             )
 
         colorbar_fontsize = kwargs.get("colorbar_fontsize", 15)
+        colorbar_titlesize = kwargs.get("colorbar_titlesize", 15)
         colorbar_accuracy = kwargs.get("colorbar_accuracy", 8)
         colorbar_pad = kwargs.get("colorbar_pad", 0.1)
         shrink = kwargs.get("shrink", 1.0)
@@ -199,13 +217,14 @@ class Landscaper:
             np.around(ticks, colorbar_accuracy), fontsize=colorbar_fontsize
         )
         # clb.set_ylabel(r'$\Delta F/k_{\rm{B}}T$', fontsize=20)
-        if colorbar_title := kwargs.get("colorbar_title", r"$\Delta F/nk_{\rm B}T$"):
-            clb.ax.set_title(colorbar_title, fontsize=colorbar_fontsize, pad=18)
+        if colorbar_title := kwargs.get("colorbar_title", r"$\Delta F/nk_B T$"):
+            clb.ax.set_title(colorbar_title, fontsize=colorbar_titlesize, pad=18)
         clb.ax.tick_params(which="major")
 
         label_fontsize = kwargs.get("label_fontsize", 20)
         plt.xlabel(self.labels.get(x_axis, x_axis), fontsize=label_fontsize)
         plt.ylabel(self.labels.get(y_axis, y_axis), fontsize=label_fontsize)
+        plt.tick_params(axis="both", labelsize=kwargs.get("ticksize", label_fontsize), pad=8)
 
         if aspect == "auto":
             ax.set_aspect(1.0 / ax.get_data_ratio())
@@ -226,7 +245,7 @@ class Landscaper:
         if ylim := kwargs.get("ylim"):
             plt.ylim(ylim)
 
-        plt.tight_layout()
+        plt.tight_layout(pad=kwargs.get("pad", 1.08))
         plot_savefig(self, save=save, **kwargs)
         if interactive:
             plt.show()

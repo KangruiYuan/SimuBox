@@ -100,7 +100,7 @@ def read_density(
     default_name: Optional[str] = "phout.txt",
     mode: str = "r",
     **kwargs,
-):
+) -> Density:
     cont, path = read_file(path, default_name=default_name, mode=mode, **kwargs)
 
     path = path if isinstance(path, PathLike) else None
@@ -202,6 +202,8 @@ def read_csv(
         data = pd.read_csv(path, skiprows=skiprows)
     else:
         data = path.copy()
+    if "freeE" in data.columns:
+        data["freeE"] = np.around(data["freeE"], 8)
     if subset:
         data = data.drop_duplicates(subset=subset)
 
@@ -284,7 +286,7 @@ def periodic_extension(arr: np.ndarray, periods: Sequence[int]):
 
 def parse_density(
     density: Density,
-    target: Union[int, Iterable[int]] = 0,
+    target: Union[int, Iterable[int], str] = 0,
     permute: Optional[Iterable[int]] = None,
     slices: Optional[tuple[int, int]] = None,
     expand: Union[Numeric, Sequence[Numeric]] = 1,
@@ -310,7 +312,10 @@ def parse_density(
         f_mat = lambda x: x
         f_vec = lambda x: x
 
-    target = [target] if isinstance(target, int) else target
+    if target == "all":
+        target = list(density.data.columns)
+    elif isinstance(target, int):
+        target = [target]
     mats = [f_mat(density.data[t].values.reshape(shape)) for t in target]
     shape = f_vec(shape)
     lxlylz = f_vec(lxlylz)
