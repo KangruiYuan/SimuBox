@@ -8,7 +8,7 @@
 
 ## 框架 Framework
 
-![Framework](https://github.com/KangruiYuan/SimuBox/blob/main/Docs/Figures/summary.png)
+![Framework](https://github.com/KangruiYuan/SimuBox/blob/main/docs/figures/summary.png)
 
 
 ## 安装引导 Installation 
@@ -45,26 +45,3 @@
 
 该仓库功能相对驳杂，由于迭代问题，编写风格仍有待提高。
 任何问题请发布在`issue`或者通过邮件`E-mail：kryuan@qq.com`联系本人。
-
-
-## 引用 Citing
-
-感谢复旦大学李卫华教授课题组。
-
-```bibtex
-@article{SimuBox,
-   author = {Yuan, K. and Xu, Z. and Li, W. and Huang, X.},
-   title = {Reexamine the emergence and stability of the square cylinder phase in block copolymers},
-   journal = {Chem. Eur. J.},
-   volume = {10.1002/chem.202301043},
-   pages = {e202301043},
-   keywords = {block copolymer, self-assembly, self-consistent field theory, square cylinder
-phase},
-   ISSN = {1521-3765 (Electronic)
-0947-6539 (Linking)},
-   DOI = {10.1002/chem.202301043},
-   url = {https://www.ncbi.nlm.nih.gov/pubmed/37199182},
-   year = {2023},
-   type = {Journal Article}
-}
-```
