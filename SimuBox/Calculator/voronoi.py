@@ -13,8 +13,8 @@ from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor
 
 from ..Artist import generate_colors
-from ..Schema import (
-    density,
+from ..schema import (
+    Density,
     OpenCVResult,
     AnalyzeMode,
     ColorMode,
@@ -22,14 +22,14 @@ from ..Schema import (
     VoronoiAnalyzeResult,
     PathLike,
 )
-from ..Toolkits import parse_density
+from ..toolkits import parse_density
 from ..Artist import plot_savefig
 
 
 class VoronoiCell:
     @staticmethod
     def OpenCV(
-        density: density,
+        density: Density,
         expand: Union[int, Sequence[int]] = 3,
         **kwargs,
     ):
@@ -77,7 +77,7 @@ class VoronoiCell:
         )
 
     @classmethod
-    def Analyze(cls, density: density, mode: AnalyzeMode, **kwargs):
+    def Analyze(cls, density: Density, mode: AnalyzeMode, **kwargs):
 
         cv_res = cls.OpenCV(density, **kwargs)
         if "expand" in kwargs:

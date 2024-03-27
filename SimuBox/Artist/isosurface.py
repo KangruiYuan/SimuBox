@@ -7,12 +7,12 @@ import pyvista as pv
 from skimage.measure import marching_cubes
 
 from .plotter import plot_savefig
-from ..Schema import density, Numeric, PathLike, DensityParseResult
-from ..Toolkits import parse_density
+from ..schema import Density, Numeric, PathLike, DensityParseResult
+from ..toolkits import parse_density
 
 
 def iso3D(
-    density: density,
+    density: Density,
     target: Optional[Union[int, Iterable[int]]] = 0,
     permute: Optional[Iterable[int]] = None,
     level: Union[float, Iterable[float]] = 0.5,
@@ -92,7 +92,7 @@ def iso3D(
 
 
 def iso2D(
-    density: Union[density, DensityParseResult],
+    density: Union[Density, DensityParseResult],
     target: Optional[Union[int, Iterable[int]]] = 0,
     permute: Optional[Iterable[int]] = None,
     slices: Optional[tuple[int, int]] = None,

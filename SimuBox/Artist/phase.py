@@ -9,8 +9,8 @@ from numpy.polynomial import Chebyshev
 from scipy.io import loadmat
 
 from .plotter import plot_locators, plot_savefig, generate_colors
-from ..Schema import DetectionMode, CompareResult, PhasePointData, CommonLabels, PathLike
-from ..Toolkits import read_csv
+from ..schema import DetectionMode, PhaseCompareResult, Point, CommonLabels, PathLike
+from ..toolkits import read_csv
 
 PHASE_PLOT_CONFIG = {
     "font.family": "Times New Roman",
@@ -102,7 +102,7 @@ class PhaseDiagram:
         df = read_csv(path=path, acc=acc, **kwargs)
         print(f"Include phase: {set(df['phase'].values)}")
 
-        plot_dict = dict()
+        phase_map = dict()
         xlabel = xlabel if xlabel is not None else self.xlabel
         ylabel = ylabel if ylabel is not None else self.ylabel
         y_set = np.sort(df[ylabel].unique())
@@ -110,7 +110,7 @@ class PhaseDiagram:
 
         exclude = kwargs.get("exclude", [])
 
-        mat = np.zeros((len(y_set), len(x_set)), dtype=PhasePointData)
+        mat = np.zeros((len(y_set), len(x_set)), dtype=Point)
         for i, y in enumerate(y_set):
             for j, x in enumerate(x_set):
                 phase = "unknown"
@@ -161,15 +161,15 @@ class PhaseDiagram:
                             phase = min_label[0]
                     else:
                         phase = "_".join([phase, min_label[0]])
-                mat[i][j] = PhasePointData(phase=phase, x=x, y=y, value=freeE)
-                if phase in plot_dict:
+                mat[i][j] = Point(phase=phase, x=x, y=y, value=freeE)
+                if phase in phase_map:
                     for attr, val in zip(
                         [xlabel, ylabel, "freeE", "lylz", "lxly"],
                         [x, y, freeE, lylz, lxly],
                     ):
-                        plot_dict[phase][attr].append(val)
+                        phase_map[phase][attr].append(val)
                 else:
-                    plot_dict[phase] = {
+                    phase_map[phase] = {
                         xlabel: [x],
                         ylabel: [y],
                         "freeE": [freeE],
@@ -177,11 +177,11 @@ class PhaseDiagram:
                         "lxly": [lxly],
                     }
 
-        comp_res = CompareResult(df=df, plot_dict=plot_dict, mat=mat)
+        comp_res = PhaseCompareResult(data=df, phase_map=phase_map, mat=mat)
 
         if plot:
             fig, ax = plt.subplots(1, 1, figsize=(8, 6))
-            for key, value in plot_dict.items():
+            for key, value in phase_map.items():
                 if key not in self.colors:
                     self.colors[key] = generate_colors(mode="HEX")[0]
                 ax.scatter(
@@ -216,12 +216,12 @@ class PhaseDiagram:
         return D1 / D, D2 / D
 
     @staticmethod
-    def de_unknown(comp_res: CompareResult):
+    def de_unknown(comp_res: PhaseCompareResult):
         mat = comp_res.mat
         for i in range(mat.shape[0]):
             for j in range(mat.shape[1]):
                 try:
-                    mat[i][j].phase = mat[i][j].phase.lstrip("unknown_")
+                    mat[i][j].label = mat[i][j].label.lstrip("unknown_")
                 except AttributeError:
                     continue
         comp_res.mat = mat
@@ -316,28 +316,28 @@ class PhaseDiagram:
     @classmethod
     def check_phase(
         cls,
-        point: PhasePointData,
-        point_other: Optional[PhasePointData] = None,
+        point: Point,
+        point_other: Optional[Point] = None,
         ignore: Optional[Union[str, list[str]]] = None,
     ):
         if ignore is None:
             ignore = []
         if point_other is None:
             return (
-                not isinstance(point, PhasePointData)
-                or "unknown" in point.phase
-                or point.phase in ignore
+                    not isinstance(point, Point)
+                    or "unknown" in point.label
+                    or point.label in ignore
             )
         else:
             return (
-                cls.check_phase(point=point, ignore=ignore)
-                or cls.check_phase(point=point_other, ignore=ignore)
-                or point.phase == point_other.phase
+                    cls.check_phase(point=point, ignore=ignore)
+                    or cls.check_phase(point=point_other, ignore=ignore)
+                    or point.label == point_other.label
             )
 
     def boundary_detect(
         self,
-        comp_res: CompareResult,
+        comp_res: PhaseCompareResult,
         mode: DetectionMode = DetectionMode.BOTH,
         ignore: Optional[Union[str, list[str]]] = None,
         **kwargs,
@@ -346,27 +346,27 @@ class PhaseDiagram:
             ignore = [ignore]
         xys = []
         mat = comp_res.mat.copy()
-        df = comp_res.df.copy()
+        df = comp_res.data.copy()
         if mode == DetectionMode.BOTH or mode == DetectionMode.HORIZONTAL:
             for idx in range(mat.shape[0]):
                 line = mat[idx]
                 line = line[line != 0]
                 for ele_idx in range(len(line) - 1):
-                    ele_left_1: PhasePointData = line[ele_idx]
-                    ele_right_1: PhasePointData = line[ele_idx + 1]
+                    ele_left_1: Point = line[ele_idx]
+                    ele_right_1: Point = line[ele_idx + 1]
                     if self.check_phase(ele_left_1, ele_right_1, ignore):
                         continue
                     ele_left_2: pd.DataFrame = self.query_point(
                         data=df,
                         xval=ele_left_1.x,
                         yval=ele_left_1.y,
-                        phase=ele_right_1.phase,
+                        phase=ele_right_1.label,
                     )
                     ele_right_2: pd.DataFrame = self.query_point(
                         data=df,
                         xval=ele_right_1.x,
                         yval=ele_right_1.y,
-                        phase=ele_left_1.phase,
+                        phase=ele_left_1.label,
                     )
 
                     if len(ele_left_2) != 1 or len(ele_right_2) != 1:
@@ -388,8 +388,8 @@ class PhaseDiagram:
                 line = mat[:, idx]
                 line = line[line != 0]
                 for ele_idx in range(len(line) - 1):
-                    ele_left_1: PhasePointData = line[ele_idx]
-                    ele_right_1: PhasePointData = line[ele_idx + 1]
+                    ele_left_1: Point = line[ele_idx]
+                    ele_right_1: Point = line[ele_idx + 1]
                     if self.check_phase(ele_left_1, ele_right_1, ignore):
                         continue
 
@@ -397,13 +397,13 @@ class PhaseDiagram:
                         data=df,
                         xval=ele_left_1.x,
                         yval=ele_left_1.y,
-                        phase=ele_right_1.phase,
+                        phase=ele_right_1.label,
                     )
                     ele_right_2: pd.DataFrame = self.query_point(
                         data=df,
                         xval=ele_right_1.x,
                         yval=ele_right_1.y,
-                        phase=ele_left_1.phase,
+                        phase=ele_left_1.label,
                     )
 
                     if len(ele_left_2) != 1 or len(ele_right_2) != 1:
@@ -495,8 +495,8 @@ class PhaseDiagram:
             col = mat[:, col_idx] if axis == 1 else mat[col_idx, :]
             col = col[col != 0]
             for ele_idx in range(len(col) - 1):
-                ele_1: PhasePointData = col[ele_idx]
-                ele_2: PhasePointData = col[ele_idx + 1]
+                ele_1: Point = col[ele_idx]
+                ele_2: Point = col[ele_idx + 1]
                 if self.check_phase(ele_1, ele_2, ignore):
                     continue
 

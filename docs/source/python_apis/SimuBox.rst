@@ -10,9 +10,8 @@ Subpackages
    SimuBox.Artist
    SimuBox.Calculator
    SimuBox.SCFTRunner
-   SimuBox.Schema
-   SimuBox.Toolkits
-   SimuBox.Web
+   SimuBox.schema
+   SimuBox.toolkits
 
 Submodules
 ----------

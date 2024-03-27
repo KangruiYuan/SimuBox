@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SimuBox.Toolkits.vector module &mdash; SimuBox  文档</title>
+  <title>SimuBox.toolkits.Vector module &mdash; SimuBox  文档</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
 
@@ -20,8 +20,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="索引" href="../genindex.html" />
     <link rel="search" title="搜索" href="../search.html" />
-    <link rel="next" title="SimuBox.Toolkits.xmltrans module" href="SimuBox.Toolkits.xmltrans.html" />
-    <link rel="prev" title="SimuBox.Toolkits.reader module" href="SimuBox.Toolkits.reader.html" /> 
+    <link rel="next" title="SimuBox.toolkits.WebUnit module" href="SimuBox.toolkits.WebUnit.html" />
+    <link rel="prev" title="SimuBox.toolkits package" href="SimuBox.toolkits.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -56,9 +56,8 @@
 <li class="toctree-l4"><a class="reference internal" href="SimuBox.Artist.html">SimuBox.Artist package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="SimuBox.Calculator.html">SimuBox.Calculator package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="SimuBox.SCFTRunner.html">SimuBox.SCFTRunner package</a></li>
-<li class="toctree-l4"><a class="reference internal" href="SimuBox.Schema.html">SimuBox.Schema package</a></li>
-<li class="toctree-l4 current"><a class="reference internal" href="SimuBox.Toolkits.html">SimuBox.Toolkits package</a></li>
-<li class="toctree-l4"><a class="reference internal" href="SimuBox.Web.html">SimuBox.Web package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="SimuBox.schema.html">SimuBox.schema package</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="SimuBox.toolkits.html">SimuBox.toolkits package</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="SimuBox.html#submodules">Submodules</a></li>
@@ -85,10 +84,10 @@
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="modules.html">SimuBox</a></li>
           <li class="breadcrumb-item"><a href="SimuBox.html">SimuBox package</a></li>
-          <li class="breadcrumb-item"><a href="SimuBox.Toolkits.html">SimuBox.Toolkits package</a></li>
-      <li class="breadcrumb-item active">SimuBox.Toolkits.vector module</li>
+          <li class="breadcrumb-item"><a href="SimuBox.toolkits.html">SimuBox.toolkits package</a></li>
+      <li class="breadcrumb-item active">SimuBox.toolkits.Vector module</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../_sources/python_apis/SimuBox.Toolkits.vector.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/python_apis/SimuBox.toolkits.Vector.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -96,22 +95,22 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-SimuBox.Toolkits.vector">
-<span id="simubox-toolkits-vector-module"></span><h1>SimuBox.Toolkits.vector module<a class="headerlink" href="#module-SimuBox.Toolkits.vector" title="Link to this heading">¶</a></h1>
+  <section id="module-SimuBox.toolkits.Vector">
+<span id="simubox-toolkits-vector-module"></span><h1>SimuBox.toolkits.Vector module<a class="headerlink" href="#module-SimuBox.toolkits.Vector" title="Link to this heading">¶</a></h1>
 <dl class="py function">
-<dt class="sig sig-object py" id="SimuBox.Toolkits.vector.vectorize">
-<span class="sig-prename descclassname"><span class="pre">SimuBox.Toolkits.vector.</span></span><span class="sig-name descname"><span class="pre">vectorize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fill_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SimuBox.Toolkits.vector.vectorize" title="Link to this definition">¶</a></dt>
-<dd><p>对任意值进行向量化，进一步可以进行截取和填充。</p>
+<dt class="sig sig-object py" id="SimuBox.toolkits.Vector.vectorize">
+<span class="sig-prename descclassname"><span class="pre">SimuBox.toolkits.Vector.</span></span><span class="sig-name descname"><span class="pre">vectorize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fill_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SimuBox.toolkits.Vector.vectorize" title="Link to this definition">¶</a></dt>
+<dd><p>对任意值进行向量化，进一步可以进行截取和填充</p>
 <dl class="field-list simple">
 <dt class="field-odd">参数<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>value</strong> – 需要进行向量化的任意值，可以是标量，也可以是向量。</p></li>
-<li><p><strong>length</strong> – 最终向量的长度，原长度过长会被截取，否则会被扩充。</p></li>
-<li><p><strong>fill_value</strong> – 扩充时的填充值，默认为向量的最后一个值。</p></li>
+<li><p><strong>value</strong> – 需要进行向量化的任意值，可以是标量，也可以是向量</p></li>
+<li><p><strong>length</strong> – 最终向量的长度，原长度过长会被截取，否则会被扩充</p></li>
+<li><p><strong>fill_value</strong> – 扩充时的填充值，默认为向量的最后一个值</p></li>
 </ul>
 </dd>
 <dt class="field-even">返回<span class="colon">:</span></dt>
-<dd class="field-even"><p></p>
+<dd class="field-even"><p>向量</p>
 </dd>
 </dl>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">vectorize</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
@@ -133,8 +132,8 @@
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="SimuBox.Toolkits.vector.verify_scalar">
-<span class="sig-prename descclassname"><span class="pre">SimuBox.Toolkits.vector.</span></span><span class="sig-name descname"><span class="pre">verify_scalar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SimuBox.Toolkits.vector.verify_scalar" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="SimuBox.toolkits.Vector.verify_scalar">
+<span class="sig-prename descclassname"><span class="pre">SimuBox.toolkits.Vector.</span></span><span class="sig-name descname"><span class="pre">verify_scalar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SimuBox.toolkits.Vector.verify_scalar" title="Link to this definition">¶</a></dt>
 <dd><p>对参数值进行检验，如果是标量，返回True；如果是向量，返回False</p>
 <dl class="field-list simple">
 <dt class="field-odd">参数<span class="colon">:</span></dt>
@@ -164,8 +163,8 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="SimuBox.Toolkits.reader.html" class="btn btn-neutral float-left" title="SimuBox.Toolkits.reader module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="SimuBox.Toolkits.xmltrans.html" class="btn btn-neutral float-right" title="SimuBox.Toolkits.xmltrans module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="SimuBox.toolkits.html" class="btn btn-neutral float-left" title="SimuBox.toolkits package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="SimuBox.toolkits.WebUnit.html" class="btn btn-neutral float-right" title="SimuBox.toolkits.WebUnit module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

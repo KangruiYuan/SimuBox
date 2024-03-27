@@ -3,7 +3,7 @@ from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 from typing import Iterable, Union, Callable, Sequence
-from ..Schema import Numeric, PeakData, PeakFitResult
+from ..schema import Numeric, Peak, PeakFitResult
 from ..Artist import plot_legend, plot_savefig, plot_locators
 from sklearn.metrics import r2_score
 
@@ -69,7 +69,7 @@ def curve_split(x: Union[Iterable, Numeric], *params):
 def peak_fit(
     x: np.ndarray,
     y: np.ndarray,
-    peaks: Sequence[PeakData],
+    peaks: Sequence[Peak],
     func: Callable = curve_function,
     fix_background: bool = False,
     xlabel: str = r"Wavenumbers/${\rm cm}^{-1}$",
@@ -152,7 +152,7 @@ def peak_fit(
     res_peaks = []
     for i_r, i_p in enumerate(range(0, len(popt) - 1, 3)):
         res_peaks.append(
-            PeakData(
+            Peak(
                 amplitude=popt[i_p],
                 center=popt[i_p + 1],
                 width=popt[i_p + 2],

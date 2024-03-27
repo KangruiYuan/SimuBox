@@ -7,8 +7,8 @@ import scipy.signal as sg
 
 from .peak import gaussian_expansion
 from ..Artist import plot_locators, plot_savefig
-from ..Schema import ScatterResult, ScatterPlot, density, PathLike
-from ..Toolkits import parse_density
+from ..schema import ScatterResult, ScatterPlot, Density, PathLike
+from ..toolkits import parse_density
 
 SCATTER_PLOT_CONFIG = {
     "font.family": "Times New Roman",
@@ -67,7 +67,7 @@ class Scatter:
     @classmethod
     def sacttering_peak(
         cls,
-        density: density,
+        density: Density,
         # mat: np.ndarray,
         # NxNyNz: Union[np.ndarray, Sequence],
         # lxlylz: Union[np.ndarray, Sequence],

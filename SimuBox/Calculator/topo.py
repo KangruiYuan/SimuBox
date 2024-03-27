@@ -12,7 +12,7 @@ import sympy as sym
 from sympy import Symbol
 
 from ..Artist import plot_locators, plot_legend, plot_savefig
-from ..Schema import ODTResult, TopoPlot
+from ..schema import ODTResult, TopoPlot
 
 __all__ = ["TopoCreater", "fA", "fB", "fC", "x", "Joint"]
 

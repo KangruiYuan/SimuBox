@@ -5,7 +5,7 @@ from typing import Optional
 
 import numpy as np
 from matplotlib.ticker import AutoMinorLocator, MultipleLocator
-from ..Schema import PathLike, ColorMode
+from ..schema import PathLike, ColorMode
 from typing import Union
 
 

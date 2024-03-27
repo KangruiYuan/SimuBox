@@ -9,8 +9,8 @@ from cycler import cycler
 
 from collections import ChainMap
 
-from ..Toolkits import read_csv
-from ..Schema import AbsCommonLabels, DiffCommonLabels, LineCompareResult, LineData, PathLike
+from ..toolkits import read_csv
+from ..schema import AbsCommonLabels, DiffCommonLabels, LineCompareResult, Line, PathLike
 from .plotter import plot_trans, plot_legend, plot_locators, plot_savefig
 
 COMPARE_PLOT_CONFIG = {
@@ -148,7 +148,7 @@ class CompareJudger:
                 alpha=1.0,
             )
             lines.append(
-                LineData(x=o_xticks, y=o_yticks, label=self.diff_labels.get(o, o))
+                Line(x=o_xticks, y=o_yticks, label=self.diff_labels.get(o, o))
             )
 
         if horiline:
@@ -177,7 +177,7 @@ class CompareJudger:
                 alpha=0.8,
             )
             lines.append(
-                LineData(
+                Line(
                     x=horiline_xticks,
                     y=horiline_yticks,
                     label=self.diff_labels.get(base, base),
@@ -253,7 +253,7 @@ class CompareJudger:
                 lw=2.5,
                 markersize=8,
             )
-            lines.append(LineData(x=x, y=y, label=self.abs_labels.get(p, p)))
+            lines.append(Line(x=x, y=y, label=self.abs_labels.get(p, p)))
 
         plt.xlabel(self.abs_labels.get(xlabel, xlabel), fontsize=30)
         plt.ylabel(self.abs_labels.get(ylabel, ylabel), fontsize=30)
@@ -326,7 +326,7 @@ class CompareJudger:
                 alpha=1.0,
             )
             lines.append(
-                LineData(x=o_xticks, y=o_yticks, label=self.diff_labels.get(yl, yl))
+                Line(x=o_xticks, y=o_yticks, label=self.diff_labels.get(yl, yl))
             )
 
         plot_trans(**kwargs)

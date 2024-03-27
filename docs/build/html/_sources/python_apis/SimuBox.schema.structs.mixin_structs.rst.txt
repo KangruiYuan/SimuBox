@@ -1,0 +1,7 @@
+SimuBox.schema.structs.mixin\_structs module
+============================================
+
+.. automodule:: SimuBox.schema.structs.mixin_structs
+   :members:
+   :undoc-members:
+   :show-inheritance:

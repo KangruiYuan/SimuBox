@@ -6,7 +6,7 @@ os.environ["NUMEXPR_MAX_THREADS"] = "16"
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="启动SimuBox的网页端服务")
-    parser.add_argument("-a", "--app", type=str, default="主页.py", help="主页面文件")
+    parser.add_argument("-a", "--app", type=str, default="Homepage.py", help="主页面文件")
     parser.add_argument("-p", "--port", type=int, default=9998)
     parser.add_argument(
         "-l",

@@ -10,8 +10,8 @@ from scipy.interpolate import griddata
 from shapely.geometry import Polygon
 
 from .plotter import plot_locators, plot_savefig
-from ..Schema import LandscapeResult, PathLike, CommonLabels, Numeric, Vector, IQResult
-from ..Toolkits import read_csv, find_nearest_1d
+from ..schema import LandscapeResult, PathLike, CommonLabels, Numeric, Vector, Contour
+from ..toolkits import read_csv, find_nearest_1d
 
 LAND_PLOT_CONFIG = {
     "font.family": "Times New Roman",
@@ -76,7 +76,7 @@ class Landscaper:
                 IQ = 4 * area * np.pi / length**2
                 # centroid = polygon.centroid
                 print("level: ", level, "面积：", area, "周长：", length, "IQ: ", IQ)
-                IQs.append(IQResult(level=level, area=area, length=length, IQ=IQ, vertices=vertices))
+                IQs.append(Contour(level=level, area=area, length=length, IQ=IQ, vertices=vertices))
         return IQs
 
     def prospect(
@@ -135,7 +135,6 @@ class Landscaper:
         else:
             assert tick_num is not None
             levels = np.linspace(np.min(target_mat), np.max(target_mat), tick_num)
-        ticks = levels
 
         fig = plt.figure(figsize=kwargs.get("figsize", (8, 6)))
         ax = plt.gca()
@@ -193,7 +192,7 @@ class Landscaper:
             plt.clabel(
                 contour_fig,
                 fontsize=clabel_fontsize,
-                colors=["w"] * (len(ticks) - inverse_color) + ["k"] * inverse_color,
+                colors=["w"] * (len(levels) - inverse_color) + ["k"] * inverse_color,
                 fmt="%g",
                 manual=manual,
                 zorder=7,
@@ -202,7 +201,7 @@ class Landscaper:
             plt.clabel(
                 contour_fig,
                 fontsize=clabel_fontsize,
-                colors=["w"] * (len(ticks) - inverse_color) + ["k"] * inverse_color,
+                colors=["w"] * (len(levels) - inverse_color) + ["k"] * inverse_color,
                 fmt="%g",
                 zorder=7,
             )
@@ -212,9 +211,9 @@ class Landscaper:
         colorbar_accuracy = kwargs.get("colorbar_accuracy", 8)
         colorbar_pad = kwargs.get("colorbar_pad", 0.1)
         shrink = kwargs.get("shrink", 1.0)
-        clb = plt.colorbar(contourf_fig, ticks=ticks, shrink=shrink, pad=colorbar_pad)
+        clb = plt.colorbar(contourf_fig, ticks=levels, shrink=shrink, pad=colorbar_pad)
         clb.set_ticklabels(
-            np.around(ticks, colorbar_accuracy), fontsize=colorbar_fontsize
+            np.around(levels, colorbar_accuracy), fontsize=colorbar_fontsize
         )
         # clb.set_ylabel(r'$\Delta F/k_{\rm{B}}T$', fontsize=20)
         if colorbar_title := kwargs.get("colorbar_title", r"$\Delta F/nk_B T$"):
@@ -255,7 +254,6 @@ class Landscaper:
             x_ticks=x_ticks,
             y_ticks=y_ticks,
             levels=levels,
-            ticks=ticks,
             fig=fig,
             ax=ax,
             contourf_fig=contourf_fig,

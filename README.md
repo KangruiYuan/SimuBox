@@ -10,38 +10,12 @@
 
 ![Framework](https://github.com/KangruiYuan/SimuBox/blob/main/docs/figures/summary.png)
 
+## 使用文档 Docs
 
-## 安装引导 Installation 
-
-1. From Github
-
-`git clone https://github.com/KangruiYuan/SimuBox.git`
-
-2. From PyPI
-
-相应版本一般落后于`Github`仓库
-
-`pip install SimuBox`
-
-> TIPS: 安装后配置环境推荐使用poetry，依次执行以下python指令
-> 
-> `pip install poetry`
-> 
-> `poetry install`
-
-## 使用示例 Demos
-
-示例请见[`/Demos/Scripts.ipynb`](https://github.com/KangruiYuan/SimuBox/blob/main/Demos/Scripts.ipynb)
-
-对于部分功能，进行了网页端可视化，在成功安装之后，可以通过以下指令启动网页服务：
-
-`python -m SimuBox.run`
-
-对于更为全面的功能使用，仍需通过代码实现。
+[请访问项目文档。](https://kangruiyuan.github.io/SimuBox/)
 
 ## 联系方式 Contact
 
 > 生活的全部意义在于无穷地探索尚未知道的东西，在于不断地增加更多的知识。 —— 左拉 《萌芽》
 
-该仓库功能相对驳杂，由于迭代问题，编写风格仍有待提高。
 任何问题请发布在`issue`或者通过邮件`E-mail：kryuan@qq.com`联系本人。
