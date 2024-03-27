@@ -6,6 +6,7 @@ from typing import Optional, Union
 from pathlib import Path
 import numpy as np
 
+__all__ = ["printout", "fet", "density"]
 
 class printout(MixinBaseModel):
     """
@@ -65,8 +66,7 @@ class fet(MixinBaseModel):
 
 class density(MixinBaseModel):
     """
-    密度类文件的解析结果。
-    密度类文件包括：phout/phin/block/joint/component。
+    密度类文件的解析结果。密度类文件包括：phout/phin/block/joint/component。
     """
 
     path: Optional[Path] = None
@@ -78,6 +78,7 @@ class density(MixinBaseModel):
     def repair_from_printout(self, printout: printout):
         """
         基于printout文件对密度进行修复。
+
         :param printout: printout文件的解析结果。
         :return: None
         """
@@ -91,6 +92,7 @@ class density(MixinBaseModel):
     def repair_from_fet(self, fet: fet):
         """
         基于fet文件对密度进行修复。
+
         :param fet: fet文件的解析结果。
         :return:
         """
@@ -110,6 +112,7 @@ class density(MixinBaseModel):
     ):
         """
         对密度数据进行修复（当前仅针对block.txt文件）
+
         :param inputs: 每个嵌段的体积分数，该输入可以是input.json文件、嵌段体积分数的向量以及'auto'，'auto'代表通过线性方程求解来自动修复密度。
         :param species: 每种分子链的体积分数，字典形式（键为json文件中的SpecyID， 值为VolumeFraction）。
         :param constraint: 对于自动求解的模式，可以增加额外的限制变量。

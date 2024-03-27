@@ -12,7 +12,7 @@ import os
 from ..Schema import (
     printout,
     density,
-    Fet,
+    fet,
     DensityParseResult,
     Numeric,
     FileLike,
@@ -252,7 +252,7 @@ def read_fet(
     res = dict()
     for key, val in cont:
         res[key] = float(val)
-    return Fet(path=path, **res)
+    return fet(path=path, **res)
 
 
 def periodic_extension(arr: np.ndarray, periods: Sequence[int]):

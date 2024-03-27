@@ -8,9 +8,7 @@ from matplotlib.figure import Figure
 from pydantic import BaseModel
 from scipy.spatial import Voronoi
 
-from .Enums import Operator
-from .Types import Vector
-
+from ..Enums import Operator
 
 class MixinBaseModel(BaseModel):
     class Config:
