@@ -15,5 +15,5 @@ SimuBox/SimuBox.egg-info/
 SimuBox.egg-info/
 
 # possible cache directory
-/SimuBox/Web/cache/
-/SimuBox/SCFTRunner/Scripts/param_list.txt
+/SimuBox/web/cache/
+/SimuBox/runner/Scripts/param_list.txt

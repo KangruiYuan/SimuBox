@@ -1,13 +1,33 @@
 import re
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
 import numpy as np
 import pandas as pd
 
 from ..schema import Numeric, Vector, PathLike, Operation, OPERATOR_FUNCTION_MAP
 
+def arange(
+    start: Union[int, float], end: Union[int, float], step: Union[int, float], accuracy: int = 6
+):
+    if start > end:
+        start, end = end, start
+    gap = end - start
+    num = gap // abs(step) + 1
+    asc = np.arange(num) * abs(step)
+
+    res = np.around(asc + start, accuracy)
+    if end not in res:
+        res = np.append(res, end)
+    return np.sort(res)
+
 def find_nearest_1d(array: Vector, value: Numeric) -> Numeric:
+    """
+
+    :param array:
+    :param value:
+    :return:
+    """
     if not isinstance(array, np.ndarray):
         array = np.asarray(array)
     idx = (np.abs(array - value)).argmin()
@@ -56,6 +76,4 @@ def process_dataframe(data: pd.DataFrame, operation: Operation, accuracy:int = 3
         return data
     else:
         raise KeyError(f"left: {operation.left}不是有效数据列")
-
-
 

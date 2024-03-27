@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 from typing import Iterable, Union, Callable, Sequence
 from ..schema import Numeric, Peak, PeakFitResult
-from ..Artist import plot_legend, plot_savefig, plot_locators
+from ..artist import plot_legend, plot_savefig, plot_locators
 from sklearn.metrics import r2_score
 
 
@@ -26,34 +26,6 @@ def curve_function(x: Union[Iterable, Numeric], *params):
         res += gaussian_expansion(x, params[i], params[i + 1], params[i + 2])
 
     return res + params[-1]
-
-
-def fix_param(params: np.ndarray, fix: Sequence):
-    assert len(params) % 3 == 1
-    fixed = []
-    for i in range(0, len(params) - 1, 3):
-        for idj, j in enumerate(fix[:-1]):
-            idi = i + idj
-            if j:
-                fixed.append(params[idi])
-            else:
-                fixed.append(-1)
-    if fix[-1]:
-        fixed.append(params[-1])
-    else:
-        fixed.append(-1)
-    fixed = np.array(fixed)
-
-    def curve(x: Union[Iterable, Numeric], *args):
-        args = np.array(args)
-        args[fixed != -1] = fixed[fixed != -1]
-        res = 0
-        for i in range(0, len(args) - 1, 3):
-            res += gaussian_expansion(x, params[i], params[i + 1], params[i + 2])
-        return res + args[-1]
-
-    return curve
-
 
 def curve_split(x: Union[Iterable, Numeric], *params):
     assert len(params) % 3 == 1

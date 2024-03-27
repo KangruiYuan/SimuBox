@@ -12,7 +12,7 @@ from scipy.spatial import distance, Delaunay
 from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor
 
-from ..Artist import generate_colors
+from ..artist import generate_colors
 from ..schema import (
     Density,
     OpenCVResult,
@@ -23,7 +23,7 @@ from ..schema import (
     PathLike,
 )
 from ..toolkits import parse_density
-from ..Artist import plot_savefig
+from ..artist import plot_savefig
 
 
 class VoronoiCell:

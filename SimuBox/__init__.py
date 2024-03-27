@@ -1,6 +1,6 @@
 
 from .toolkits import *
-from .Calculator import *
-from .Artist import *
-from .SCFTRunner import *
+from .calculator import *
+from .artist import *
+from .runner import *
 from .schema import *

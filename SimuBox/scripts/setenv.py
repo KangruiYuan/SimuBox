@@ -6,11 +6,9 @@ abs_current_dir = Path(__file__).parent.absolute()
 json_files = (abs_current_dir / "JSON").iterdir()
 
 alias_list = [
-    f'alias prep="cp {abs_current_dir / "Scripts/*"} ./"',
-    # f'alias babcb="cp {abs_current_dir / "JSON/BABCB.json"} ./input.json"',
-    # f'alias abcabc="cp {abs_current_dir / "JSON/ABC_ABC.json"} ./input.json"',
-    # 'alias prep_babcb="prep;babcb"',
-    # 'alias prep_abcabc="prep;abcabc"',
+    'alias pj="ls | grep push_job | xargs -i python3 {}"',
+    'alias pjs="ls | grep push_job | xargs -i python3 {} >aa.txt 2>&1 &"',
+    f'alias prep="cp {abs_current_dir / "extractor.py"} ./;cp {abs_current_dir / "push_job.py"}"',
 ]
 
 for json_file in json_files:
@@ -19,9 +17,7 @@ for json_file in json_files:
     alias_list.append(f'alias prep_{name}="prep;{name}"')
 
 
-
 bashrc_path = os.path.expanduser("~/.bashrc")
-
 with open(bashrc_path, "r") as bashrc_file:
     cont = bashrc_file.read()
 
@@ -33,7 +29,6 @@ with open(bashrc_path, "a") as bashrc_append_file:
             print(f"{element} added to .bashrc")
         else:
             print(f"{element} already exists in .bashrc")
-
 
 # 执行 source ~/.bashrc 命令
 subprocess.run("source ~/.bashrc", shell=True)

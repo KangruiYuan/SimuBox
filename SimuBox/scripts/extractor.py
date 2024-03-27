@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any, Union, Sequence
 from tqdm import tqdm
 
-from push_job_TOPS import opts
+from push_job import opts
 
 
 def check_files(files: list[Union[str, Path]]):

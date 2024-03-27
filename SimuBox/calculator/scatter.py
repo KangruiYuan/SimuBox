@@ -6,7 +6,7 @@ import numpy as np
 import scipy.signal as sg
 
 from .peak import gaussian_expansion
-from ..Artist import plot_locators, plot_savefig
+from ..artist import plot_locators, plot_savefig
 from ..schema import ScatterResult, ScatterPlot, Density, PathLike
 from ..toolkits import parse_density
 
