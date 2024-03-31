@@ -97,12 +97,18 @@ def iso2D(
     permute: Optional[Iterable[int]] = None,
     slices: Optional[tuple[int, int]] = None,
     titles: Optional[Sequence[str]] = None,
+    grid: Optional[Sequence[int]] = None,
+    figsize: Optional[Sequence[Numeric]] = None,
+    aspect: Optional[Numeric] = None,
     norm: Union[Tuple[Numeric, Numeric], List[Tuple[Numeric, Numeric]]] = None,
+    scale: Union[Tuple[Numeric, Numeric], List[Tuple[Numeric, Numeric]]] = None,
+    cmap: str = "jet",
     label: bool = True,
     colorbar: bool = False,
     interactive: bool = True,
     save: Union[PathLike, bool] = False,
     fontsize: int = 25,
+    verbose: bool = False,
     **kwargs,
 ):
 
@@ -113,13 +119,24 @@ def iso2D(
     length = int(parsed.mat.shape[0])
 
     if titles is not None:
-        assert len(titles) == length, "如果要指定titles，请与需要绘制的图幅相等"
+        assert (
+            len(titles) == length
+        ), f"请提供与子图数量相等的子图标题，需要{length}个，现仅提供了{len(titles)}个。"
 
-    fig, axes = plt.subplots(1, length, figsize=kwargs.get("figsize", (4 * length, 3.5)))
+    if grid is None:
+        grid = (1, length)
+    if verbose: print(grid)
+
+    if figsize is None:
+        figsize = (grid[1] * 4, grid[0] * 3.5)
+
+    fig, axes = plt.subplots(nrows=grid[0], ncols=grid[1], figsize=figsize)
     if length == 1:
         axes = [axes]
+    else:
+        axes = axes.flatten()
 
-    asp = kwargs.get("asp", parsed.lxlylz[1] / parsed.lxlylz[0])
+    aspect = aspect if aspect else parsed.lxlylz[1] / parsed.lxlylz[0]
     rotation = kwargs.get("rotation", 1)
 
     if norm is not None:
@@ -128,27 +145,41 @@ def iso2D(
         else:
             norms = norm
 
+    if scale is not None:
+        if isinstance(scale[0], (int, float)):
+            scales = length * [scale]
+        else:
+            scales = scale
+
     for i, (ax, phi) in enumerate(zip(axes, parsed.mat)):
         phi = np.rot90(phi, rotation)
+        vmin, vmax = phi.min(), phi.max()
+
         if norm is not None:
-            normalizer = mpl.colors.Normalize(vmin=norms[i][0], vmax=norms[i][1])
+            normalizer = mpl.colors.Normalize(vmin=vmin, vmax=vmax)
+            phi = normalizer(phi) * (norms[i][1] - norms[i][0]) + norms[i][0]
+            if verbose: print(norms[i])
+
+        if scale is not None:
+            vmin, vmax = scales[i]
         else:
-            normalizer = lambda x: x
-        phi = normalizer(phi)
+            vmin, vmax = phi.min(), phi.max()
+
+        if verbose: print(vmin, vmax)
         im = ax.imshow(
             phi,
-            cmap="jet",
+            cmap=cmap,
             interpolation="spline36",
-            aspect=asp,
-            # vmin=norms[i][0],
-            # vmax=norms[i][1],
+            aspect=aspect,
+            vmin=vmin,
+            vmax=vmax,
         )
         if titles is not None:
             ax.set_title(titles[i])
 
         for _dir in ["bottom", "top", "right", "left"]:
             ax.spines[_dir].set_color(None)
-        ax.yaxis.set_ticks([])  # type: ignore
+        ax.yaxis.set_ticks([])
         ax.xaxis.set_ticks([])
         if label:
             ax.set_xlabel(
@@ -158,14 +189,14 @@ def iso2D(
                 r"{} $R_g$".format(round(parsed.lxlylz[1], 3)), fontsize=fontsize
             )
         if colorbar:
-            clb = plt.colorbar(im, ax=ax, fraction=kwargs.get('fraction', 0.05))
-            clb.ax.tick_params(labelsize=kwargs.get("clb_labelsize", fontsize-10))
+            clb = plt.colorbar(im, ax=ax, fraction=kwargs.get("fraction", 0.05))
+            clb.ax.tick_params(labelsize=kwargs.get("clb_labelsize", fontsize - 10))
 
     fig.tight_layout()
     plot_savefig(
         density,
-        prefix="iso2d",
-        suffix="_".join(str(i) for i in parsed.target),
+        prefix=kwargs.get("prefix", "iso2d"),
+        suffix=kwargs.get("suffix", "_".join(str(i) for i in parsed.target)),
         save=save,
         **kwargs,
     )

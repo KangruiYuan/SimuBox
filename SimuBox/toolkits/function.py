@@ -12,7 +12,7 @@ __all__ = [
     "arange",
     "find_nearest_1d",
     "replace_target",
-    "match_path",
+    "match_target",
     "process_dataframe",
 ]
 

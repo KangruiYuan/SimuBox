@@ -11,7 +11,7 @@ __all__ = [
     "Fet",
     "Density",
     "DensityParseResult",
-    "XMLRaw",
+    "XML",
     "XMLTransResult",
 ]
 
@@ -172,7 +172,7 @@ class DensityParseResult(MixinBaseModel):
     target: list[int]
 
 
-class XMLRaw(MixinBaseModel):
+class XML(MixinBaseModel):
     path: Path
     NxNyNz: np.ndarray
     lxlylz: np.ndarray
@@ -183,7 +183,7 @@ class XMLRaw(MixinBaseModel):
 
 
 class XMLTransResult(MixinBaseModel):
-    xml: XMLRaw
+    xml: XML
     phi: np.ndarray
 
     def write(
@@ -192,6 +192,14 @@ class XMLTransResult(MixinBaseModel):
         path: Optional[Union[str, Path]] = None,
         scale: bool = False,
     ):
+        """
+        将密度信息输出到文件。
+
+        :param phi: 密度矩阵。
+        :param path: 文件路径。若为空，则默认在对应xml文件的同目录下。
+        :param scale: 是否对密度进行归一化。
+        :return:
+        """
         if phi is None:
             phi = self.phi
         if scale:

@@ -53,8 +53,8 @@ def read_printout(
     content = path.open(mode=mode, encoding=encoding).readlines()
     box = to_array(content[-3], 0)
     lxlylz = box[:3].copy()
-    potentials = to_array(content[-4], 1)
-    volumes = to_array(content[-5], 1)
+    potentials = to_array(content[-4], 2)
+    volumes = to_array(content[-5], 2)
     uws = re.findall("[.0-9e+-]+", content[-1])
     uws = list(map(float, uws))
 
@@ -84,6 +84,18 @@ def read_density(
     encoding: str = "utf-8",
     **kwargs,
 ) -> Density:
+    """
+
+    :param path: 文件路径或者文件所在的文件夹路径。
+    :param filename: 文件名，在path为文件夹路径时生效。
+    :param parse_N:
+    :param parse_L:
+    :param binary:
+    :param mode: 读取模式，默认为仅读取（r）。
+    :param encoding: 编码模式，默认为utf-8。
+    :param kwargs:
+    :return:
+    """
 
     if isinstance(path, bytes):
         bin_read_function = np.frombuffer
@@ -184,17 +196,18 @@ def read_density(
 
 
 def read_csv(
-    path: Union[FileLike, pd.DataFrame],
+    path: PathLike,
     skiprows: int = 0,
     accuracy: int = 3,
     Operations: Optional[Union[Operation, Sequence[Operation]]] = None,
     subset: Optional[Union[str, Sequence[str]]] = ("phase", "freeE"),
     **kwargs,
 ):
-    if not isinstance(path, pd.DataFrame):
+    assert path.is_file(), f"{path} 并非有效的文件路径。"
+    if path.suffix == ".csv":
         data = pd.read_csv(path, skiprows=skiprows)
     else:
-        data = path.copy()
+        data = pd.read_excel(path, skiprows=skiprows)
     if "freeE" in data.columns:
         data["freeE"] = np.around(data["freeE"], 8)
     if subset:
@@ -300,6 +313,17 @@ def parse_density(
     expand: Union[Numeric, Sequence[Numeric]] = 1,
     **kwargs,
 ):
+    """
+    对密度信息进行二次处理，如延拓、交换轴、切片等。
+
+    :param density:
+    :param target:
+    :param permute:
+    :param slices:
+    :param expand:
+    :param kwargs:
+    :return:
+    """
     assert density.shape is not None, "需要指定shape属性"
     shape = density.shape.copy()
     lxlylz = density.lxlylz.copy()

@@ -8,26 +8,40 @@ import re
 from itertools import product
 import xml
 
-from ..schema import XMLRaw, XMLTransResult
+from ..schema import XML, XMLTransResult, PathLike
+
+__all__ = ["XmlTransformer"]
 
 
 class XmlTransformer:
-    xml: XMLRaw
+    xml: XML
 
     def __init__(
         self,
-        path: Union[Path, str],
+        path: PathLike,
     ):
         self.path = Path(path)
 
     @classmethod
     def collect_types(cls, root):
+        """
+        获取粒子种类。
+
+        :param root:
+        :return:
+        """
         txt = root.getElementsByTagName("type")[0].firstChild.wholeText
         types = re.sub(r"[\n ]+", " ", txt).strip(" ").split(" ")
         return types
 
     @classmethod
     def collect_positions(cls, root):
+        """
+        获取粒子坐标。
+
+        :param root:
+        :return:
+        """
         txt = root.getElementsByTagName("position")[0].firstChild.wholeText
         positions = re.sub(r"[\n ]+", " ", txt).strip(" ").split(" ")
         positions = list(map(float, positions))
@@ -36,6 +50,12 @@ class XmlTransformer:
 
     @classmethod
     def collect_lxlylz(cls, root):
+        """
+        获取盒子大小。
+
+        :param root:
+        :return:
+        """
         temp = root.getElementsByTagName("box")[0]
         return np.array([float(temp.getAttribute(i)) for i in ["lx", "ly", "lz"]])
 
@@ -45,6 +65,14 @@ class XmlTransformer:
         atoms_mapping: Optional[dict] = None,
         merge: bool = True,
     ):
+        """
+        解析xml文件，提取其中的信息。
+
+        :param NxNyNz: 设置后续转化为密度时的网格大小。
+        :param atoms_mapping: 人工指定不同粒子的映射。
+        :param merge: 是否对同类型粒子进行合并。如设置为True，A1和A2均会被视为同一种粒子，否则会被视为两种粒子。
+        :return:
+        """
         root = xml.dom.minidom.parse(self.path.open("r"))
         lxlylz = self.collect_lxlylz(root)
         types = self.collect_types(root)
@@ -56,8 +84,8 @@ class XmlTransformer:
             if merge:
                 atoms_type = [re.sub(r"\d", "", i) for i in atoms_type]
                 atoms_type = sorted(list(set(atoms_type)))
-            atoms_mapping = dict(list(enumerate(atoms_type)))
-            atoms_mapping = {v: k for k, v in atoms_mapping.items()}
+            atoms_mapping = dict(list(zip(atoms_type, range(len(atoms_type)))))
+            # atoms_mapping = {v: k for k, v in atoms_mapping.items()}
 
         assert all(
             a in atoms_mapping for a in atoms_type
@@ -73,7 +101,7 @@ class XmlTransformer:
         NxNyNz = np.array(NxNyNz, dtype=int)
         grid_spacing = lxlylz / NxNyNz
 
-        res = XMLRaw(
+        res = XML(
             path=self.path,
             data=data,
             NxNyNz=NxNyNz,
@@ -86,7 +114,15 @@ class XmlTransformer:
         return res
 
     @classmethod
-    def transform(cls, xml: Optional[XMLRaw] = None, r_cut: Union[int, float] = 2.0):
+    def transform(cls, xml: Optional[XML] = None, r_cut: Union[int, float] = 2.0):
+        """
+        将xml记录的粒子信息，转化为自洽场的密度信息。
+
+        :param xml:
+        :param r_cut:
+        :return:
+        """
+
 
         xml = xml if xml is not None else cls.xml
         assert xml is not None
@@ -114,4 +150,5 @@ class XmlTransformer:
             mask = dis <= r_cut
             for grid in grids[mask]:
                 phi[t[i]][grid[0]][grid[1]][grid[2]] += 1
+
         return XMLTransResult(xml=xml, phi=phi)
