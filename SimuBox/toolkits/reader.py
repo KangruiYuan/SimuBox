@@ -23,60 +23,39 @@ from ..schema import (
 from .function import process_dataframe
 
 
-def read_file(
-    path: FileLike,
-    default_name: Optional[str] = None,
-    mode: str = "r",
-    encoding: str = "utf-8",
-    hook: Optional[Callable] = None,
-):
-    if isinstance(path, BytesIO):
-        with TextIOWrapper(path, encoding=encoding) as txt:
-            content = txt.readlines()
-    elif isinstance(path, bytes):
-        content = path
-    elif isinstance(path, PathLike):
-        path = Path(path)
-        if not path.is_file():
-            assert default_name is not None, f"当前路径({path})下未检测到相应文件"
-            path = path / default_name
-            assert path.is_file(), f"当前路径({path})下未检测到相应文件"
-        if path.suffix in (".txt", ""):
-            content = path.open(mode, encoding=encoding).readlines()
-        elif path.suffix == ".json":
-            if hook is None:
-                hook = OrderedDict
-            with open(path, mode=mode) as fp:
-                content = json.load(fp, object_pairs_hook=hook)
-        elif path.suffix == ".bin":
-            content = path
-        else:
-            raise NotImplementedError(f"{path.suffix}格式的文件读取方式尚未建立。")
-    else:
-        raise NotImplementedError(f"{type(path)}的读取方式尚未建立。")
-    return content, path
+def check_filepath(path: PathLike, filename: str):
+    return path if path.is_file() else path / filename
 
 
 def read_json(
     path: PathLike,
-    default_name: Optional[str] = "input.json",
+    filename: str = "input.json",
     mode: str = "r",
     hook: Optional[Callable] = OrderedDict,
     **kwargs,
 ):
-    content, _ = read_file(
-        path=path, default_name=default_name, mode=mode, hook=hook, **kwargs
-    )
+    with open(check_filepath(path, filename), mode=mode) as fp:
+        content = json.load(fp, object_pairs_hook=hook)
     return content
 
 
 def read_printout(
-    path: FileLike, default_name: str = "printout.txt", mode: str = "r", **kwargs
+    path: PathLike,
+    filename: str = "printout.txt",
+    mode: str = "r",
+    encoding: str = "utf-8",
+    **kwargs,
 ):
-    cont, path = read_file(path, default_name=default_name, mode=mode, **kwargs)
-    box = np.array(list(map(float, cont[-3].strip().split(" "))))
+
+    to_array = lambda x, y: np.array(list(map(float, x.strip().split(" ")[y:])))
+
+    path = check_filepath(path, filename)
+    content = path.open(mode=mode, encoding=encoding).readlines()
+    box = to_array(content[-3], 0)
     lxlylz = box[:3].copy()
-    uws = re.findall("[.0-9e+-]+", cont[-1])
+    potentials = to_array(content[-4], 1)
+    volumes = to_array(content[-5], 1)
+    uws = re.findall("[.0-9e+-]+", content[-1])
     uws = list(map(float, uws))
 
     return Printout(
@@ -90,6 +69,8 @@ def read_printout(
         freeS=uws[4],
         freeWS=uws[3] + uws[4],
         inCompMax=uws[-1],
+        volumes=volumes,
+        potentials=potentials,
     )
 
 
@@ -97,24 +78,28 @@ def read_density(
     path: FileLike,
     parse_N: bool = True,
     parse_L: bool = False,
-    default_name: Optional[str] = "phout.txt",
+    filename: str = "phout.txt",
+    binary: Sequence[str] = (".bin"),
     mode: str = "r",
+    encoding: str = "utf-8",
     **kwargs,
 ) -> Density:
-    cont, path = read_file(path, default_name=default_name, mode=mode, **kwargs)
 
-    path = path if isinstance(path, PathLike) else None
-
-    if isinstance(cont, list):
-        txt_flag = True
-    else:
-        txt_flag = False
-        if isinstance(cont, bytes):
-            bin_read_function = np.frombuffer
-        elif isinstance(cont, PathLike):
+    if isinstance(path, bytes):
+        bin_read_function = np.frombuffer
+        content = path
+        text = False
+    elif isinstance(path, PathLike):
+        path = check_filepath(path, filename)
+        if path.suffix == binary:
             bin_read_function = np.fromfile
+            content = path
+            text = False
         else:
-            raise NotImplementedError(f"二进制型{type(path)}读取方式有误")
+            content = path.open(mode=mode, encoding=encoding).readlines()
+            text = True
+    else:
+        raise ValueError(type(path))
 
     def _validate(vec: np.ndarray):
         return any(vec > 1000) or any(vec <= 0)
@@ -122,14 +107,14 @@ def read_density(
     skip = 0
     offset = 0
     if parse_N:
-        if txt_flag:
-            NxNyNz = np.array(list(map(int, cont[skip].strip().split(" "))))
+        if text:
+            NxNyNz = np.array(list(map(int, content[skip].strip().split(" "))))
         else:
             # int32 for scft
-            NxNyNz = bin_read_function(cont, dtype=np.int32, count=3)
+            NxNyNz = bin_read_function(content, dtype=np.int32, count=3)
             if _validate(NxNyNz):
                 # int64 for tops
-                NxNyNz = bin_read_function(cont, dtype=np.int64, count=3)
+                NxNyNz = bin_read_function(content, dtype=np.int64, count=3)
                 if _validate(NxNyNz):
                     raise ValueError(f"NxNyNz解析错误: {NxNyNz}")
                 offset += 3 * 8
@@ -141,16 +126,18 @@ def read_density(
         NxNyNz = kwargs.get("NxNyNz")
 
     if parse_L:
-        if txt_flag:
-            lxlylz = np.array(list(map(float, cont[skip].strip().split(" "))))
+        if text:
+            lxlylz = np.array(list(map(float, content[skip].strip().split(" "))))
         else:
-            lxlylz = bin_read_function(cont, dtype=np.float64, count=3, offset=offset)
+            lxlylz = bin_read_function(
+                content, dtype=np.float64, count=3, offset=offset
+            )
             offset += 3 * 8
         skip += 1
     else:
         lxlylz = kwargs.get("lxlylz", np.ones(3))
 
-    if txt_flag:
+    if text:
         try:
             data = pd.read_csv(
                 path, skiprows=skip, header=None, sep=r"[ ]+", engine="python"
@@ -161,21 +148,21 @@ def read_density(
                     path,
                     parse_N=True,
                     parse_L=True,
-                    default_name=default_name,
+                    filename=filename,
                     mode=mode,
                     **kwargs,
                 )
             else:
                 raise pe
     else:
-        if isinstance(cont, PathLike):
-            count = os.path.getsize(cont)
+        if isinstance(content, PathLike):
+            count = os.path.getsize(content)
         else:
-            count = len(cont)
+            count = len(content)
         count -= offset
         count //= 8
 
-        data = bin_read_function(cont, dtype=np.float64, count=count, offset=offset)
+        data = bin_read_function(content, dtype=np.float64, count=count, offset=offset)
         assert NxNyNz is not None
         data = pd.DataFrame(
             data.reshape((int(np.prod(NxNyNz)), -1), order=kwargs.get("order", "F"))
@@ -187,7 +174,13 @@ def read_density(
     else:
         shape = kwargs.get("shape", NxNyNz)
 
-    return Density(path=path, data=data, NxNyNz=NxNyNz, lxlylz=lxlylz, shape=shape)
+    return Density(
+        path=path if isinstance(path, PathLike) else None,
+        data=data,
+        NxNyNz=NxNyNz,
+        lxlylz=lxlylz,
+        shape=shape,
+    )
 
 
 def read_csv(
@@ -244,9 +237,24 @@ def read_csv(
 
 
 def read_fet(
-    path: FileLike, default_name: Optional[str] = "fet.dat", mode: str = "r", **kwargs
-):
-    cont, path = read_file(path, default_name=default_name, mode=mode, **kwargs)
+    path: FileLike,
+    filename: str = "fet.dat",
+    mode: str = "r",
+    encoding: str = "utf-8",
+    **kwargs,
+) -> Fet:
+    """
+    读取SCFT输出的fet文件。
+
+    :param path: 文件路径或者文件所在的文件夹路径。
+    :param filename: 文件名，在path为文件夹路径时生效。
+    :param mode: 读取模式，默认为仅读取（r）。
+    :param encoding: 编码模式，默认为utf-8。
+    :param kwargs:
+    :return:
+    """
+    path = check_filepath(path, filename=filename)
+    cont, path = path.open(mode=mode, encoding=encoding).readlines()
 
     cont = [c.strip().split()[1:] for c in cont if c.strip()]
     res = dict()

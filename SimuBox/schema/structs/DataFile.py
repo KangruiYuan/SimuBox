@@ -31,6 +31,8 @@ class Printout(MixinBaseModel):
     freeWS: float
     freeU: float
     inCompMax: float
+    volumes: np.ndarray
+    potentials: np.ndarray
 
 
 class Fet(MixinBaseModel):
