@@ -10,9 +10,10 @@ from .plotter import plot_savefig
 from ..schema import Density, Numeric, PathLike, DensityParseResult
 from ..toolkits import parse_density
 
+__all__ = ["iso2D", "iso3D"]
 
 def iso3D(
-    density: Density,
+    density: Union[Density, DensityParseResult],
     target: Optional[Union[int, Iterable[int]]] = 0,
     permute: Optional[Iterable[int]] = None,
     level: Union[float, Iterable[float]] = 0.5,
@@ -22,7 +23,11 @@ def iso3D(
     save: Optional[PathLike] = None,
     **kwargs,
 ):
-    parsed = parse_density(density, target, permute, **kwargs)
+
+    if not isinstance(density, DensityParseResult):
+        parsed = parse_density(density, target, permute, **kwargs)
+    else:
+        parsed = density
     lxlylz = parsed.lxlylz
     NxNyNz = parsed.NxNyNz
     mats = parsed.mat
@@ -93,7 +98,7 @@ def iso3D(
 
 def iso2D(
     density: Union[Density, DensityParseResult],
-    target: Optional[Union[int, Iterable[int]]] = 0,
+    target: Optional[Union[int, Iterable[int]], str] = 0,
     permute: Optional[Iterable[int]] = None,
     slices: Optional[tuple[int, int]] = None,
     titles: Optional[Sequence[str]] = None,
@@ -109,14 +114,43 @@ def iso2D(
     save: Union[PathLike, bool] = False,
     fontsize: int = 25,
     verbose: bool = False,
+    stack: bool = False,
     **kwargs,
 ):
+    """
+
+    :param density: Density | DensityParseResult
+        密度信息或者二次处理后的密度信息。
+
+    :param target:
+    :param permute:
+    :param slices:
+    :param titles:
+    :param grid:
+    :param figsize:
+    :param aspect:
+    :param norm:
+    :param scale:
+    :param cmap:
+    :param label:
+    :param colorbar:
+    :param interactive:
+    :param save:
+    :param fontsize:
+    :param verbose:
+    :param stack:
+    :param kwargs:
+    :return:
+    """
 
     if not isinstance(density, DensityParseResult):
         parsed = parse_density(density, target, permute, slices, **kwargs)
     else:
         parsed = density
-    length = int(parsed.mat.shape[0])
+    if stack:
+        length = 1
+    else:
+        length = int(parsed.mat.shape[0])
 
     if titles is not None:
         assert (
@@ -137,6 +171,7 @@ def iso2D(
         axes = axes.flatten()
 
     aspect = aspect if aspect else parsed.lxlylz[1] / parsed.lxlylz[0]
+    aspect = aspect * parsed.NxNyNz[0] / parsed.NxNyNz[1]
     rotation = kwargs.get("rotation", 1)
 
     if norm is not None:
@@ -151,7 +186,8 @@ def iso2D(
         else:
             scales = scale
 
-    for i, (ax, phi) in enumerate(zip(axes, parsed.mat)):
+    mats = [np.stack(parsed.mat, axis=-1)] if stack else parsed.mat
+    for i, (ax, phi) in enumerate(zip(axes, mats)):
         phi = np.rot90(phi, rotation)
         vmin, vmax = phi.min(), phi.max()
 

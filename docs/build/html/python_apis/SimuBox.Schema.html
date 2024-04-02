@@ -21,7 +21,7 @@
     <link rel="index" title="索引" href="../genindex.html" />
     <link rel="search" title="搜索" href="../search.html" />
     <link rel="next" title="SimuBox.schema.enums package" href="SimuBox.schema.enums.html" />
-    <link rel="prev" title="SimuBox.SCFTRunner.add_alias module" href="SimuBox.SCFTRunner.add_alias.html" /> 
+    <link rel="prev" title="SimuBox.runner.Phases module" href="SimuBox.runner.Phases.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -53,14 +53,13 @@
 <li class="toctree-l1 current"><a class="reference internal" href="modules.html">SimuBox</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="SimuBox.html">SimuBox package</a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="SimuBox.html#subpackages">Subpackages</a><ul class="current">
-<li class="toctree-l4"><a class="reference internal" href="SimuBox.Artist.html">SimuBox.Artist package</a></li>
-<li class="toctree-l4"><a class="reference internal" href="SimuBox.Calculator.html">SimuBox.Calculator package</a></li>
-<li class="toctree-l4"><a class="reference internal" href="SimuBox.SCFTRunner.html">SimuBox.SCFTRunner package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="SimuBox.artist.html">SimuBox.artist package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="SimuBox.calculator.html">SimuBox.calculator package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="SimuBox.runner.html">SimuBox.runner package</a></li>
 <li class="toctree-l4 current"><a class="current reference internal" href="#">SimuBox.schema package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="SimuBox.toolkits.html">SimuBox.toolkits package</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="SimuBox.html#submodules">Submodules</a></li>
 <li class="toctree-l3"><a class="reference internal" href="SimuBox.html#module-SimuBox">Module contents</a></li>
 </ul>
 </li>
@@ -121,6 +120,12 @@
 <li class="toctree-l4"><a class="reference internal" href="SimuBox.schema.enums.OtherEnums.html#SimuBox.schema.enums.OtherEnums.Operator"><code class="docutils literal notranslate"><span class="pre">Operator</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.enums.SCFTEnums.html">SimuBox.schema.enums.SCFTEnums module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="SimuBox.schema.enums.SCFTEnums.html#SimuBox.schema.enums.SCFTEnums.Cells"><code class="docutils literal notranslate"><span class="pre">Cells</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="SimuBox.schema.enums.SCFTEnums.html#SimuBox.schema.enums.SCFTEnums.Ensemble"><code class="docutils literal notranslate"><span class="pre">Ensemble</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="SimuBox.schema.enums.SCFTEnums.html#SimuBox.schema.enums.SCFTEnums.Servers"><code class="docutils literal notranslate"><span class="pre">Servers</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="SimuBox.schema.enums.html#module-SimuBox.schema.enums">Module contents</a></li>
@@ -143,7 +148,7 @@
 <li class="toctree-l4"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.DensityParseResult"><code class="docutils literal notranslate"><span class="pre">DensityParseResult</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Fet"><code class="docutils literal notranslate"><span class="pre">Fet</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Printout"><code class="docutils literal notranslate"><span class="pre">Printout</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.XMLRaw"><code class="docutils literal notranslate"><span class="pre">XMLRaw</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.XML"><code class="docutils literal notranslate"><span class="pre">XML</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.XMLTransResult"><code class="docutils literal notranslate"><span class="pre">XMLTransResult</span></code></a></li>
 </ul>
 </li>
@@ -156,6 +161,7 @@
 <li class="toctree-l4"><a class="reference internal" href="SimuBox.schema.structs.OtherStructs.html#SimuBox.schema.structs.OtherStructs.Operation"><code class="docutils literal notranslate"><span class="pre">Operation</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.SCFTStructs.html">SimuBox.schema.structs.SCFTStructs module</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="SimuBox.schema.structs.html#module-SimuBox.schema.structs">Module contents</a></li>
@@ -182,7 +188,7 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="SimuBox.SCFTRunner.add_alias.html" class="btn btn-neutral float-left" title="SimuBox.SCFTRunner.add_alias module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="SimuBox.runner.Phases.html" class="btn btn-neutral float-left" title="SimuBox.runner.Phases module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="SimuBox.schema.enums.html" class="btn btn-neutral float-right" title="SimuBox.schema.enums package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

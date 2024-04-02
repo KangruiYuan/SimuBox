@@ -20,8 +20,7 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="索引" href="../genindex.html" />
     <link rel="search" title="搜索" href="../search.html" />
-    <link rel="next" title="SimuBox.run module" href="SimuBox.run.html" />
-    <link rel="prev" title="SimuBox.toolkits.reader module" href="SimuBox.toolkits.reader.html" /> 
+    <link rel="prev" title="SimuBox.toolkits.vector module" href="SimuBox.toolkits.vector.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -53,14 +52,13 @@
 <li class="toctree-l1 current"><a class="reference internal" href="modules.html">SimuBox</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="SimuBox.html">SimuBox package</a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="SimuBox.html#subpackages">Subpackages</a><ul class="current">
-<li class="toctree-l4"><a class="reference internal" href="SimuBox.Artist.html">SimuBox.Artist package</a></li>
-<li class="toctree-l4"><a class="reference internal" href="SimuBox.Calculator.html">SimuBox.Calculator package</a></li>
-<li class="toctree-l4"><a class="reference internal" href="SimuBox.SCFTRunner.html">SimuBox.SCFTRunner package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="SimuBox.artist.html">SimuBox.artist package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="SimuBox.calculator.html">SimuBox.calculator package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="SimuBox.runner.html">SimuBox.runner package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="SimuBox.schema.html">SimuBox.schema package</a></li>
 <li class="toctree-l4 current"><a class="reference internal" href="SimuBox.toolkits.html">SimuBox.toolkits package</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="SimuBox.html#submodules">Submodules</a></li>
 <li class="toctree-l3"><a class="reference internal" href="SimuBox.html#module-SimuBox">Module contents</a></li>
 </ul>
 </li>
@@ -97,14 +95,101 @@
              
   <section id="module-SimuBox.toolkits.xmltrans">
 <span id="simubox-toolkits-xmltrans-module"></span><h1>SimuBox.toolkits.xmltrans module<a class="headerlink" href="#module-SimuBox.toolkits.xmltrans" title="Link to this heading">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="SimuBox.toolkits.xmltrans.XmlTransformer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">SimuBox.toolkits.xmltrans.</span></span><span class="sig-name descname"><span class="pre">XmlTransformer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SimuBox.toolkits.xmltrans.XmlTransformer" title="Link to this definition">¶</a></dt>
+<dd><p>基类：<code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="SimuBox.toolkits.xmltrans.XmlTransformer.collect_lxlylz">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">collect_lxlylz</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">root</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SimuBox.toolkits.xmltrans.XmlTransformer.collect_lxlylz" title="Link to this definition">¶</a></dt>
+<dd><p>获取盒子大小。</p>
+<dl class="field-list simple">
+<dt class="field-odd">参数<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>root</strong> – </p>
+</dd>
+<dt class="field-even">返回<span class="colon">:</span></dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SimuBox.toolkits.xmltrans.XmlTransformer.collect_positions">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">collect_positions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">root</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SimuBox.toolkits.xmltrans.XmlTransformer.collect_positions" title="Link to this definition">¶</a></dt>
+<dd><p>获取粒子坐标。</p>
+<dl class="field-list simple">
+<dt class="field-odd">参数<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>root</strong> – </p>
+</dd>
+<dt class="field-even">返回<span class="colon">:</span></dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SimuBox.toolkits.xmltrans.XmlTransformer.collect_types">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">collect_types</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">root</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SimuBox.toolkits.xmltrans.XmlTransformer.collect_types" title="Link to this definition">¶</a></dt>
+<dd><p>获取粒子种类。</p>
+<dl class="field-list simple">
+<dt class="field-odd">参数<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>root</strong> – </p>
+</dd>
+<dt class="field-even">返回<span class="colon">:</span></dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SimuBox.toolkits.xmltrans.XmlTransformer.parse_xml">
+<span class="sig-name descname"><span class="pre">parse_xml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">NxNyNz</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atoms_mapping</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">merge</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SimuBox.toolkits.xmltrans.XmlTransformer.parse_xml" title="Link to this definition">¶</a></dt>
+<dd><p>解析xml文件，提取其中的信息。</p>
+<dl class="field-list simple">
+<dt class="field-odd">参数<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>NxNyNz</strong> – 设置后续转化为密度时的网格大小。</p></li>
+<li><p><strong>atoms_mapping</strong> – 人工指定不同粒子的映射。</p></li>
+<li><p><strong>merge</strong> – 是否对同类型粒子进行合并。如设置为True，A1和A2均会被视为同一种粒子，否则会被视为两种粒子。</p></li>
+</ul>
+</dd>
+<dt class="field-even">返回<span class="colon">:</span></dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="SimuBox.toolkits.xmltrans.XmlTransformer.transform">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xml</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.XML" title="SimuBox.SimuBox.schema.structs.DataFile.XML"><span class="pre">XML</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r_cut</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SimuBox.toolkits.xmltrans.XmlTransformer.transform" title="Link to this definition">¶</a></dt>
+<dd><p>将xml记录的粒子信息，转化为自洽场的密度信息。</p>
+<dl class="field-list simple">
+<dt class="field-odd">参数<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>xml</strong> – </p></li>
+<li><p><strong>r_cut</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">返回<span class="colon">:</span></dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="SimuBox.toolkits.xmltrans.XmlTransformer.xml">
+<span class="sig-name descname"><span class="pre">xml</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.XML" title="SimuBox.SimuBox.schema.structs.DataFile.XML"><span class="pre">XML</span></a></em><a class="headerlink" href="#SimuBox.toolkits.xmltrans.XmlTransformer.xml" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="SimuBox.toolkits.reader.html" class="btn btn-neutral float-left" title="SimuBox.toolkits.reader module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="SimuBox.run.html" class="btn btn-neutral float-right" title="SimuBox.run module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="SimuBox.toolkits.vector.html" class="btn btn-neutral float-left" title="SimuBox.toolkits.vector module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
   <hr/>

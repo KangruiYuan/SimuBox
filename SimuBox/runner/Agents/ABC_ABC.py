@@ -2,6 +2,8 @@ import math
 
 from .MixinModel import *
 
+__all__ = ["ABC_ABC"]
+
 
 class ABC_ABC(MixinAgent):
 
@@ -23,11 +25,11 @@ class ABC_ABC(MixinAgent):
                 input_dict["Block"][i]["ContourLength"] = j
         elif pn == "z":
             input_dict["Specy"][1]["ChemicalPotential"] = round(float(math.log(pv)), 6)
-        elif pn == 'phi0':
+        elif pn == "phi0":
             phi0 = round(pv, 6)
             phi1 = round(1 - phi0, 6)
-            input_dict['Specy'][0]["VolumeFraction"] = phi0
-            input_dict['Specy'][1]["VolumeFraction"] = phi1
+            input_dict["Specy"][0]["VolumeFraction"] = phi0
+            input_dict["Specy"][1]["VolumeFraction"] = phi1
         elif pn == "chiNAC":
             input_dict["Component"]["FloryHugginsInteraction"][0][
                 "FloryHugginsParameter"

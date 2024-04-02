@@ -1,5 +1,7 @@
 from .MixinModel import *
 
+__all__ = ["BABCB"]
+
 
 class BABCB(MixinAgent):
 

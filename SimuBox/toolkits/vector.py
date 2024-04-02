@@ -40,6 +40,7 @@ def vectorize(
     :param length: 最终向量的长度，原长度过长会被截取，否则会被扩充
     :param fill_value: 扩充时的填充值，默认为向量的最后一个值
     :return: 向量
+
     >>> vectorize(1)
     [1]
     >>> vectorize("p")

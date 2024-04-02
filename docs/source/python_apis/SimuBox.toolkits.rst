@@ -7,10 +7,9 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   SimuBox.toolkits.Vector
-   SimuBox.toolkits.WebUnit
    SimuBox.toolkits.function
    SimuBox.toolkits.reader
+   SimuBox.toolkits.vector
    SimuBox.toolkits.xmltrans
 
 Module contents

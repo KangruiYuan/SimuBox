@@ -24,6 +24,7 @@ from .function import process_dataframe
 
 
 def check_filepath(path: PathLike, filename: str):
+    path = Path(path)
     return path if path.is_file() else path / filename
 
 
@@ -176,9 +177,24 @@ def read_density(
 
         data = bin_read_function(content, dtype=np.float64, count=count, offset=offset)
         assert NxNyNz is not None
-        data = pd.DataFrame(
-            data.reshape((int(np.prod(NxNyNz)), -1), order=kwargs.get("order", "F"))
-        )
+        try:
+            data = pd.DataFrame(
+                data.reshape((int(np.prod(NxNyNz)), -1), order=kwargs.get("order", "F"))
+            )
+        except ValueError as ve:
+            if not parse_L or not parse_N:
+                return read_density(
+                    path,
+                    parse_N=True,
+                    parse_L=True,
+                    filename=filename,
+                    mode=mode,
+                    **kwargs,
+                )
+            else:
+                print(f"NxNyNz:{NxNyNz}, lxlylz:{lxlylz}, offset:{offset}")
+                raise ve
+
 
     if NxNyNz is not None:
         shape = NxNyNz[NxNyNz != 1]
@@ -312,7 +328,7 @@ def parse_density(
     slices: Optional[tuple[int, int]] = None,
     expand: Union[Numeric, Sequence[Numeric]] = 1,
     **kwargs,
-):
+) -> DensityParseResult:
     """
     对密度信息进行二次处理，如延拓、交换轴、切片等。
 

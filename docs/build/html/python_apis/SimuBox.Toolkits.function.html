@@ -21,7 +21,7 @@
     <link rel="index" title="索引" href="../genindex.html" />
     <link rel="search" title="搜索" href="../search.html" />
     <link rel="next" title="SimuBox.toolkits.reader module" href="SimuBox.toolkits.reader.html" />
-    <link rel="prev" title="SimuBox.toolkits.WebUnit module" href="SimuBox.toolkits.WebUnit.html" /> 
+    <link rel="prev" title="SimuBox.toolkits package" href="SimuBox.toolkits.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -53,14 +53,13 @@
 <li class="toctree-l1 current"><a class="reference internal" href="modules.html">SimuBox</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="SimuBox.html">SimuBox package</a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="SimuBox.html#subpackages">Subpackages</a><ul class="current">
-<li class="toctree-l4"><a class="reference internal" href="SimuBox.Artist.html">SimuBox.Artist package</a></li>
-<li class="toctree-l4"><a class="reference internal" href="SimuBox.Calculator.html">SimuBox.Calculator package</a></li>
-<li class="toctree-l4"><a class="reference internal" href="SimuBox.SCFTRunner.html">SimuBox.SCFTRunner package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="SimuBox.artist.html">SimuBox.artist package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="SimuBox.calculator.html">SimuBox.calculator package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="SimuBox.runner.html">SimuBox.runner package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="SimuBox.schema.html">SimuBox.schema package</a></li>
 <li class="toctree-l4 current"><a class="reference internal" href="SimuBox.toolkits.html">SimuBox.toolkits package</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="SimuBox.html#submodules">Submodules</a></li>
 <li class="toctree-l3"><a class="reference internal" href="SimuBox.html#module-SimuBox">Module contents</a></li>
 </ul>
 </li>
@@ -97,13 +96,64 @@
              
   <section id="module-SimuBox.toolkits.function">
 <span id="simubox-toolkits-function-module"></span><h1>SimuBox.toolkits.function module<a class="headerlink" href="#module-SimuBox.toolkits.function" title="Link to this heading">¶</a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="SimuBox.toolkits.function.arange">
+<span class="sig-prename descclassname"><span class="pre">SimuBox.toolkits.function.</span></span><span class="sig-name descname"><span class="pre">arange</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">accuracy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">6</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SimuBox.toolkits.function.arange" title="Link to this definition">¶</a></dt>
+<dd><p>从start到end，以指定的step作为间隔生成数值序列。强制包含两个端点，同时默认保持六位小数精度。</p>
+<dl class="field-list simple">
+<dt class="field-odd">参数<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>start</strong> – 起始值</p></li>
+<li><p><strong>end</strong> – 终止值</p></li>
+<li><p><strong>step</strong> – 步长</p></li>
+<li><p><strong>accuracy</strong> – 保留的小数精度</p></li>
+</ul>
+</dd>
+<dt class="field-even">返回<span class="colon">:</span></dt>
+<dd class="field-even"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="SimuBox.toolkits.function.find_nearest_1d">
+<span class="sig-prename descclassname"><span class="pre">SimuBox.toolkits.function.</span></span><span class="sig-name descname"><span class="pre">find_nearest_1d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#SimuBox.toolkits.function.find_nearest_1d" title="Link to this definition">¶</a></dt>
+<dd><p>寻找序列（array）中与指定值（value）最接近的数值的索引。</p>
+<dl class="field-list simple">
+<dt class="field-odd">参数<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>array</strong> – 任意向量</p></li>
+<li><p><strong>value</strong> – 任意数值</p></li>
+</ul>
+</dd>
+<dt class="field-even">返回<span class="colon">:</span></dt>
+<dd class="field-even"><p>索引值（整型）</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="SimuBox.toolkits.function.match_target">
+<span class="sig-prename descclassname"><span class="pre">SimuBox.toolkits.function.</span></span><span class="sig-name descname"><span class="pre">match_target</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">candidates</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SimuBox.toolkits.function.match_target" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="SimuBox.toolkits.function.process_dataframe">
+<span class="sig-prename descclassname"><span class="pre">SimuBox.toolkits.function.</span></span><span class="sig-name descname"><span class="pre">process_dataframe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="SimuBox.schema.structs.OtherStructs.html#SimuBox.schema.structs.OtherStructs.Operation" title="SimuBox.SimuBox.schema.structs.OtherStructs.Operation"><span class="pre">Operation</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">accuracy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SimuBox.toolkits.function.process_dataframe" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="SimuBox.toolkits.function.replace_target">
+<span class="sig-prename descclassname"><span class="pre">SimuBox.toolkits.function.</span></span><span class="sig-name descname"><span class="pre">replace_target</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'phase'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#SimuBox.toolkits.function.replace_target" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="SimuBox.toolkits.WebUnit.html" class="btn btn-neutral float-left" title="SimuBox.toolkits.WebUnit module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="SimuBox.toolkits.html" class="btn btn-neutral float-left" title="SimuBox.toolkits package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="SimuBox.toolkits.reader.html" class="btn btn-neutral float-right" title="SimuBox.toolkits.reader module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

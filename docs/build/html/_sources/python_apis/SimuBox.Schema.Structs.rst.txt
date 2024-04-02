@@ -12,6 +12,7 @@ Submodules
    SimuBox.schema.structs.DataFile
    SimuBox.schema.structs.MixinStructs
    SimuBox.schema.structs.OtherStructs
+   SimuBox.schema.structs.SCFTStructs
 
 Module contents
 ---------------

@@ -10,6 +10,7 @@ Submodules
    SimuBox.schema.enums.MixinEnums
    SimuBox.schema.enums.Modes
    SimuBox.schema.enums.OtherEnums
+   SimuBox.schema.enums.SCFTEnums
 
 Module contents
 ---------------
