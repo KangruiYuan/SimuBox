@@ -3,21 +3,21 @@ from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 from typing import Iterable, Union, Callable, Sequence
-from ..schema import Numeric, Peak, PeakFitResult
+from ..schema import RealNum, Peak, PeakFitResult
 from ..artist import plot_legend, plot_savefig, plot_locators
 from sklearn.metrics import r2_score
 
 
 def gaussian_expansion(
-    array: Union[Iterable, Numeric],
-    amp: Numeric,
-    ctr: Numeric,
-    wid: Numeric,
+    array: Union[Iterable, RealNum],
+    amp: RealNum,
+    ctr: RealNum,
+    wid: RealNum,
 ):
     return amp * np.exp(-(((array - ctr) / wid) ** 2))
 
 
-def curve_function(x: Union[Iterable, Numeric], *params):
+def curve_function(x: Union[Iterable, RealNum], *params):
 
     assert len(params) % 3 == 1
 
@@ -27,7 +27,7 @@ def curve_function(x: Union[Iterable, Numeric], *params):
 
     return res + params[-1]
 
-def curve_split(x: Union[Iterable, Numeric], *params):
+def curve_split(x: Union[Iterable, RealNum], *params):
     assert len(params) % 3 == 1
     res = []
     for i in range(0, len(params) - 1, 3):
@@ -82,7 +82,7 @@ def peak_fit(
             else:
                 lb.append(0)
                 ub.append(np.inf)
-    # print(lb,ub)
+
     if fix_background:
         lb.append(max(guess[-1] * lb_scale, 0))
         ub.append(guess[-1] * ub_scale)

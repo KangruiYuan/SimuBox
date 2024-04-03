@@ -10,7 +10,7 @@ from scipy.interpolate import griddata
 from shapely.geometry import Polygon
 
 from .plotter import plot_locators, plot_savefig
-from ..schema import LandscapeResult, PathLike, CommonLabels, Numeric, Vector, Contour
+from ..schema import LandscapeResult, PathLike, CommonLabels, RealNum, Vector, Contour
 from ..toolkits import read_csv, find_nearest_1d
 
 LAND_PLOT_CONFIG = {
@@ -88,7 +88,7 @@ class Landscaper:
         precision: int = -3,
         save: Optional[bool] = True,
         tick_num: Optional[int] = None,
-        aspect: Union[Literal["auto", "equal", "square"], Numeric] = 1,
+        aspect: Union[Literal["auto", "equal", "square"], RealNum] = 1,
         relative: bool = True,
         IQ: bool = True,
         interactive: bool = True,

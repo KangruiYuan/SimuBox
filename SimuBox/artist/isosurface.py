@@ -7,7 +7,7 @@ import pyvista as pv
 from skimage.measure import marching_cubes
 
 from .plotter import plot_savefig
-from ..schema import Density, Numeric, PathLike, DensityParseResult
+from ..schema import Density, RealNum, PathLike, DensityParseResult
 from ..toolkits import parse_density
 
 __all__ = ["iso2D", "iso3D"]
@@ -98,15 +98,15 @@ def iso3D(
 
 def iso2D(
     density: Union[Density, DensityParseResult],
-    target: Optional[Union[int, Iterable[int]], str] = 0,
+    target: Optional[Union[int, Iterable[int], str]] = 0,
     permute: Optional[Iterable[int]] = None,
     slices: Optional[tuple[int, int]] = None,
     titles: Optional[Sequence[str]] = None,
     grid: Optional[Sequence[int]] = None,
-    figsize: Optional[Sequence[Numeric]] = None,
-    aspect: Optional[Numeric] = None,
-    norm: Union[Tuple[Numeric, Numeric], List[Tuple[Numeric, Numeric]]] = None,
-    scale: Union[Tuple[Numeric, Numeric], List[Tuple[Numeric, Numeric]]] = None,
+    figsize: Optional[Sequence[RealNum]] = None,
+    aspect: Optional[RealNum] = None,
+    norm: Union[Tuple[RealNum, RealNum], List[Tuple[RealNum, RealNum]]] = None,
+    scale: Union[Tuple[RealNum, RealNum], List[Tuple[RealNum, RealNum]]] = None,
     cmap: str = "jet",
     label: bool = True,
     colorbar: bool = False,

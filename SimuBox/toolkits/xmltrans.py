@@ -123,7 +123,6 @@ class XmlTransformer:
         :return:
         """
 
-
         xml = xml if xml is not None else cls.xml
         assert xml is not None
         phi = np.zeros([len(xml.atoms_type), *xml.NxNyNz])

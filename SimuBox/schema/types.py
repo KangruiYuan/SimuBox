@@ -3,9 +3,10 @@ from typing import Union, Iterable, Sequence
 from io import BytesIO
 from numpy import ndarray
 
-__all__ = ["Numeric", "Vector", "PathLike", "FileLike"]
+__all__ = ["RealNum", "Vector", "PathLike", "FileLike", "Numeric"]
 
-Numeric = Union[int, float]
-Vector = Union[Sequence[Numeric], Iterable[Numeric], ndarray]
+RealNum = Union[int, float]
+Numeric = Union[RealNum, complex]
+Vector = Union[Sequence[RealNum], Iterable[RealNum], ndarray]
 PathLike = Union[Path, str]
 FileLike = Union[PathLike, BytesIO, bytes]

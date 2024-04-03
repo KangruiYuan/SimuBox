@@ -2,7 +2,7 @@ from abc import abstractmethod
 from collections import OrderedDict
 from typing import Any
 
-from ..Phases import PhaseInit
+from ..phases import PhaseInit
 from ...schema import Cells, Options
 
 

@@ -1,16 +1,28 @@
 from collections import ChainMap
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Any, Optional, Union, Sequence
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+
 from numpy.polynomial import Chebyshev
 from scipy.io import loadmat
 
-from .plotter import plot_locators, plot_savefig, generate_colors
-from ..schema import DetectionMode, PhaseCompareResult, Point, CommonLabels, PathLike
+from .plotter import plot_locators, plot_savefig, plot_legend, generate_colors
+from ..schema import (
+    DetectionMode,
+    PhaseCompareResult,
+    Point,
+    CommonLabels,
+    PathLike,
+    Operation,
+    RealNum,
+    ColorMode,
+)
 from ..toolkits import read_csv
+
+__all__ = ["PHASE_PLOT_CONFIG", "PhaseDiagram"]
 
 PHASE_PLOT_CONFIG = {
     "font.family": "Times New Roman",
@@ -47,6 +59,15 @@ class PhaseDiagram:
         colors: Optional[dict] = None,
         labels: Optional[dict] = None,
     ) -> None:
+        """
+        初始化对象。
+
+        :param path: 存放一系列相图文件(.csv)的文件夹路径。
+        :param xlabel: 相图横轴数值对应的列名。
+        :param ylabel: 相图纵轴数值对应的列名。
+        :param colors: 各相结构在绘制时的颜色。
+        :param labels: 各标签的姓名映射，如{"tau": r"$\tau$"}，即在渲染时将tau渲染为τ
+        """
         self.path = Path(path)
         self.colors = colors if colors is not None else {}
         self.labels = (
@@ -55,52 +76,84 @@ class PhaseDiagram:
         self.xlabel = xlabel
         self.ylabel = ylabel
 
-    def query_point(
+    def query(
         self,
-        data: pd.DataFrame,
-        xval: Optional[Union[float, str, int]] = None,
-        yval: Optional[Union[float, str, int]] = None,
+        data: Union[pd.DataFrame, PathLike],
+        x: Optional[Union[float, str, int]] = None,
+        y: Optional[Union[float, str, int]] = None,
         **kwargs,
     ):
-        res = data.copy()
+        """
+        对表格数据进行快速筛选
+
+        :param data:
+        :param x:
+        :param y:
+        :param kwargs:
+        :return:
+        """
+        if isinstance(data, pd.DataFrame):
+            res = data.copy()
+        else:
+            res = read_csv(data)
+        if x:
+            res = res[res[self.xlabel] == x]
+        if y:
+            res = res[res[self.ylabel] == y]
+
         columns = res.columns
-        if xval:
-            res = res[res[self.xlabel] == xval]
-        if yval:
-            res = res[res[self.ylabel] == yval]
         for key, val in kwargs.items():
             if key in columns:
                 res = res[res[key] == val]
         return res
 
     @staticmethod
-    def checkin(phase: list, candidates: list):
-        if len(phase) == 0:
+    def checkin(phases: Sequence, candidates: Sequence):
+        """
+        检查相结构是否属于备选结构。
+
+        :param phases:
+        :param candidates:
+        :return:
+        """
+        if len(phases) == 0:
             return False
-        for i in phase:
+        for i in phases:
             if i in candidates:
                 return True
         return False
 
     def compare(
         self,
-        name: Optional[str] = None,
-        path: Optional[Union[str, Path]] = None,
+        path: PathLike,
         plot: bool = True,
-        acc: int = 3,
+        accuracy: int = 3,
         xlabel: Optional[str] = None,
         ylabel: Optional[str] = None,
+        verbose: bool = True,
+        operation: Optional[Union[Operation, Sequence[Operation]]] = None,
+        subset: Optional[Union[str, Sequence[str]]] = ("phase", "freeE"),
+        figsize: Union[Sequence[int]] = (8, 6),
+        interactive: bool = True,
         **kwargs,
     ):
-        if path is None:
-            assert name is not None
-            path = (self.path / name).with_suffix(".csv")
-        else:
-            if not isinstance(path, Path):
-                path = Path(path)
+        if not isinstance(path, Path):
+            path = Path(path)
+        if not path.is_file():
+            path = self.path / path
+            if not path.is_file():
+                if path.with_suffix(".csv").is_file():
+                    path = path.with_suffix(".csv")
+                elif path.with_suffix(".xlsx").is_file():
+                    path = path.with_suffix(".xlsx")
+                else:
+                    raise ValueError(f"请输入正确的文件名或者路径信息。{str(path)}不存在")
 
-        df = read_csv(path=path, acc=acc, **kwargs)
-        print(f"Include phase: {set(df['phase'].values)}")
+        df = read_csv(
+            path=path, accuracy=accuracy, operation=operation, subset=subset, **kwargs
+        )
+        if verbose:
+            print(f"包括相结构: {set(df['phase'].values)}")
 
         phase_map = dict()
         xlabel = xlabel if xlabel is not None else self.xlabel
@@ -108,7 +161,9 @@ class PhaseDiagram:
         y_set = np.sort(df[ylabel].unique())
         x_set = np.sort(df[xlabel].unique())
 
-        exclude = kwargs.get("exclude", [])
+        exclude = kwargs.get("exclude", ())
+        sqrt3 = np.around(np.sqrt(3), decimals=accuracy)
+        sqrt2 = np.around(np.sqrt(2), decimals=accuracy)
 
         mat = np.zeros((len(y_set), len(x_set)), dtype=Point)
         for i, y in enumerate(y_set):
@@ -121,47 +176,41 @@ class PhaseDiagram:
                 freeE = min_data["freeE"].min()
                 min_label = min_data["phase"].unique()
                 lxly = min_data["lxly"].unique()
-                lylx = np.around(1 / lxly, acc)
+                lylx = np.around(1 / lxly, accuracy)
                 lylz = min_data["lylz"].unique()
-                lzly = np.around(1 / lylz, acc)
+                lzly = np.around(1 / lylz, accuracy)
 
-                if self.checkin(exclude, min_label):
+                if self.checkin(min_label, exclude):
                     phase = min_label[0]
                 elif "L" in min_label:
                     phase = "L"
-                elif self.checkin(["C4", "Crect"], min_label):
-                    if any(lylz == 1):
+                elif self.checkin(min_label, ["C4", "Crect"]):
+                    if any(lylz == 1) or any(lylx == 1):
                         phase = "C4"
                     else:
                         phase = "Crect"
                 elif len(min_label) == 1:
-                    if self.checkin(["C6", "C3"], min_label):
-                        if lylz == np.around(np.sqrt(3), acc) or lzly == np.around(
-                            1 / np.sqrt(3), acc
-                        ):
+                    if self.checkin(min_label, ["C6", "C3"]):
+                        if sqrt3 in [lylz, lzly, lxly, lylx]:
                             phase = min_label[0]
-                    elif self.checkin(["iHPa"], min_label):
-                        if lxly == np.around(np.sqrt(3), acc) or lylx == np.around(
-                            1 / np.sqrt(3), acc
-                        ):
+                    elif self.checkin(min_label, ["iHPa"]):
+                        if sqrt3 in [lylz, lzly, lxly, lylx]:
                             phase = "iHPa"
-                        elif lylz == np.around(np.sqrt(2), acc) or lxly == 1:
+                        elif sqrt2 in [lylz, lzly, lxly, lylx]:
                             phase = "SC"
                     elif "PL" in min_label:
-                        if lxly == np.around(np.sqrt(3), acc) or lylx == np.around(
-                            1 / np.sqrt(3), acc
-                        ):
+                        if sqrt3 in [lylz, lzly, lxly, lylx]:
                             phase = "PL"
-                    elif self.checkin(["L", "Disorder", "O70"], min_label):
+                    elif self.checkin(min_label, ["L", "Disorder", "O70"]):
                         phase = min_label[0]
                     elif self.checkin(
-                        ["SC", "SG", "DG", "BCC", "FCC", "sdgn"], min_label
+                        min_label, ["SC", "SG", "DG", "BCC", "FCC", "sdgn"]
                     ):
                         if lxly == 1 and lylz == 1:
                             phase = min_label[0]
                     else:
                         phase = "_".join([phase, min_label[0]])
-                mat[i][j] = Point(phase=phase, x=x, y=y, value=freeE)
+                mat[i][j] = Point(label=phase, x=x, y=y, value=freeE)
                 if phase in phase_map:
                     for attr, val in zip(
                         [xlabel, ylabel, "freeE", "lylz", "lxly"],
@@ -180,10 +229,10 @@ class PhaseDiagram:
         comp_res = PhaseCompareResult(data=df, phase_map=phase_map, mat=mat)
 
         if plot:
-            fig, ax = plt.subplots(1, 1, figsize=(8, 6))
+            fig, ax = plt.subplots(1, 1, figsize=figsize)
             for key, value in phase_map.items():
                 if key not in self.colors:
-                    self.colors[key] = generate_colors(mode="HEX")[0]
+                    self.colors[key] = generate_colors(mode=ColorMode.HEX)[0]
                 ax.scatter(
                     value[xlabel],
                     value[ylabel],
@@ -193,21 +242,53 @@ class PhaseDiagram:
             ax.tick_params(top="on", right="on", which="both")
             ax.tick_params(which="both", width=2, length=4, direction="in")
             plot_locators(**kwargs)
-            ax.set_xlabel(
-                self.labels.get(xlabel, xlabel), fontdict={"size": 20}
+            ax.set_xlabel(self.labels.get(xlabel, xlabel), fontdict={"size": 20})
+            ax.set_ylabel(self.labels.get(ylabel, ylabel), fontdict={"size": 20})
+            plot_legend(
+                legend=kwargs.get(
+                    "legend",
+                    {
+                        "mode": "outside",
+                        "loc": "upper left",
+                        "bbox_to_anchor": (0.98, 0.8),
+                    },
+                )
             )
-            ax.set_ylabel(
-                self.labels.get(ylabel, ylabel), fontdict={"size": 20}
-            )
-            ax.legend(frameon=False, loc="upper left", bbox_to_anchor=(0.98, 0.8))
             fig.tight_layout()
             comp_res.fig = fig
             comp_res.ax = ax
+            if not interactive:
+                plt.show()
 
         return comp_res
 
     @staticmethod
-    def cross_point(x1, y1, x2, y2, x3, y3, x4, y4):
+    def cross_point(
+        x1: RealNum,
+        y1: RealNum,
+        x2: RealNum,
+        y2: RealNum,
+        x3: RealNum,
+        y3: RealNum,
+        x4: RealNum,
+        y4: RealNum,
+    ):
+        """
+        两点确定直线，计算两条直线之间的交点。
+        (x1, y1), (x2, y2)为第一条直线的两点。
+        (x3, y3), (x4, y4)为第二条直线的两点。
+        y一般对应自由能的数值。
+
+        :param x1:
+        :param y1:
+        :param x2:
+        :param y2:
+        :param x3:
+        :param y3:
+        :param x4:
+        :param y4:
+        :return:
+        """
         b1 = (y2 - y1) * x1 + (x1 - x2) * y1
         b2 = (y4 - y3) * x3 + (x3 - x4) * y3
         D = (x2 - x1) * (y4 - y3) - (x4 - x3) * (y2 - y1)
@@ -217,64 +298,93 @@ class PhaseDiagram:
 
     @staticmethod
     def de_unknown(comp_res: PhaseCompareResult):
+        """
+        将相结构名称前缀中的unknown去掉。
+
+        :param comp_res:
+        :return:
+        """
         mat = comp_res.mat
         for i in range(mat.shape[0]):
             for j in range(mat.shape[1]):
                 try:
-                    mat[i][j].label = mat[i][j].label.lstrip("unknown_")
+                    new_label = mat[i][j].label.lstrip("unknown_")
+                    if new_label == "":
+                        mat[i][j] = 0
+                    else:
+                        mat[i][j].label = new_label
                 except AttributeError:
                     continue
         comp_res.mat = mat
         return comp_res
 
-    def scan(self, folder: Optional[Union[str, Path]] = None, **kwargs):
-        if folder is not None:
-            if isinstance(folder, str):
-                folder = Path(folder)
+    def scan(
+        self,
+        path: Optional[Union[str, Path]] = None,
+        filetype: Sequence[str] = (".csv"),
+        figsize: Union[Sequence[int]] = (8, 8),
+        skip: Sequence[str] = (),
+        extract: Sequence[str] = (),
+        inverse: Sequence[str] = (),
+        deunknown: Sequence[str] = (),
+        annotation: Optional[dict] = None,
+        verbose: bool = True,
+        **kwargs,
+    ):
+        if annotation is None:
+            annotation = {}
+
+        if path is not None:
+            if isinstance(path, str):
+                path = Path(path)
+                assert path.is_dir()
         else:
-            folder = self.path
+            path = self.path
 
-        filelist = list(folder.glob("*.csv"))
-        fig, ax = plt.subplots(figsize=kwargs.get("figsize", (8, 6)))
-        skip: list[str] = kwargs.get("skip", [])
-        extract: list[str] = kwargs.get("extract", [])
-        inverse_lst: list[str] = kwargs.get("inverse", [])
-        deunknown: list[str] = kwargs.get("deunknown", [])
-        ann_dict: dict[str, Any] = kwargs.get("annotation", {})
+        filelist = []
+        for ft in filetype:
+            filelist += list(path.glob("*" + ft))
 
+        fig, ax = plt.subplots(figsize=figsize)
         for filename in filelist:
             tmp_name = filename.stem
-            tmp_dict: dict = ann_dict.get(tmp_name, {})
-            print(tmp_name, end="\t")
+            tmp_dict: dict = annotation.get(tmp_name, {})
+            if verbose:
+                print(tmp_name, end="\t")
             if tmp_name in skip:
-                print("Skip...")
+                if verbose:
+                    print("Skip...")
                 continue
             else:
                 comp_res = self.compare(
-                    path=filename, plot=False, acc=tmp_dict.get("acc", 2)
+                    path=filename, plot=False, accuracy=tmp_dict.get("acc", 2)
                 )
 
             if tmp_name in deunknown or deunknown == "All":
                 comp_res = self.de_unknown(comp_res)
 
             if tmp_name in extract:
+                # print("Extracting.")
                 tmp_xys = self.extract_edge(comp_res.mat, **tmp_dict)
             else:
-                # tmp_xys = self.boundary(comp_res.df, comp_res.mat, mode=["hori", "ver"])
                 tmp_xys = self.boundary_detect(comp_res, **tmp_dict)
 
-            if tmp_name in inverse_lst:
-                tmp_xys = tmp_xys[np.argsort(tmp_xys[:, 1])]
-                self.draw_line(tmp_xys, ax=ax, annotation=tmp_dict, inverse=True)
-            else:
-                tmp_xys = tmp_xys[np.argsort(tmp_xys[:, 0])]
-                self.draw_line(tmp_xys, ax=ax, annotation=tmp_dict)
+            try:
+                if tmp_name in inverse:
+                    tmp_xys = tmp_xys[np.argsort(tmp_xys[:, 1])]
+                    self.draw_line(tmp_xys, ax=ax, annotation=tmp_dict, inverse=True)
+                else:
+                    tmp_xys = tmp_xys[np.argsort(tmp_xys[:, 0])]
+                    self.draw_line(tmp_xys, ax=ax, annotation=tmp_dict)
+            except IndexError as ie:
+                print(tmp_xys)
+                raise ie
 
-        if phase_name := ann_dict.get("phase_name", ()):
+        if phase_name := annotation.get("phase_name", ()):
             for name, _x, _y in phase_name:
                 ax.text(_x, _y, name, fontsize=20, color="k")
 
-        if phase_name_arrow := ann_dict.get("phase_name_arrow", ()):
+        if phase_name_arrow := annotation.get("phase_name_arrow", ()):
             for name, _x, _y, _text_x, _text_y in phase_name_arrow:
                 ax.annotate(
                     name,
@@ -324,15 +434,15 @@ class PhaseDiagram:
             ignore = []
         if point_other is None:
             return (
-                    not isinstance(point, Point)
-                    or "unknown" in point.label
-                    or point.label in ignore
+                not isinstance(point, Point)
+                or "unknown" in point.label
+                or point.label in ignore
             )
         else:
             return (
-                    cls.check_phase(point=point, ignore=ignore)
-                    or cls.check_phase(point=point_other, ignore=ignore)
-                    or point.label == point_other.label
+                cls.check_phase(point=point, ignore=ignore)
+                or cls.check_phase(point=point_other, ignore=ignore)
+                or point.label == point_other.label
             )
 
     def boundary_detect(
@@ -356,16 +466,16 @@ class PhaseDiagram:
                     ele_right_1: Point = line[ele_idx + 1]
                     if self.check_phase(ele_left_1, ele_right_1, ignore):
                         continue
-                    ele_left_2: pd.DataFrame = self.query_point(
+                    ele_left_2: pd.DataFrame = self.query(
                         data=df,
-                        xval=ele_left_1.x,
-                        yval=ele_left_1.y,
+                        x=ele_left_1.x,
+                        y=ele_left_1.y,
                         phase=ele_right_1.label,
                     )
-                    ele_right_2: pd.DataFrame = self.query_point(
+                    ele_right_2: pd.DataFrame = self.query(
                         data=df,
-                        xval=ele_right_1.x,
-                        yval=ele_right_1.y,
+                        x=ele_right_1.x,
+                        y=ele_right_1.y,
                         phase=ele_left_1.label,
                     )
 
@@ -393,16 +503,16 @@ class PhaseDiagram:
                     if self.check_phase(ele_left_1, ele_right_1, ignore):
                         continue
 
-                    ele_left_2: pd.DataFrame = self.query_point(
+                    ele_left_2: pd.DataFrame = self.query(
                         data=df,
-                        xval=ele_left_1.x,
-                        yval=ele_left_1.y,
+                        x=ele_left_1.x,
+                        y=ele_left_1.y,
                         phase=ele_right_1.label,
                     )
-                    ele_right_2: pd.DataFrame = self.query_point(
+                    ele_right_2: pd.DataFrame = self.query(
                         data=df,
-                        xval=ele_right_1.x,
-                        yval=ele_right_1.y,
+                        x=ele_right_1.x,
+                        y=ele_right_1.y,
                         phase=ele_left_1.label,
                     )
 

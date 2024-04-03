@@ -16,6 +16,7 @@ class Operation(MixinBaseModel):
     factor: Optional[float] = None
     operator: Operator
     name: Optional[str] = None
+    accuracy: int = 3
 
     @property
     def _name(self):

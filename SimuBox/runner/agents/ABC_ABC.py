@@ -6,8 +6,8 @@ __all__ = ["ABC_ABC"]
 
 
 class ABC_ABC(MixinAgent):
-
-    chain2_len: float
+    def __init__(self, *args, **kwargs):
+       self.chain2_len: float = -1.0
 
     @classmethod
     def modify(cls, pn: str, pv: Any, input_dict: OrderedDict, options: Options):

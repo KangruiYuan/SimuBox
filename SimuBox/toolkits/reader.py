@@ -14,7 +14,7 @@ from ..schema import (
     Density,
     Fet,
     DensityParseResult,
-    Numeric,
+    RealNum,
     FileLike,
     PathLike,
     Operation,
@@ -80,7 +80,7 @@ def read_density(
     parse_N: bool = True,
     parse_L: bool = False,
     filename: str = "phout.txt",
-    binary: Sequence[str] = (".bin"),
+    binary: bool = False,
     mode: str = "r",
     encoding: str = "utf-8",
     **kwargs,
@@ -104,13 +104,25 @@ def read_density(
         text = False
     elif isinstance(path, PathLike):
         path = check_filepath(path, filename)
-        if path.suffix == binary:
+        if binary or path.suffix in (".bin"):
             bin_read_function = np.fromfile
             content = path
             text = False
         else:
-            content = path.open(mode=mode, encoding=encoding).readlines()
-            text = True
+            try:
+                content = path.open(mode=mode, encoding=encoding).readlines()
+                text = True
+            except UnicodeDecodeError as ude:
+                return read_density(
+                    path,
+                    parse_N=True,
+                    parse_L=True,
+                    filename=filename,
+                    mode=mode,
+                    encoding=encoding,
+                    binary=True,
+                    **kwargs,
+                )
     else:
         raise ValueError(type(path))
 
@@ -164,6 +176,8 @@ def read_density(
                     filename=filename,
                     mode=mode,
                     **kwargs,
+                    encoding=encoding,
+                    binary=binary,
                 )
             else:
                 raise pe
@@ -189,6 +203,8 @@ def read_density(
                     parse_L=True,
                     filename=filename,
                     mode=mode,
+                    encoding=encoding,
+                    binary=binary,
                     **kwargs,
                 )
             else:
@@ -215,7 +231,7 @@ def read_csv(
     path: PathLike,
     skiprows: int = 0,
     accuracy: int = 3,
-    Operations: Optional[Union[Operation, Sequence[Operation]]] = None,
+    operation: Optional[Union[Operation, Sequence[Operation]]] = None,
     subset: Optional[Union[str, Sequence[str]]] = ("phase", "freeE"),
     **kwargs,
 ):
@@ -229,8 +245,8 @@ def read_csv(
     if subset:
         data = data.drop_duplicates(subset=subset)
 
-    if Operations is None:
-        Operations = [
+    if operation is None:
+        operation = [
             Operation(
                 left="ly",
                 right="lz",
@@ -253,10 +269,10 @@ def read_csv(
                 name=kwargs.get("var", "chiN"),
             ),
         ]
-    elif isinstance(Operations, Operation):
-        Operations = [Operations]
+    elif isinstance(operation, Operation):
+        operation = [operation]
 
-    for Opr in Operations:
+    for Opr in operation:
         try:
             data = process_dataframe(data, Opr)
         except KeyError:
@@ -326,7 +342,7 @@ def parse_density(
     target: Union[int, Iterable[int], str] = 0,
     permute: Optional[Iterable[int]] = None,
     slices: Optional[tuple[int, int]] = None,
-    expand: Union[Numeric, Sequence[Numeric]] = 1,
+    expand: Union[RealNum, Sequence[RealNum]] = 1,
     **kwargs,
 ) -> DensityParseResult:
     """
@@ -368,7 +384,7 @@ def parse_density(
     shape = f_vec(shape)
     lxlylz = f_vec(lxlylz)
 
-    if isinstance(expand, Numeric):
+    if isinstance(expand, RealNum):
         expand = np.array([max(expand, 1)] * len(shape))
     else:
         assert len(expand) == len(shape), f"当前矩阵维度为3，拓展信息长度为{len(expand)}, 不匹配"

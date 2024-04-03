@@ -1,11 +1,11 @@
 import re
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional, Union, Sequence
 
 import numpy as np
 import pandas as pd
 
-from ..schema import Numeric, Vector, PathLike, Operation, OPERATOR_FUNCTION_MAP
+from ..schema import RealNum, Vector, PathLike, Operation, OPERATOR_FUNCTION_MAP
 
 
 __all__ = [
@@ -44,7 +44,7 @@ def arange(
     return np.sort(res)
 
 
-def find_nearest_1d(array: Vector, value: Numeric) -> int:
+def find_nearest_1d(array: Vector, value: RealNum) -> int:
     """
     寻找序列（array）中与指定值（value）最接近的数值的索引。
 
@@ -58,9 +58,21 @@ def find_nearest_1d(array: Vector, value: Numeric) -> int:
     return idx
 
 
-def replace_target(path: PathLike, target: str, key: str = "phase") -> Optional[Path]:
+def replace_target(
+    path: PathLike, target: Union[str, RealNum], key: str = "phase"
+) -> Optional[Path]:
+    """
+    替换路径中的信息。
+
+    :param path: 原路径。
+    :param target: 需要替换的值。
+    :param key: 值对应的名称。
+    :return: 替换值之后的路径。
+    """
+
     path = str(path)
     pattern = re.compile(key + r"(\w+)_?")
+    target = str(target)
     match = pattern.search(path)
     # 如果找到匹配项，则进行替换
     if match:
@@ -73,20 +85,39 @@ def replace_target(path: PathLike, target: str, key: str = "phase") -> Optional[
         return
 
 
-def match_target(candidates: list[str], **kwargs):
+def match_target(candidates: Sequence[PathLike], **kwargs):
+    """
+    按照指定的关键字匹配路径。
+
+    :param candidates: 等待匹配的对象。
+    :param kwargs:
+    :return: 匹配到的对象。
+    """
     criteria = [k + str(v) for k, v in kwargs.items()]
+    res = []
     for candidate in candidates:
         candidate = str(candidate)
         for c in criteria:
             if c not in candidate:
                 break
         else:
-            return Path(candidate)
-    print(f"{criteria}匹配失败。")
-    return
+            res.append(Path(candidate))
+    if len(res) == 0:
+        print(f"{criteria}匹配失败。")
+        return
+    else:
+        return res if len(res) > 1 else res[0]
 
 
-def process_dataframe(data: pd.DataFrame, operation: Operation, accuracy: int = 3):
+def process_dataframe(data: pd.DataFrame, operation: Operation):
+    """
+    对dataframe数据进行便捷的预处理。
+
+    :param data:
+    :param operation:
+    :param accuracy:
+    :return:
+    """
 
     if operation.left in data.columns:
         left = data[operation.left].values
@@ -100,7 +131,7 @@ def process_dataframe(data: pd.DataFrame, operation: Operation, accuracy: int = 
             )
 
         data[operation.name] = np.around(
-            OPERATOR_FUNCTION_MAP[operation.operator](left, right), accuracy
+            OPERATOR_FUNCTION_MAP[operation.operator](left, right), operation.accuracy
         )
         return data
     else:

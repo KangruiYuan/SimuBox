@@ -1,4 +1,4 @@
 
-from .Agents import *
-from .Phases import *
-from .Manager import *
+from .agents import *
+from .phases import *
+from .manager import *
