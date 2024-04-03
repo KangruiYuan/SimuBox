@@ -89,7 +89,7 @@ instance/
 .scrapy
 
 # Sphinx documentation
-docs/_build/
+compile/_build/
 
 # PyBuilder
 .pybuilder/

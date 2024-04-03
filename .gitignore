@@ -6,7 +6,7 @@ __pycache__/
 
 
 # dev docs
-/docs/build_flow.md
+/compile/build_flow.md
 
 # build dist
 /build/

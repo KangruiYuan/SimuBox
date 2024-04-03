@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="zh-CN" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SimuBox.schema.structs package &mdash; SimuBox  文档</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/documentation_options.js?v=7d86a446"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../_static/translations.js?v=beaddf03"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="SimuBox.schema.structs.ChartElement module" href="SimuBox.schema.structs.ChartElement.html" />
+    <link rel="prev" title="SimuBox.schema.enums.SCFTEnums module" href="SimuBox.schema.enums.SCFTEnums.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            SimuBox
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../readme_link.html"><em>SimuBox</em> for science calculation</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API References:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">SimuBox</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="SimuBox.html">SimuBox package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="SimuBox.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="SimuBox.artist.html">SimuBox.artist package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="SimuBox.calculator.html">SimuBox.calculator package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="SimuBox.runner.html">SimuBox.runner package</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="SimuBox.schema.html">SimuBox.schema package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="SimuBox.toolkits.html">SimuBox.toolkits package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.html#module-SimuBox">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">SimuBox</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">SimuBox</a></li>
+          <li class="breadcrumb-item"><a href="SimuBox.html">SimuBox package</a></li>
+          <li class="breadcrumb-item"><a href="SimuBox.schema.html">SimuBox.schema package</a></li>
+      <li class="breadcrumb-item active">SimuBox.schema.structs package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/python_apis/SimuBox.schema.structs.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="simubox-schema-structs-package">
+<h1>SimuBox.schema.structs package<a class="headerlink" href="#simubox-schema-structs-package" title="Link to this heading">¶</a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="SimuBox.schema.structs.ChartElement.html">SimuBox.schema.structs.ChartElement module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="SimuBox.schema.structs.ChartElement.html#SimuBox.schema.structs.ChartElement.Contour"><code class="docutils literal notranslate"><span class="pre">Contour</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.ChartElement.html#SimuBox.schema.structs.ChartElement.Contour.IQ"><code class="docutils literal notranslate"><span class="pre">Contour.IQ</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.ChartElement.html#SimuBox.schema.structs.ChartElement.Contour.area"><code class="docutils literal notranslate"><span class="pre">Contour.area</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.ChartElement.html#SimuBox.schema.structs.ChartElement.Contour.length"><code class="docutils literal notranslate"><span class="pre">Contour.length</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.ChartElement.html#SimuBox.schema.structs.ChartElement.Contour.level"><code class="docutils literal notranslate"><span class="pre">Contour.level</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.ChartElement.html#SimuBox.schema.structs.ChartElement.Contour.model_config"><code class="docutils literal notranslate"><span class="pre">Contour.model_config</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.ChartElement.html#SimuBox.schema.structs.ChartElement.Contour.model_fields"><code class="docutils literal notranslate"><span class="pre">Contour.model_fields</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.ChartElement.html#SimuBox.schema.structs.ChartElement.Contour.vertices"><code class="docutils literal notranslate"><span class="pre">Contour.vertices</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="SimuBox.schema.structs.ChartElement.html#SimuBox.schema.structs.ChartElement.LandscapeResult"><code class="docutils literal notranslate"><span class="pre">LandscapeResult</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.ChartElement.html#SimuBox.schema.structs.ChartElement.LandscapeResult.IQs"><code class="docutils literal notranslate"><span class="pre">LandscapeResult.IQs</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.ChartElement.html#SimuBox.schema.structs.ChartElement.LandscapeResult.clb"><code class="docutils literal notranslate"><span class="pre">LandscapeResult.clb</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.ChartElement.html#SimuBox.schema.structs.ChartElement.LandscapeResult.contour_fig"><code class="docutils literal notranslate"><span class="pre">LandscapeResult.contour_fig</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.ChartElement.html#SimuBox.schema.structs.ChartElement.LandscapeResult.contourf_fig"><code class="docutils literal notranslate"><span class="pre">LandscapeResult.contourf_fig</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.ChartElement.html#SimuBox.schema.structs.ChartElement.LandscapeResult.levels"><code class="docutils literal notranslate"><span class="pre">LandscapeResult.levels</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.ChartElement.html#SimuBox.schema.structs.ChartElement.LandscapeResult.mat"><code class="docutils literal notranslate"><span class="pre">LandscapeResult.mat</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.ChartElement.html#SimuBox.schema.structs.ChartElement.LandscapeResult.model_config"><code class="docutils literal notranslate"><span class="pre">LandscapeResult.model_config</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.ChartElement.html#SimuBox.schema.structs.ChartElement.LandscapeResult.model_fields"><code class="docutils literal notranslate"><span class="pre">LandscapeResult.model_fields</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.ChartElement.html#SimuBox.schema.structs.ChartElement.LandscapeResult.xticks"><code class="docutils literal notranslate"><span class="pre">LandscapeResult.xticks</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.ChartElement.html#SimuBox.schema.structs.ChartElement.LandscapeResult.yticks"><code class="docutils literal notranslate"><span class="pre">LandscapeResult.yticks</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="SimuBox.schema.structs.ChartElement.html#SimuBox.schema.structs.ChartElement.Line"><code class="docutils literal notranslate"><span class="pre">Line</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.ChartElement.html#SimuBox.schema.structs.ChartElement.Line.label"><code class="docutils literal notranslate"><span class="pre">Line.label</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.ChartElement.html#SimuBox.schema.structs.ChartElement.Line.model_config"><code class="docutils literal notranslate"><span class="pre">Line.model_config</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.ChartElement.html#SimuBox.schema.structs.ChartElement.Line.model_fields"><code class="docutils literal notranslate"><span class="pre">Line.model_fields</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.ChartElement.html#SimuBox.schema.structs.ChartElement.Line.value"><code class="docutils literal notranslate"><span class="pre">Line.value</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.ChartElement.html#SimuBox.schema.structs.ChartElement.Line.x"><code class="docutils literal notranslate"><span class="pre">Line.x</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.ChartElement.html#SimuBox.schema.structs.ChartElement.Line.y"><code class="docutils literal notranslate"><span class="pre">Line.y</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.ChartElement.html#SimuBox.schema.structs.ChartElement.Line.z"><code class="docutils literal notranslate"><span class="pre">Line.z</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="SimuBox.schema.structs.ChartElement.html#SimuBox.schema.structs.ChartElement.LineCompareResult"><code class="docutils literal notranslate"><span class="pre">LineCompareResult</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.ChartElement.html#SimuBox.schema.structs.ChartElement.LineCompareResult.lines"><code class="docutils literal notranslate"><span class="pre">LineCompareResult.lines</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.ChartElement.html#SimuBox.schema.structs.ChartElement.LineCompareResult.model_config"><code class="docutils literal notranslate"><span class="pre">LineCompareResult.model_config</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.ChartElement.html#SimuBox.schema.structs.ChartElement.LineCompareResult.model_fields"><code class="docutils literal notranslate"><span class="pre">LineCompareResult.model_fields</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.ChartElement.html#SimuBox.schema.structs.ChartElement.LineCompareResult.xlabel"><code class="docutils literal notranslate"><span class="pre">LineCompareResult.xlabel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.ChartElement.html#SimuBox.schema.structs.ChartElement.LineCompareResult.ylabel"><code class="docutils literal notranslate"><span class="pre">LineCompareResult.ylabel</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="SimuBox.schema.structs.ChartElement.html#SimuBox.schema.structs.ChartElement.PhaseCompareResult"><code class="docutils literal notranslate"><span class="pre">PhaseCompareResult</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.ChartElement.html#SimuBox.schema.structs.ChartElement.PhaseCompareResult.data"><code class="docutils literal notranslate"><span class="pre">PhaseCompareResult.data</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.ChartElement.html#SimuBox.schema.structs.ChartElement.PhaseCompareResult.mat"><code class="docutils literal notranslate"><span class="pre">PhaseCompareResult.mat</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.ChartElement.html#SimuBox.schema.structs.ChartElement.PhaseCompareResult.model_config"><code class="docutils literal notranslate"><span class="pre">PhaseCompareResult.model_config</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.ChartElement.html#SimuBox.schema.structs.ChartElement.PhaseCompareResult.model_fields"><code class="docutils literal notranslate"><span class="pre">PhaseCompareResult.model_fields</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.ChartElement.html#SimuBox.schema.structs.ChartElement.PhaseCompareResult.phase_map"><code class="docutils literal notranslate"><span class="pre">PhaseCompareResult.phase_map</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="SimuBox.schema.structs.ChartElement.html#SimuBox.schema.structs.ChartElement.Point"><code class="docutils literal notranslate"><span class="pre">Point</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.ChartElement.html#SimuBox.schema.structs.ChartElement.Point.label"><code class="docutils literal notranslate"><span class="pre">Point.label</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.ChartElement.html#SimuBox.schema.structs.ChartElement.Point.model_config"><code class="docutils literal notranslate"><span class="pre">Point.model_config</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.ChartElement.html#SimuBox.schema.structs.ChartElement.Point.model_fields"><code class="docutils literal notranslate"><span class="pre">Point.model_fields</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.ChartElement.html#SimuBox.schema.structs.ChartElement.Point.value"><code class="docutils literal notranslate"><span class="pre">Point.value</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.ChartElement.html#SimuBox.schema.structs.ChartElement.Point.x"><code class="docutils literal notranslate"><span class="pre">Point.x</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.ChartElement.html#SimuBox.schema.structs.ChartElement.Point.y"><code class="docutils literal notranslate"><span class="pre">Point.y</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.ChartElement.html#SimuBox.schema.structs.ChartElement.Point.z"><code class="docutils literal notranslate"><span class="pre">Point.z</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="SimuBox.schema.structs.ComputedRes.html">SimuBox.schema.structs.ComputedRes module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html">SimuBox.schema.structs.DataFile module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Density"><code class="docutils literal notranslate"><span class="pre">Density</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Density.NxNyNz"><code class="docutils literal notranslate"><span class="pre">Density.NxNyNz</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Density.data"><code class="docutils literal notranslate"><span class="pre">Density.data</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Density.lxlylz"><code class="docutils literal notranslate"><span class="pre">Density.lxlylz</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Density.model_config"><code class="docutils literal notranslate"><span class="pre">Density.model_config</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Density.model_fields"><code class="docutils literal notranslate"><span class="pre">Density.model_fields</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Density.path"><code class="docutils literal notranslate"><span class="pre">Density.path</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Density.repair_data"><code class="docutils literal notranslate"><span class="pre">Density.repair_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Density.repair_from_fet"><code class="docutils literal notranslate"><span class="pre">Density.repair_from_fet()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Density.repair_from_printout"><code class="docutils literal notranslate"><span class="pre">Density.repair_from_printout()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Density.shape"><code class="docutils literal notranslate"><span class="pre">Density.shape</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.DensityParseResult"><code class="docutils literal notranslate"><span class="pre">DensityParseResult</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.DensityParseResult.NxNyNz"><code class="docutils literal notranslate"><span class="pre">DensityParseResult.NxNyNz</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.DensityParseResult.expand"><code class="docutils literal notranslate"><span class="pre">DensityParseResult.expand</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.DensityParseResult.lxlylz"><code class="docutils literal notranslate"><span class="pre">DensityParseResult.lxlylz</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.DensityParseResult.mat"><code class="docutils literal notranslate"><span class="pre">DensityParseResult.mat</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.DensityParseResult.model_config"><code class="docutils literal notranslate"><span class="pre">DensityParseResult.model_config</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.DensityParseResult.model_fields"><code class="docutils literal notranslate"><span class="pre">DensityParseResult.model_fields</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.DensityParseResult.path"><code class="docutils literal notranslate"><span class="pre">DensityParseResult.path</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.DensityParseResult.raw_NxNyNz"><code class="docutils literal notranslate"><span class="pre">DensityParseResult.raw_NxNyNz</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.DensityParseResult.raw_lxlylz"><code class="docutils literal notranslate"><span class="pre">DensityParseResult.raw_lxlylz</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.DensityParseResult.raw_mat"><code class="docutils literal notranslate"><span class="pre">DensityParseResult.raw_mat</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.DensityParseResult.target"><code class="docutils literal notranslate"><span class="pre">DensityParseResult.target</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Fet"><code class="docutils literal notranslate"><span class="pre">Fet</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Fet.Q0"><code class="docutils literal notranslate"><span class="pre">Fet.Q0</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Fet.VolumeFraction0"><code class="docutils literal notranslate"><span class="pre">Fet.VolumeFraction0</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Fet.activity0"><code class="docutils literal notranslate"><span class="pre">Fet.activity0</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Fet.freeAB"><code class="docutils literal notranslate"><span class="pre">Fet.freeAB</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Fet.freeAB_sum"><code class="docutils literal notranslate"><span class="pre">Fet.freeAB_sum</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Fet.freeAC"><code class="docutils literal notranslate"><span class="pre">Fet.freeAC</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Fet.freeBA"><code class="docutils literal notranslate"><span class="pre">Fet.freeBA</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Fet.freeBC"><code class="docutils literal notranslate"><span class="pre">Fet.freeBC</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Fet.freeCA"><code class="docutils literal notranslate"><span class="pre">Fet.freeCA</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Fet.freeCB"><code class="docutils literal notranslate"><span class="pre">Fet.freeCB</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Fet.freeDiff"><code class="docutils literal notranslate"><span class="pre">Fet.freeDiff</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Fet.freeEnergy"><code class="docutils literal notranslate"><span class="pre">Fet.freeEnergy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Fet.freeS"><code class="docutils literal notranslate"><span class="pre">Fet.freeS</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Fet.freeW"><code class="docutils literal notranslate"><span class="pre">Fet.freeW</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Fet.inCompMax"><code class="docutils literal notranslate"><span class="pre">Fet.inCompMax</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Fet.lx"><code class="docutils literal notranslate"><span class="pre">Fet.lx</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Fet.lx_full"><code class="docutils literal notranslate"><span class="pre">Fet.lx_full</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Fet.ly"><code class="docutils literal notranslate"><span class="pre">Fet.ly</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Fet.ly_full"><code class="docutils literal notranslate"><span class="pre">Fet.ly_full</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Fet.lz"><code class="docutils literal notranslate"><span class="pre">Fet.lz</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Fet.lz_full"><code class="docutils literal notranslate"><span class="pre">Fet.lz_full</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Fet.model_config"><code class="docutils literal notranslate"><span class="pre">Fet.model_config</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Fet.model_fields"><code class="docutils literal notranslate"><span class="pre">Fet.model_fields</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Fet.path"><code class="docutils literal notranslate"><span class="pre">Fet.path</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Fet.stressX"><code class="docutils literal notranslate"><span class="pre">Fet.stressX</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Fet.stressY"><code class="docutils literal notranslate"><span class="pre">Fet.stressY</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Fet.stressZ"><code class="docutils literal notranslate"><span class="pre">Fet.stressZ</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Fet.sumVolume"><code class="docutils literal notranslate"><span class="pre">Fet.sumVolume</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Fet.xABN"><code class="docutils literal notranslate"><span class="pre">Fet.xABN</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Fet.xACN"><code class="docutils literal notranslate"><span class="pre">Fet.xACN</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Fet.xBAN"><code class="docutils literal notranslate"><span class="pre">Fet.xBAN</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Fet.xBCN"><code class="docutils literal notranslate"><span class="pre">Fet.xBCN</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Fet.xCAN"><code class="docutils literal notranslate"><span class="pre">Fet.xCAN</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Fet.xCBN"><code class="docutils literal notranslate"><span class="pre">Fet.xCBN</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Printout"><code class="docutils literal notranslate"><span class="pre">Printout</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Printout.box"><code class="docutils literal notranslate"><span class="pre">Printout.box</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Printout.freeEnergy"><code class="docutils literal notranslate"><span class="pre">Printout.freeEnergy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Printout.freeS"><code class="docutils literal notranslate"><span class="pre">Printout.freeS</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Printout.freeU"><code class="docutils literal notranslate"><span class="pre">Printout.freeU</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Printout.freeW"><code class="docutils literal notranslate"><span class="pre">Printout.freeW</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Printout.freeWS"><code class="docutils literal notranslate"><span class="pre">Printout.freeWS</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Printout.inCompMax"><code class="docutils literal notranslate"><span class="pre">Printout.inCompMax</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Printout.lxlylz"><code class="docutils literal notranslate"><span class="pre">Printout.lxlylz</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Printout.model_config"><code class="docutils literal notranslate"><span class="pre">Printout.model_config</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Printout.model_fields"><code class="docutils literal notranslate"><span class="pre">Printout.model_fields</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Printout.path"><code class="docutils literal notranslate"><span class="pre">Printout.path</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Printout.potentials"><code class="docutils literal notranslate"><span class="pre">Printout.potentials</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Printout.step"><code class="docutils literal notranslate"><span class="pre">Printout.step</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.Printout.volumes"><code class="docutils literal notranslate"><span class="pre">Printout.volumes</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.XML"><code class="docutils literal notranslate"><span class="pre">XML</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.XML.NxNyNz"><code class="docutils literal notranslate"><span class="pre">XML.NxNyNz</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.XML.atoms_mapping"><code class="docutils literal notranslate"><span class="pre">XML.atoms_mapping</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.XML.atoms_type"><code class="docutils literal notranslate"><span class="pre">XML.atoms_type</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.XML.data"><code class="docutils literal notranslate"><span class="pre">XML.data</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.XML.grid_spacing"><code class="docutils literal notranslate"><span class="pre">XML.grid_spacing</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.XML.lxlylz"><code class="docutils literal notranslate"><span class="pre">XML.lxlylz</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.XML.model_config"><code class="docutils literal notranslate"><span class="pre">XML.model_config</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.XML.model_fields"><code class="docutils literal notranslate"><span class="pre">XML.model_fields</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.XML.path"><code class="docutils literal notranslate"><span class="pre">XML.path</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.XMLTransResult"><code class="docutils literal notranslate"><span class="pre">XMLTransResult</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.XMLTransResult.model_config"><code class="docutils literal notranslate"><span class="pre">XMLTransResult.model_config</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.XMLTransResult.model_fields"><code class="docutils literal notranslate"><span class="pre">XMLTransResult.model_fields</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.XMLTransResult.phi"><code class="docutils literal notranslate"><span class="pre">XMLTransResult.phi</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.XMLTransResult.write"><code class="docutils literal notranslate"><span class="pre">XMLTransResult.write()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.DataFile.html#SimuBox.schema.structs.DataFile.XMLTransResult.xml"><code class="docutils literal notranslate"><span class="pre">XMLTransResult.xml</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="SimuBox.schema.structs.MixinStructs.html">SimuBox.schema.structs.MixinStructs module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="SimuBox.schema.structs.MixinStructs.html#SimuBox.schema.structs.MixinStructs.FigureAxesMixin"><code class="docutils literal notranslate"><span class="pre">FigureAxesMixin</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.MixinStructs.html#SimuBox.schema.structs.MixinStructs.FigureAxesMixin.ax"><code class="docutils literal notranslate"><span class="pre">FigureAxesMixin.ax</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.MixinStructs.html#SimuBox.schema.structs.MixinStructs.FigureAxesMixin.fig"><code class="docutils literal notranslate"><span class="pre">FigureAxesMixin.fig</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.MixinStructs.html#SimuBox.schema.structs.MixinStructs.FigureAxesMixin.model_config"><code class="docutils literal notranslate"><span class="pre">FigureAxesMixin.model_config</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.MixinStructs.html#SimuBox.schema.structs.MixinStructs.FigureAxesMixin.model_fields"><code class="docutils literal notranslate"><span class="pre">FigureAxesMixin.model_fields</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="SimuBox.schema.structs.MixinStructs.html#SimuBox.schema.structs.MixinStructs.MixinBaseModel"><code class="docutils literal notranslate"><span class="pre">MixinBaseModel</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.MixinStructs.html#SimuBox.schema.structs.MixinStructs.MixinBaseModel.Config"><code class="docutils literal notranslate"><span class="pre">MixinBaseModel.Config</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="SimuBox.schema.structs.MixinStructs.html#SimuBox.schema.structs.MixinStructs.MixinBaseModel.Config.arbitrary_types_allowed"><code class="docutils literal notranslate"><span class="pre">MixinBaseModel.Config.arbitrary_types_allowed</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.MixinStructs.html#SimuBox.schema.structs.MixinStructs.MixinBaseModel.model_config"><code class="docutils literal notranslate"><span class="pre">MixinBaseModel.model_config</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.MixinStructs.html#SimuBox.schema.structs.MixinStructs.MixinBaseModel.model_fields"><code class="docutils literal notranslate"><span class="pre">MixinBaseModel.model_fields</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="SimuBox.schema.structs.OtherStructs.html">SimuBox.schema.structs.OtherStructs module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="SimuBox.schema.structs.OtherStructs.html#SimuBox.schema.structs.OtherStructs.Operation"><code class="docutils literal notranslate"><span class="pre">Operation</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.OtherStructs.html#SimuBox.schema.structs.OtherStructs.Operation.accuracy"><code class="docutils literal notranslate"><span class="pre">Operation.accuracy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.OtherStructs.html#SimuBox.schema.structs.OtherStructs.Operation.factor"><code class="docutils literal notranslate"><span class="pre">Operation.factor</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.OtherStructs.html#SimuBox.schema.structs.OtherStructs.Operation.left"><code class="docutils literal notranslate"><span class="pre">Operation.left</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.OtherStructs.html#SimuBox.schema.structs.OtherStructs.Operation.model_config"><code class="docutils literal notranslate"><span class="pre">Operation.model_config</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.OtherStructs.html#SimuBox.schema.structs.OtherStructs.Operation.model_fields"><code class="docutils literal notranslate"><span class="pre">Operation.model_fields</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.OtherStructs.html#SimuBox.schema.structs.OtherStructs.Operation.name"><code class="docutils literal notranslate"><span class="pre">Operation.name</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.OtherStructs.html#SimuBox.schema.structs.OtherStructs.Operation.operator"><code class="docutils literal notranslate"><span class="pre">Operation.operator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="SimuBox.schema.structs.OtherStructs.html#SimuBox.schema.structs.OtherStructs.Operation.right"><code class="docutils literal notranslate"><span class="pre">Operation.right</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="SimuBox.schema.structs.SCFTStructs.html">SimuBox.schema.structs.SCFTStructs module</a></li>
+</ul>
+</div>
+</section>
+<section id="module-SimuBox.schema.structs">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-SimuBox.schema.structs" title="Link to this heading">¶</a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="SimuBox.schema.enums.SCFTEnums.html" class="btn btn-neutral float-left" title="SimuBox.schema.enums.SCFTEnums module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="SimuBox.schema.structs.ChartElement.html" class="btn btn-neutral float-right" title="SimuBox.schema.structs.ChartElement module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Alkaid Yuan.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
