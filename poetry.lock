@@ -2291,13 +2291,13 @@ reference = "tsinghua-source"
 
 [[package]]
 name = "plotly"
-version = "5.18.0"
+version = "5.20.0"
 description = "An open-source, interactive data visualization library for Python"
 optional = false
-python-versions = ">=3.6"
+python-versions = ">=3.8"
 files = [
-    {file = "plotly-5.18.0-py3-none-any.whl", hash = "sha256:23aa8ea2f4fb364a20d34ad38235524bd9d691bf5299e800bca608c31e8db8de"},
-    {file = "plotly-5.18.0.tar.gz", hash = "sha256:360a31e6fbb49d12b007036eb6929521343d6bee2236f8459915821baefa2cbb"},
+    {file = "plotly-5.20.0-py3-none-any.whl", hash = "sha256:837a9c8aa90f2c0a2f0d747b82544d014dc2a2bdde967b5bb1da25b53932d1a9"},
+    {file = "plotly-5.20.0.tar.gz", hash = "sha256:bf901c805d22032cfa534b2ff7c5aa6b0659e037f19ec1e0cca7f585918b5c89"},
 ]
 
 [package.dependencies]
@@ -2716,13 +2716,13 @@ reference = "tsinghua-source"
 
 [[package]]
 name = "pyecharts"
-version = "2.0.4"
+version = "2.0.5"
 description = "Python options, make charting easier"
 optional = false
 python-versions = "*"
 files = [
-    {file = "pyecharts-2.0.4-py3-none-any.whl", hash = "sha256:5441ffa1e804558b22c7769c57ac1c85cf97951a5be6f8938ef615a13bbd3d51"},
-    {file = "pyecharts-2.0.4.tar.gz", hash = "sha256:14503e688d4de8560e3d41c19db1b472d9a0208e25dd860626e1e8c665d12d20"},
+    {file = "pyecharts-2.0.5-py3-none-any.whl", hash = "sha256:77380f671679e349d676835a3a0e2f27644fec63e695e9c64556a2dae85d4070"},
+    {file = "pyecharts-2.0.5.tar.gz", hash = "sha256:664bdb6075eb585900d97204382905c958ade306b277ae68aedd310434de56ff"},
 ]
 
 [package.dependencies]
@@ -4644,4 +4644,4 @@ reference = "tsinghua-source"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "3e912127274c39081c23f145104c6484f46ba40697356d6409931f633554c3c7"
+content-hash = "21a3115cee9d26a8b7c8ffdb0c0420fea17ed43b6dc27cfb92928036ca927f35"

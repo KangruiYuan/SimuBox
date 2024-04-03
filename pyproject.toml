@@ -30,6 +30,8 @@ streamlit-extras = "^0.3.6"
 pydantic = "^2.5.2"
 opencv-python = "^4.8.1.78"
 opencv-python-headless = "^4.8.1.78"
+plotly = "^5.20.0"
+pyecharts = "^2.0.5"
 
 [tool.poetry.group.dev.dependencies]
 streamlit-echarts = "^0.4.0"
