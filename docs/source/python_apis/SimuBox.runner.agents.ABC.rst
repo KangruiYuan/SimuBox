@@ -1,7 +1,7 @@
-SimuBox.runner.Agents.ABC module
+SimuBox.runner.agents.ABC module
 ================================
 
-.. automodule:: SimuBox.runner.Agents.ABC
+.. automodule:: SimuBox.runner.agents.ABC
    :members:
    :undoc-members:
    :show-inheritance:

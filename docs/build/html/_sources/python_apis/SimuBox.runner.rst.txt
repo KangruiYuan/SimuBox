@@ -7,7 +7,7 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
-   SimuBox.runner.Agents
+   SimuBox.runner.agents
 
 Submodules
 ----------
@@ -15,8 +15,8 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   SimuBox.runner.Manager
-   SimuBox.runner.Phases
+   SimuBox.runner.manager
+   SimuBox.runner.phases
 
 Module contents
 ---------------

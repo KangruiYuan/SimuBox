@@ -1,7 +1,7 @@
-SimuBox.runner.Phases module
+SimuBox.runner.phases module
 ============================
 
-.. automodule:: SimuBox.runner.Phases
+.. automodule:: SimuBox.runner.phases
    :members:
    :undoc-members:
    :show-inheritance:

@@ -1,7 +1,7 @@
-SimuBox.runner.Agents.BABCB module
+SimuBox.runner.agents.BABCB module
 ==================================
 
-.. automodule:: SimuBox.runner.Agents.BABCB
+.. automodule:: SimuBox.runner.agents.BABCB
    :members:
    :undoc-members:
    :show-inheritance:

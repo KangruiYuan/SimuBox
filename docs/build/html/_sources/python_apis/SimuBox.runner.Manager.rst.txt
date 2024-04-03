@@ -1,7 +1,7 @@
-SimuBox.runner.Manager module
+SimuBox.runner.manager module
 =============================
 
-.. automodule:: SimuBox.runner.Manager
+.. automodule:: SimuBox.runner.manager
    :members:
    :undoc-members:
    :show-inheritance:

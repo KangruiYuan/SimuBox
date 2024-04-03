@@ -1,7 +1,7 @@
-SimuBox.runner.Agents.MixinModel module
+SimuBox.runner.agents.MixinModel module
 =======================================
 
-.. automodule:: SimuBox.runner.Agents.MixinModel
+.. automodule:: SimuBox.runner.agents.MixinModel
    :members:
    :undoc-members:
    :show-inheritance:
