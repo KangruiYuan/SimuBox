@@ -1,7 +1,0 @@
-SimuBox.schema.structs.file\_structs module
-===========================================
-
-.. automodule:: SimuBox.schema.structs.file_structs
-   :members:
-   :undoc-members:
-   :show-inheritance:

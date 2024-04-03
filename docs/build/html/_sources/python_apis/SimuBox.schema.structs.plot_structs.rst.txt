@@ -1,7 +1,0 @@
-SimuBox.schema.structs.plot\_structs module
-===========================================
-
-.. automodule:: SimuBox.schema.structs.plot_structs
-   :members:
-   :undoc-members:
-   :show-inheritance:
