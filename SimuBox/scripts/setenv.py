@@ -8,7 +8,8 @@ json_files = (abs_current_dir / "JSON").iterdir()
 alias_list = [
     'alias pj="ls | grep push_job | xargs -i python3 {}"',
     'alias pjs="ls | grep push_job | xargs -i python3 {} >aa.txt 2>&1 &"',
-    f'alias prep="cp {abs_current_dir / "extractor.py"} ./;cp {abs_current_dir / "push_job.py"}"',
+    f'alias prep="cp {abs_current_dir / "push_job.py"}" ./',
+    # f'alias prep="cp {abs_current_dir / "extractor.py"} ./;cp {abs_current_dir / "push_job.py"}"',
 ]
 
 for json_file in json_files:

@@ -1,9 +1,6 @@
 from collections import OrderedDict
 
-try:
-    from SCFTRunner import BABCB, SCFTManager, Options, arange, Servers
-except ImportError:
-    from SimuBox import BABCB, SCFTManager, Options, arange, Servers
+from SimuBox import BABCB, SCFTManager, Options, arange, Servers
 
 import platform
 

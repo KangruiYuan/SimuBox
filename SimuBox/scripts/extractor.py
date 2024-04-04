@@ -10,8 +10,7 @@ from itertools import combinations
 from pathlib import Path
 from typing import Any, Union, Sequence
 from tqdm import tqdm
-
-from push_job import opts
+from ..schema.structs.SCFTStructs import Options as opts
 
 
 def check_files(files: list[Union[str, Path]]):
@@ -23,10 +22,11 @@ def check_files(files: list[Union[str, Path]]):
 
 
 def check_result(res: dict):
-    if res["phase"] == "C4" and round(res["ly"] / res["lz"], 3) != 1.0:
-        res["phase"] = "Crect"
-    elif res["phase"] == "Crect" and round(res["ly"] / res["lz"], 3) == 1.0:
-        res["phase"] = "C4"
+    if "phase" in res:
+        if res["phase"] == "C4" and round(res["ly"] / res["lz"], 3) != 1.0:
+            res["phase"] = "Crect"
+        elif res["phase"] == "Crect" and round(res["ly"] / res["lz"], 3) == 1.0:
+            res["phase"] = "C4"
 
     if round(res["freeE_dis"] - res["freeE"], 3) == 0:
         res["phase"] = "Disorder"
@@ -97,11 +97,11 @@ def collect(
             json_data = json.load(fp, object_pairs_hook=OrderedDict)
 
         data = {}
-        scripts = json_data["Scripts"]
+        scripts = json_data.get('Scripts', {})
         data.update(scripts)
         stats_res = stats_component(json_data)
         data.update(stats_res)
-        server_before = json_data["Scripts"].get("cal_type", "cpu")
+        server_before = scripts.get("cal_type", "cpu")
         data["server"] = server_before
         data["target_comp"] = json_data["Iteration"]["IncompressibilityTarget"]
         if server_before == "cpu":
@@ -196,27 +196,29 @@ def dispatch(missions: list):
             mission_folder = mission["path"]
             os.chdir(mission_folder)
             with open(opts.json_name, mode="r") as fp:
-                json_base = json.load(fp, object_pairs_hook=OrderedDict)
+                json_data = json.load(fp, object_pairs_hook=OrderedDict)
             server = args.server or mission["server"]
-            json_base["Scripts"]["cal_type"] = (
+            if "Scripts" not in json_data:
+                json_data["Scripts"] = {}
+            json_data["Scripts"]["cal_type"] = (
                 server if os.path.isfile("phout.txt") else "cpu"
             )
-            json_base["Iteration"]["MaxStep"] = mission["step"]
-            json_base["Initializer"]["UnitCell"]["Length"] = mission["lxlylz"]
+            json_data["Iteration"]["MaxStep"] = mission["step"]
+            json_data["Initializer"]["UnitCell"]["Length"] = mission["lxlylz"]
             if os.path.isfile("phout.txt"):
                 sp.call("cp phout.txt phin.txt", shell=True, stdout=sp.PIPE)
-                json_base["Initializer"]["Mode"] = "FILE"
-                json_base["Initializer"]["FileInitializer"] = {
+                json_data["Initializer"]["Mode"] = "FILE"
+                json_data["Initializer"]["FileInitializer"] = {
                     "Mode": "OMEGA",
                     "Path": "phin.txt",
                     "SkipLineNumber": 1 if mission["server"] == "cpu" else 2,
                 }
-                json_base["Iteration"]["AndersonMixing"]["Switch"] = "AUTO"
+                json_data["Iteration"]["AndersonMixing"]["Switch"] = "AUTO"
 
                 with open(opts.json_name, "w") as f:
-                    json.dump(json_base, f, indent=4, separators=(",", ": "))
+                    json.dump(json_data, f, indent=4, separators=(",", ": "))
 
-            if json_base["Scripts"]["cal_type"] == "gpu":
+            if json_data["Scripts"]["cal_type"] == "gpu":
                 job = sp.Popen(opts.worker["gpuSCFT"], shell=True, stdout=sp.PIPE)
             else:
                 job = sp.Popen(opts.worker["cpuTOPS"], shell=True, stdout=sp.PIPE)
