@@ -11,7 +11,7 @@ from shapely.geometry import Polygon
 
 from .plotter import plot_locators, plot_savefig
 from ..schema import LandscapeResult, PathLike, CommonLabels, RealNum, Vector, Contour
-from ..toolkits import read_csv, find_nearest_1d
+from ..toolkit import read_csv, find_nearest_1d
 
 LAND_PLOT_CONFIG = {
     "font.family": "Times New Roman",

@@ -22,7 +22,7 @@ from ..schema import (
     VoronoiAnalyzeResult,
     PathLike,
 )
-from ..toolkits import parse_density
+from ..toolkit import parse_density
 from ..artist import plot_savefig
 
 

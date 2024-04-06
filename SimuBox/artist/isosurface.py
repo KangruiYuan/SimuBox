@@ -8,7 +8,7 @@ from skimage.measure import marching_cubes
 
 from .plotter import plot_savefig
 from ..schema import Density, RealNum, PathLike, DensityParseResult
-from ..toolkits import parse_density
+from ..toolkit import parse_density
 
 __all__ = ["iso2D", "iso3D"]
 

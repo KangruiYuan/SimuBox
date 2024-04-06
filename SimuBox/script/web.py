@@ -1,8 +1,8 @@
 from pathlib import Path
 import argparse
 import os
+import platform
 
-os.environ["NUMEXPR_MAX_THREADS"] = "16"
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="启动SimuBox的网页端服务")
@@ -17,4 +17,9 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     app_path = Path(__file__).parents[1] / "web" / args.app
+
+    if platform.system() == "Windows":
+        os.environ["NUMEXPR_MAX_THREADS"] = "16"
+    else:
+        os.environ["NUMEXPR_MAX_THREADS"] = "4"
     os.system(f"python -m streamlit run {app_path} --server.port {args.port}")

@@ -9,7 +9,7 @@ from cycler import cycler
 
 from collections import ChainMap
 
-from ..toolkits import read_csv
+from ..toolkit import read_csv
 from ..schema import AbsCommonLabels, DiffCommonLabels, LineCompareResult, Line, PathLike
 from .plotter import plot_trans, plot_legend, plot_locators, plot_savefig
 

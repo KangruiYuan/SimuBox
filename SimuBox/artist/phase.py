@@ -20,7 +20,7 @@ from ..schema import (
     RealNum,
     ColorMode,
 )
-from ..toolkits import read_csv
+from ..toolkit import read_csv
 
 __all__ = ["PHASE_PLOT_CONFIG", "PhaseDiagram"]
 
