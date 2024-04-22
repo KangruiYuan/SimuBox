@@ -10,7 +10,7 @@ from itertools import combinations
 from pathlib import Path
 from typing import Any, Union, Sequence
 from tqdm import tqdm
-from ..schema.structs.SCFTStructs import Options as opts
+from SimuBox import Options as opts
 
 
 def check_files(files: list[Union[str, Path]]):
@@ -34,7 +34,7 @@ def check_result(res: dict):
     if (res["server"] == "cpu" and res["target_comp"] < res["CompMax"]) or (
         res["server"] == "gpu" and res["target_comp"] * 1e3 < res["CompMax"]
     ):
-        print("CompMax not satisfied")
+        print("不可压缩性条件尚未满足。")
         return False
     else:
         return True
@@ -97,11 +97,11 @@ def collect(
             json_data = json.load(fp, object_pairs_hook=OrderedDict)
 
         data = {}
-        scripts = json_data.get('Scripts', {})
+        scripts = json_data.get("Scripts", {})
         data.update(scripts)
         stats_res = stats_component(json_data)
         data.update(stats_res)
-        server_before = scripts.get("cal_type", "cpu")
+        server_before = scripts.get("cal_type") or args.read
         data["server"] = server_before
         data["target_comp"] = json_data["Iteration"]["IncompressibilityTarget"]
         if server_before == "cpu":
@@ -257,6 +257,8 @@ if __name__ == "__main__":
     parser.add_argument("-t", "--terminal", default="WORKING_DIR", type=str)
     parser.add_argument("-s", "--server", default="", type=str)
     parser.add_argument("-a", "--all", action="store_true", default=False)
+    parser.add_argument("-r", "--read", default="cpu", type=str)
+    parser.add_argument('-e', "--exclude", nargs='*', default=["Density", "old"])
     args = parser.parse_args()
 
     cmd_lxlylz = "tail -3 printout.txt | head -1"
@@ -266,7 +268,11 @@ if __name__ == "__main__":
 
     parent_folder = Path.cwd()
     working_directory = parent_folder / args.terminal
-    subdirectories = [item for item in working_directory.iterdir() if item.is_dir()]
+    subdirectories = [
+        item
+        for item in working_directory.iterdir()
+        if item.is_dir() and item.stem not in args.exclude
+    ]
 
     output_csv_name = args.name or parent_folder.name
     output_csv_path = parent_folder / output_csv_name

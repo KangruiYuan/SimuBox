@@ -251,8 +251,8 @@ class Landscaper:
 
         return LandscapeResult(
             mat=target_mat,
-            x_ticks=x_ticks,
-            y_ticks=y_ticks,
+            xticks=x_ticks,
+            yticks=y_ticks,
             levels=levels,
             fig=fig,
             ax=ax,

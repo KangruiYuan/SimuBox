@@ -133,7 +133,10 @@ def read_density(
     offset = 0
     if parse_N:
         if text:
-            NxNyNz = np.array(list(map(int, content[skip].strip().split(" "))))
+            NxNyNz = list(map(int, content[skip].strip().split(" ")))
+            if len(NxNyNz) < 3:
+                NxNyNz = [1]*(3 - len(NxNyNz)) + NxNyNz
+            NxNyNz = np.array(NxNyNz)
         else:
             # int32 for scft
             NxNyNz = bin_read_function(content, dtype=np.int32, count=3)
