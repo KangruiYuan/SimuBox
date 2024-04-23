@@ -1,17 +1,27 @@
-from copy import deepcopy
+from collections import ChainMap
 from pathlib import Path
 from typing import Optional, Union, Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from cycler import cycler
 
-from collections import ChainMap
-
+from .plotter import (
+    plot_trans,
+    plot_legend,
+    plot_locators,
+    plot_savefig,
+    STYLE_ABS,
+    STYLE_DIFF,
+)
+from ..schema import (
+    AbsCommonLabels,
+    DiffCommonLabels,
+    LineCompareResult,
+    Line,
+    PathLike,
+)
 from ..toolkit import read_csv
-from ..schema import AbsCommonLabels, DiffCommonLabels, LineCompareResult, Line, PathLike
-from .plotter import plot_trans, plot_legend, plot_locators, plot_savefig
 
 COMPARE_PLOT_CONFIG = {
     "font.family": "Times New Roman",
@@ -40,25 +50,6 @@ COMPARE_PLOT_CONFIG = {
 }
 
 
-_STYLE_REF = cycler(
-    color=list("rbm")
-    + [
-        "indianred",
-        "tomato",
-        "chocolate",
-        "olivedrab",
-        "teal",
-        "deepskyblue",
-        "darkviolet",
-    ]
-) + cycler(marker=list("sXvoP*D><p"))
-
-_STYLE_ABS = cycler(
-    color=list("krbm")
-    + ["indianred", "tomato", "chocolate", "olivedrab", "teal", "deepskyblue"]
-) + cycler(marker=list("osXvP*D><p"))
-
-
 class CompareJudger:
     def __init__(
         self,
@@ -71,10 +62,14 @@ class CompareJudger:
         self.path = path if isinstance(path, Path) else Path(path)
         self.div = div
         self.diff_labels = (
-            ChainMap(diff_labels, DiffCommonLabels) if diff_labels is not None else DiffCommonLabels
+            ChainMap(diff_labels, DiffCommonLabels)
+            if diff_labels is not None
+            else DiffCommonLabels
         )
         self.abs_labels = (
-            ChainMap(abs_labels, AbsCommonLabels) if abs_labels is not None else AbsCommonLabels
+            ChainMap(abs_labels, AbsCommonLabels)
+            if abs_labels is not None
+            else AbsCommonLabels
         )
 
     def data(self, **kwargs):
@@ -90,7 +85,7 @@ class CompareJudger:
         save: Optional[Union[bool, PathLike]] = True,
         data: Optional[pd.DataFrame] = None,
         interactive: bool = True,
-        fontsize:int = 20,
+        fontsize: int = 20,
         **kwargs,
     ):
 
@@ -106,7 +101,7 @@ class CompareJudger:
 
         fig = plt.figure(figsize=kwargs.get("figsize", (8, 6)))
         ax = plt.gca()
-        ax.set_prop_cycle(_STYLE_REF)
+        ax.set_prop_cycle(STYLE_DIFF)
 
         base_data = data[data["phase"] == base]
 
@@ -147,9 +142,7 @@ class CompareJudger:
                 markersize=8,
                 alpha=1.0,
             )
-            lines.append(
-                Line(x=o_xticks, y=o_yticks, label=self.diff_labels.get(o, o))
-            )
+            lines.append(Line(x=o_xticks, y=o_yticks, label=self.diff_labels.get(o, o)))
 
         if horiline:
             if horiline == "all":
@@ -240,7 +233,7 @@ class CompareJudger:
 
         fig = plt.figure(figsize=kwargs.get("figsize", (8, 6)))
         ax = plt.gca()
-        ax.set_prop_cycle(_STYLE_ABS)
+        ax.set_prop_cycle(STYLE_ABS)
 
         for p in phases:
             tmp = data[data.phase == p]
@@ -296,7 +289,7 @@ class CompareJudger:
 
         fig = plt.figure(figsize=kwargs.get("figsize", (8, 6)))
         ax = plt.gca()
-        ax.set_prop_cycle(_STYLE_REF)
+        ax.set_prop_cycle(STYLE_DIFF)
 
         ylabels = ylabels if isinstance(ylabels, list) else [ylabels]
         base_data = data[data["phase"] == base]

@@ -107,9 +107,10 @@ class Landscaper:
                 f"极小值点: {x_axis}: {min_data.loc[idx, x_axis]}, {y_axis}:{min_data.loc[idx, y_axis]}, {target}: {min_data.loc[idx, target]}"
             )
 
-        x_all_point = df[x_axis].values.reshape(-1, 1)
-        y_all_point = df[y_axis].values.reshape(-1, 1)
-        xy_all_point = np.hstack([x_all_point, y_all_point])
+        # x_all_point = df[x_axis].values.reshape(-1, 1)
+        # y_all_point = df[y_axis].values.reshape(-1, 1)
+        # xy_all_point = np.hstack([x_all_point, y_all_point])
+        xy_all_point = df[[x_axis, y_axis]].values
         step_x = self.get_step_for_discrete(x_ticks, precision)
         step_y = self.get_step_for_discrete(y_ticks, precision)
         grid_x, grid_y = np.mgrid[

@@ -6,11 +6,18 @@ import numpy as np
 import pyvista as pv
 from skimage.measure import marching_cubes
 
-from .plotter import plot_savefig
+from .plotter import (
+    plot_trans,
+    plot_legend,
+    plot_locators,
+    plot_savefig,
+    STYLE_ABS,
+)
 from ..schema import Density, RealNum, PathLike, DensityParseResult
 from ..toolkit import parse_density
 
-__all__ = ["iso2D", "iso3D"]
+__all__ = ["iso1D", "iso2D", "iso3D"]
+
 
 def iso3D(
     density: Union[Density, DensityParseResult],
@@ -159,7 +166,8 @@ def iso2D(
 
     if grid is None:
         grid = (1, length)
-    if verbose: print(grid)
+    if verbose:
+        print(grid)
 
     if figsize is None:
         figsize = (grid[1] * 4, grid[0] * 3.5)
@@ -189,19 +197,21 @@ def iso2D(
     mats = [np.stack(parsed.mat, axis=-1)] if stack else parsed.mat
     for i, (ax, phi) in enumerate(zip(axes, mats)):
         phi = np.rot90(phi, rotation)
-        vmin, vmax = phi.min(), phi.max()
+        vmin, vmax = np.min(phi), np.max(phi)
 
         if norm is not None:
             normalizer = mpl.colors.Normalize(vmin=vmin, vmax=vmax)
             phi = normalizer(phi) * (norms[i][1] - norms[i][0]) + norms[i][0]
-            if verbose: print(norms[i])
+            if verbose:
+                print(norms[i])
 
         if scale is not None:
             vmin, vmax = scales[i]
         else:
-            vmin, vmax = phi.min(), phi.max()
+            vmin, vmax = np.min(phi), np.max(phi)
 
-        if verbose: print(vmin, vmax)
+        if verbose:
+            print(vmin, vmax)
         im = ax.imshow(
             phi,
             cmap=cmap,
@@ -239,3 +249,94 @@ def iso2D(
     if interactive:
         plt.show()
     return fig, axes
+
+
+def iso1D(
+    density: Union[Density, DensityParseResult],
+    target: Optional[Union[int, Iterable[int], str]] = 0,
+    permute: Optional[Iterable[int]] = None,
+    slices: Optional[tuple[int, int]] = None,
+    direction: Literal["left", "right", "top", "bottom", "diag", "back-diag"] = "top",
+    coord: Optional[Sequence[RealNum]] = None,
+    spread: Optional[int] = 30,
+    figsize: Optional[Sequence[RealNum]] = (8, 6),
+    scale: bool = False,
+    fontsize: int = 25,
+    xticks: bool = True,
+    verbose: bool = False,
+    **kwargs,
+):
+    if not isinstance(density, DensityParseResult):
+        parsed = parse_density(density, target, permute, slices, **kwargs)
+    else:
+        parsed = density
+
+    fig, ax = plt.subplots(figsize=figsize)
+    ax.set_prop_cycle(STYLE_ABS)
+    if len(parsed.NxNyNz) == 2:
+        # coords_map = {
+        #     "left": (0, 0, 0, 1),
+        #     "right": (0, 1, 1, 1),
+        #     "top": (0, 0, 1, 0),
+        #     "bottom": (1, 0, 1, 1),
+        #     "diag": (0, 0, 1, 1),
+        #     "back-diag": (0, 1, 1, 0),
+        # }
+        mats = parsed.mat
+        for i, mat in enumerate(mats):
+            if coord is not None and len(coord) == 4:
+                if coord[0] == coord[2]:
+                    c_vec = np.linspace(coord[1], coord[3], spread)
+                    c_idx = np.rint(c_vec * (parsed.NxNyNz[1] - 1)).astype(int)
+                    y = mat[round(coord[0]), c_idx]
+                elif coord[1] == coord[3]:
+                    r_vec = np.linspace(coord[0], coord[2], spread)
+                    r_idx = np.rint(r_vec * (parsed.NxNyNz[0] - 1)).astype(int)
+                    y = mat[r_idx, round(coord[1])]
+                else:
+                    r_vec = np.linspace(coord[0], coord[2], spread)
+                    c_vec = np.linspace(coord[1], coord[3], spread)
+                    r_idx = np.rint(r_vec * (parsed.NxNyNz[0] - 1)).astype(int)
+                    c_idx = np.rint(c_vec * (parsed.NxNyNz[1] - 1)).astype(int)
+                    y = mat[r_idx, c_idx]
+            elif direction == "left":
+                y = mat[:, 0]
+            elif direction == "right":
+                y = mat[:, -1]
+            elif direction == "top":
+                y = mat[0, :]
+            elif direction == "bottom":
+                y = mat[-1, :]
+            elif direction == "diag":
+                vec = np.linspace(0, 1, spread)
+                r_idx = np.rint(vec * (parsed.NxNyNz[0] - 1)).astype(int)
+                c_idx = np.rint(vec * (parsed.NxNyNz[1] - 1)).astype(int)
+                y = mat[r_idx, c_idx]
+            elif direction == "back-diag":
+                r_vec = np.linspace(0, 1, spread)
+                c_vec = 1 - r_vec
+                r_idx = np.rint(r_vec * (parsed.NxNyNz[0] - 1)).astype(int)
+                c_idx = np.rint(c_vec * (parsed.NxNyNz[1] - 1)).astype(int)
+                y = mat[r_idx, c_idx]
+            else:
+                raise NotImplementedError
+            length = len(y)
+            x = range(length)
+            ax.plot(
+                x,
+                y,
+                lw=2.5,
+                markersize=8,
+                alpha=1.0,
+            )
+        plt.tick_params(axis="both", labelsize=kwargs.get("labelsize", fontsize), pad=8)
+        if not xticks:
+            plt.xticks([])
+        plt.ylabel(r"$\phi$", fontsize=fontsize)
+
+        fig.tight_layout()
+        plt.show()
+
+    elif len(parsed.NxNyNz) == 3:
+        assert coord is not None and len(coord) == 6
+        raise NotImplementedError

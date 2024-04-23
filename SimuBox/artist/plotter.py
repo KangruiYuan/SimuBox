@@ -7,6 +7,36 @@ import numpy as np
 from matplotlib.ticker import AutoMinorLocator, MultipleLocator
 from ..schema import PathLike, ColorMode
 from typing import Union
+from cycler import cycler
+
+STYLE_DIFF = cycler(
+    color=[
+        "r",
+        "b",
+        "m",
+        "indianred",
+        "tomato",
+        "chocolate",
+        "olivedrab",
+        "teal",
+        "deepskyblue",
+    ]
+) + cycler(marker=list("sXvP*D><p"))
+
+STYLE_ABS = cycler(
+    color=[
+        "k",
+        "r",
+        "b",
+        "m",
+        "indianred",
+        "tomato",
+        "chocolate",
+        "olivedrab",
+        "teal",
+        "deepskyblue",
+    ]
+) + cycler(marker=list("osXvP*D><p"))
 
 
 def init_plot_config(config: dict):
@@ -43,7 +73,9 @@ def plot_legend(legend: Optional[Union[dict, bool]] = None, **kwargs):
     if mode == "outside":
         loc = legend.get("loc", "upper left")
         bbox_to_anchor = legend.get("bbox_to_anchor", (0.98, 0.8))
-        plt.legend(fontsize=fontsize, loc=loc, bbox_to_anchor=bbox_to_anchor, frameon=False)
+        plt.legend(
+            fontsize=fontsize, loc=loc, bbox_to_anchor=bbox_to_anchor, frameon=False
+        )
     elif mode == "auto":
         loc = legend.get("loc", "best")
         plt.legend(fontsize=fontsize, loc=loc, frameon=False)
@@ -102,7 +134,7 @@ def plot_savefig(
     else:
         path = path.parent / ".".join((stem, kwargs.get("fig_format", "png")))
     print(f"Save to: {path}")
-    plt.savefig(path, dpi=dpi, bbox_inches='tight')
+    plt.savefig(path, dpi=dpi, bbox_inches="tight")
 
 
 def generate_colors(
