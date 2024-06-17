@@ -1,0 +1,18 @@
+1024
+26.0
+0.78
+31.869734856, 27.6
+fet.dat
+pha.dat
+0.005
+1
+
+        fp=fopen("para","r");
+        fscanf(fp,"%d",&intag);         //in=1: inputing configuration is given;
+        fscanf(fp,"%lf",&hAB);
+        fscanf(fp, "%lf", &fA);
+        fscanf(fp,"%lf, %lf",&lx, &ly);
+        fscanf(fp,"%s",FEname);                         //output file name for parameters;
+        fscanf(fp,"%s",phname);                         //output file name for configuration;
+        fscanf(fp, "%lf", &ds0);
+	fscanf(fp, "%d", &Narm);

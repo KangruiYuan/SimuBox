@@ -238,6 +238,8 @@ def read_csv(
     subset: Optional[Union[str, Sequence[str]]] = ("phase", "freeE"),
     **kwargs,
 ):
+    if isinstance(path, str):
+        path = Path(path)
     assert path.is_file(), f"{path} 并非有效的文件路径。"
     if path.suffix == ".csv":
         data = pd.read_csv(path, skiprows=skiprows)
