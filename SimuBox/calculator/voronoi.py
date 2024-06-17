@@ -168,7 +168,7 @@ class VoronoiCell:
             e13 = dist_matrix[t[0], t[2]]
             e23 = dist_matrix[t[1], t[2]]
 
-            a, b, c = sorted([e12, e13, e23])
+            a, b, c = sorted([e12, e13, e23]) # type: ignore
             costh = (a**2 + b**2 - c**2) / (2 * a * b)
             theta = acos(costh)
             if theta > theta_max:
@@ -259,9 +259,9 @@ class VoronoiCell:
         cls,
         points: Union[list, np.ndarray],
         weights: Optional[Union[float, int, list, np.ndarray]] = 0,
-        method: WeightedMode = "additive",
+        method: WeightedMode = WeightedMode.ADDITIVE,
         size: Tuple = (500, 500),
-        color_mode: ColorMode = "L",
+        color_mode: ColorMode = ColorMode.L,
         interactive: bool = True,
         num_threads: int = 8,
         **kwargs,

@@ -3,13 +3,13 @@ from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 from typing import Iterable, Union, Callable, Sequence
-from ..schema import RealNum, Peak, PeakFitResult
+from ..schema import RealNum, Peak, PeakFitResult, Vector
 from ..artist import plot_legend, plot_savefig, plot_locators
 from sklearn.metrics import r2_score
 
 
 def gaussian_expansion(
-    array: Union[Iterable, RealNum],
+    array: Union[np.ndarray, RealNum],
     amp: RealNum,
     ctr: RealNum,
     wid: RealNum,
@@ -17,7 +17,7 @@ def gaussian_expansion(
     return amp * np.exp(-(((array - ctr) / wid) ** 2))
 
 
-def curve_function(x: Union[Iterable, RealNum], *params):
+def curve_function(x: Union[np.ndarray, RealNum], *params):
 
     assert len(params) % 3 == 1
 
@@ -27,7 +27,7 @@ def curve_function(x: Union[Iterable, RealNum], *params):
 
     return res + params[-1]
 
-def curve_split(x: Union[Iterable, RealNum], *params):
+def curve_split(x: Union[np.ndarray, RealNum], *params):
     assert len(params) % 3 == 1
     res = []
     for i in range(0, len(params) - 1, 3):
@@ -53,7 +53,7 @@ def peak_fit(
     x = np.asarray(x)
     y = np.asarray(y)
     y = y - y.min()
-    centers = [p.center for p in peaks]
+    centers = np.asarray([p.center for p in peaks])
     backgrounds = [p.background for p in peaks if p.background is not None]
     if backgrounds:
         background = np.mean(backgrounds)
@@ -106,7 +106,7 @@ def peak_fit(
 
         for n, i_line in enumerate(y_split):
             plt.fill_between(
-                x, i_line, baseline, facecolor=cm.rainbow(n / len(y_split)), alpha=0.6
+                x, i_line, baseline, facecolor=cm.rainbow(n / len(y_split)), alpha=0.6 # type: ignore
             )
             areas[n] = np.trapz(i_line - baseline, x)
 
@@ -134,7 +134,7 @@ def peak_fit(
             )
         )
 
-    r2 = r2_score(y, fit)
+    r2 = float(r2_score(y, fit))
     n = len(x)
     p = len(popt)
     adj_r2 = 1 - ((1 - r2) * (n - 1) / (n - p - 1))

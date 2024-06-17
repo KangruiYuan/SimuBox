@@ -60,7 +60,7 @@ class Scatter:
                 k_vecs.append((2 * np.pi * k_vec / l) ** 2)
 
         K_VECS = np.meshgrid(*k_vecs)
-        kxyz = sum(K_VECS)
+        kxyz: np.ndarray = sum(K_VECS) # type: ignore
 
         return kxyz, k_vecs
 
@@ -129,7 +129,7 @@ class Scatter:
         step: int = 2000,
         cutoff: int = 20,
         min_height: int = 1,
-        save: Optional[Union[PathLike, bool]] = False,
+        save: Union[PathLike, bool] = False,
         interactive: bool = False,
         **kwargs,
     ):

@@ -146,7 +146,7 @@ class TopoCreater(nx.DiGraph):
         self.fB_total = None
         self.fC_total = None
 
-    def init_nodes(self, node_nums: int, node_names: list[str] = None):
+    def init_nodes(self, node_nums: int, node_names: Optional[list[str]] = None):
         self.node_nums = node_nums
         if node_names:
             self.node_names = node_names
@@ -206,7 +206,7 @@ class TopoCreater(nx.DiGraph):
         self.type = "linear"
         blocks_info = self.stats(blocks)
         if isinstance(blocks, dict):
-            blocks = blocks_info.elements()
+            blocks = blocks_info.elements() # type: ignore
 
         total_blocks = sum(blocks_info.values())
         self.init_nodes(total_blocks + 1)

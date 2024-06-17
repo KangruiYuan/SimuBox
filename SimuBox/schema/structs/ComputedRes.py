@@ -38,13 +38,13 @@ class ScatterPlot(FigureAxesMixin):
     plot_x: np.ndarray
 
 class OpenCVResult(MixinBaseModel):
-    path: Path
+    path: Optional[Path]
     parsed_density: DensityParseResult
-    facets: list
+    facets: Sequence
     centers: np.ndarray
 
 class VoronoiAnalyzeResult(FigureAxesMixin):
-    path: Path
+    path: Optional[Path]
     cv_result: OpenCVResult
     voronoi: Optional[Voronoi] = None
     triangle: Optional[list] = None

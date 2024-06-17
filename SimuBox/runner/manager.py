@@ -214,7 +214,7 @@ class SCFTManager:
                     )
                 else:
                     _ = sp.Popen(
-                        cls.opts.worker[cls.opts.which], shell=True, stdout=sp.PIPE
+                        cls.opts.worker[cls.opts.server], shell=True, stdout=sp.PIPE
                     )
 
             os.chdir(cls.opts.filedir)
