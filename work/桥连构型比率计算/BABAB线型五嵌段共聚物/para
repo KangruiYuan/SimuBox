@@ -1,0 +1,14 @@
+in=12
+hAB=100.0
+tau=0.125
+ksi=0.5
+fA=0.14
+lx=6.22003989
+ly=6.2200497
+lz=2.00000
+fet=fet.txt
+phout=phout.txt
+ds=0.001
+Nx=192
+Ny=192
+
