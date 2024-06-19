@@ -1,0 +1,111 @@
+    1 : 5.03814053e+00, 9.67840869e-01, err=1.2949
+stress1=-3.136714, stress2=0.000007, stress3=0.000002
+lx=14.0000, ly=14.0000, lz=14.0000
+
+   50 : 5.54518125e+00, 6.14048839e-02, err=0.0527
+stress1=0.311420, stress2=0.000009, stress3=0.000001
+lx=12.0763, ly=14.0000, lz=14.0000
+
+  100 : 5.64603369e+00, 1.10744362e-02, err=0.0058
+stress1=0.006452, stress2=0.000000, stress3=0.000000
+lx=12.1568, ly=14.0000, lz=14.0000
+
+/***** enter Anderson mixing *****/
+  150 : 5.65350423e+00, 5.91698592e-03, err=0.0012
+stress1=0.000172, stress2=-0.000001, stress3=0.000000
+lx=12.1668, ly=14.0000, lz=14.0000
+
+/***** enter Anderson mixing *****/
+/***** enter Anderson mixing *****/
+/***** enter Anderson mixing *****/
+/***** enter Anderson mixing *****/
+/***** enter Anderson mixing *****/
+/***** enter Anderson mixing *****/
+/***** enter Anderson mixing *****/
+/***** enter Anderson mixing *****/
+/***** enter Anderson mixing *****/
+/***** enter Anderson mixing *****/
+  200 : 5.65338008e+00, 2.77893620e-08, err=0.0000
+stress1=0.000000, stress2=0.000000, stress3=0.000000
+lx=12.1677, ly=14.0000, lz=14.0000
+
+  201 : 5.65338009e+00, 2.83511123e-08, err=0.0000
+stress1=0.000000, stress2=0.000000, stress3=0.000000
+lx=12.1677, ly=14.0000, lz=14.0000
+
+    1 : 5.03763448e+00, 9.67812288e-01, err=1.2949
+stress1=-3.135860, stress2=0.000010, stress3=0.000002
+lx=14.0000, ly=14.0000, lz=14.0000
+
+   50 : 5.54518338e+00, 6.13822888e-02, err=0.0527
+stress1=0.311145, stress2=0.000006, stress3=0.000001
+lx=12.0764, ly=14.0000, lz=14.0000
+
+  100 : 5.64604294e+00, 1.11201838e-02, err=0.0058
+stress1=0.006450, stress2=-0.000002, stress3=0.000000
+lx=12.1568, ly=14.0000, lz=14.0000
+
+/***** enter Anderson mixing *****/
+  150 : 5.65348250e+00, 6.02323791e-03, err=0.0012
+stress1=0.000174, stress2=-0.000001, stress3=0.000000
+lx=12.1668, ly=14.0000, lz=14.0000
+
+/***** enter Anderson mixing *****/
+/***** enter Anderson mixing *****/
+/***** enter Anderson mixing *****/
+/***** enter Anderson mixing *****/
+/***** enter Anderson mixing *****/
+/***** enter Anderson mixing *****/
+/***** enter Anderson mixing *****/
+/***** enter Anderson mixing *****/
+/***** enter Anderson mixing *****/
+/***** enter Anderson mixing *****/
+  200 : 5.65337998e+00, 5.07851670e-08, err=0.0000
+stress1=-0.000000, stress2=0.000000, stress3=0.000000
+lx=12.1677, ly=14.0000, lz=14.0000
+
+/***** enter Anderson mixing *****/
+/***** enter Anderson mixing *****/
+  211 : 5.65338003e+00, 1.82877607e-08, err=0.0000
+stress1=-0.000000, stress2=0.000000, stress3=0.000000
+lx=12.1677, ly=14.0000, lz=14.0000
+
+    1 : 5.03768051e+00, 9.67814496e-01, err=1.2948
+stress1=-3.136232, stress2=0.000004, stress3=0.000001
+lx=14.0000, ly=14.0000, lz=14.0000
+
+   50 : 5.54517098e+00, 6.12702319e-02, err=0.0527
+stress1=0.311069, stress2=0.000010, stress3=0.000001
+lx=12.0765, ly=14.0000, lz=14.0000
+
+  100 : 5.64602955e+00, 1.11560294e-02, err=0.0058
+stress1=0.006442, stress2=0.000001, stress3=0.000000
+lx=12.1568, ly=14.0000, lz=14.0000
+
+/***** enter Anderson mixing *****/
+  150 : 5.65413150e+00, 5.79962592e-03, err=0.0012
+stress1=0.000172, stress2=-0.000000, stress3=0.000000
+lx=12.1668, ly=14.0000, lz=14.0000
+
+/***** enter Anderson mixing *****/
+/***** enter Anderson mixing *****/
+/***** enter Anderson mixing *****/
+/***** enter Anderson mixing *****/
+/***** enter Anderson mixing *****/
+/***** enter Anderson mixing *****/
+/***** enter Anderson mixing *****/
+/***** enter Anderson mixing *****/
+/***** enter Anderson mixing *****/
+/***** enter Anderson mixing *****/
+  200 : 5.65338516e+00, 1.92955144e-06, err=0.0000
+stress1=0.000012, stress2=-0.000000, stress3=-0.000000
+lx=12.1677, ly=14.0000, lz=14.0000
+
+/***** enter Anderson mixing *****/
+/***** enter Anderson mixing *****/
+/***** enter Anderson mixing *****/
+/***** enter Anderson mixing *****/
+  223 : 5.65337999e+00, 7.94112205e-08, err=0.0000
+stress1=0.000000, stress2=0.000000, stress3=0.000000
+lx=12.1677, ly=14.0000, lz=14.0000
+

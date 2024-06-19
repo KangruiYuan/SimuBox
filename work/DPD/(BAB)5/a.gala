@@ -1,0 +1,196 @@
+#!/usr/bin/python
+import sys
+sys.path.append('/opt/galamost4/lib')
+import molgen
+import galamost
+from optparse import OptionParser
+from time import sleep
+
+
+def star_BAB5(nb1, nb2, na, ntail, lx, ly, lz, filename):
+    ntail = 5  # arm number
+    # nb1=12 #end
+    # nb2=3 #core
+    # na=5 #fA
+    lenmol = ntail*(na+nb1+nb2)+1
+    mol1 = molgen.Molecule(lenmol)  # particle number
+    mol1.setParticleTypes(
+        "C*{0},B*{1},A*{2},B*{3}".format(1, nb2*ntail, na*ntail, nb1*ntail))  # type
+    s1 = ""
+    c = 1
+    for i in range(1, ntail+1):
+        s1 += "{0}-{1},".format(0, nb2*(i-1)+1)
+        for j in range(c, c+nb2-1):
+            s1 += "{0}-{1},".format(j, j+1)
+        c = c+nb2
+
+    for i in range(1, ntail+1):
+        s1 += "{0}-{1},".format(nb2*(i), ntail*nb2+na*(i-1)+1)
+        for j in range(c, c+na-1):
+            s1 += "{0}-{1},".format(j, j+1)
+        c = c+na
+
+    for i in range(1, ntail+1):
+        s1 += "{0}-{1},".format(nb2*ntail+na*(i), ntail*(nb2+na)+nb1*(i-1)+1)
+        for j in range(c, c+nb1-1):
+            s1 += "{0}-{1},".format(j, j+1)
+        c = c+nb1
+
+    s1 = s1[0:(len(s1)-1)]  # strip ','
+    print(s1)
+    mol1.setTopology(s1)  # topology
+    mol1.setBondLength(0.75)  # bond length
+    mol1.setMass(1.0)  # mass
+
+    ru = 3
+    gen = molgen.Generators(lx, ly, lz)  # box size in x, y, and z direction
+
+    # if filename=="single":
+    #     nmol=2
+    #     gen.setMinimumDistance(0.75)
+    # else:
+    #     nmol=int(ru*lx*ly*lz/lenmol)
+    
+    nmol = int(ru*lx*ly*lz/lenmol)
+    gen.addMolecule(mol1, nmol)  # molecule, the number of molecules
+    gen.outPutXml(filename)  # file name
+    
+    gen = molgen.Generators(10,10,10)
+    nmol=2
+    gen.setMinimumDistance(0.75)
+    gen.addMolecule(mol1, nmol)
+    gen.outPutXml('single')
+    
+    print('volume fraction of A is: %f', na/float(na+nb1+nb2))
+    print('length of molecules is: %d', lenmol)
+    print('na: %d', na)
+
+    return lenmol
+
+
+filename = 'b'
+lenmol = star_BAB5(nb1=12, nb2=3, na=5, ntail=5, lx=100,
+                   ly=100, lz=5, filename=filename)
+sleep(3)
+
+global _options
+parser = OptionParser()
+parser.add_option('--gpu', dest='gpu',help='GPU on which to execute')
+(_options, args) = parser.parse_args()
+
+filename_xml = filename + '.xml' # initial configuration file
+randomnum = 12342
+build_method = galamost.XmlReader(filename_xml)
+perform_config = galamost.PerformConfig(_options.gpu)# assign GPU by index
+all_info = galamost.AllInfo(build_method, perform_config) # build system information
+
+dt = 0.01
+app = galamost.Application(all_info, dt) # build up an application with system information and integration time-step
+
+kb=4
+bb=0
+
+bondforce = galamost.BondForceHarmonic(all_info)
+bondforce.setParams('C-B',  kb, bb)#(bond type, K0-spring constant, R0-equilibrium distance)
+bondforce.setParams('A-A',  kb, bb)#(bond type, K0-spring constant, R0-equilibrium distance)
+bondforce.setParams('B-A',  kb, bb)#(bond type, K0-spring constant, R0-equilibrium distance)
+bondforce.setParams('B-B',  kb, bb)#(bond type, K0-spring constant, R0-equilibrium distance)
+app.add(bondforce)
+
+
+# group = galamost.ParticleSet(all_info,['A', 'B'])
+group = galamost.ParticleSet(all_info, "all") # a collection of particles
+
+comp_info = galamost.ComputeInfo(all_info, group)  # calculating system informations, such as temperature, pressure, and momentum
+
+Gwvv = galamost.DpdGwvv(all_info, group) # integration method with GWVV algorithm
+app.add(Gwvv)
+
+sort_method = galamost.Sort(all_info)  # memory sorting to improve performance
+sort_method.setPeriod(80)
+app.add(sort_method)
+
+
+
+DInfo = galamost.DumpInfo(all_info, comp_info, 'data.log') # output system informations, such as temperature, pressure, and momentum
+DInfo.setPeriod(100000)
+DInfo.dumpPressTensor()
+DInfo.dumpBoxSize()
+app.add(DInfo)
+
+
+tstep=int(1e6) 
+xml = galamost.XmlDump(all_info, 'particles') # output the configuration files in xml format
+xml.setPeriod(tstep)# (period)
+#xml.setOutput(['image','mass','bond','angle','velocity'])
+xml.setOutput(['image','mass','bond','velocity'])
+app.add(xml)
+
+tstepb=int(1e6)
+binary = galamost.BinaryDump(all_info, 'particle')
+binary.setOutput(['image','mass','bond','velocity'])
+binary.setOutputCtVersion(False)
+binary.setPeriod(tstepb)
+app.add(binary)
+
+def translation_d(lenmol, s, xNeff=150):
+    xNij = xNeff*(1+3.9*lenmol**(-1/3))/(lenmol)
+    d = s + 3.27*xNij
+    return int(d)
+
+
+# s=25
+# d=50
+# d=translation_d(lenmol=lenmol, s=s, xNeff=170)
+# print('d=',d)
+# sigma=3.0
+# step = int(1e7)
+# neighbor_list = galamost.NeighborList(all_info, 1.0 ,0.05)#(,rcut,rbuffer)
+# dpd = galamost.DpdForce(all_info, neighbor_list, 1.0, randomnum)#(,,rcut, the seed for RNG)
+# dpd.setParams('A', 'A',    s,    sigma)#(type,type,alpha,sigma)
+# dpd.setParams('A', 'B',    d,  sigma)#(type,type,alpha,sigma)
+# dpd.setParams('B', 'B',    s,    sigma)#(type,type,alpha,sigma)
+# dpd.setParams('A', 'C',    s,    sigma)#(type,type,alpha,sigma)
+# dpd.setParams('B', 'C',    s,    sigma)#(type,type,alpha,sigma)
+# dpd.setParams('C', 'C',    s,    sigma)#(type,type,alpha,sigma)
+# app.add(dpd)
+# app.run(step)
+# app.remove(dpd)
+# neighbor_list.printStats()
+
+s=25
+d0=40
+ite=10
+start=d0-ite
+for i in range(1,ite):
+    if i==ite-1:
+        step =int(4e6)
+        dab=d0
+    else:
+        step = int(2e6)
+        dab=start+float(i)
+    sigma=3.0
+    neighbor_list = galamost.NeighborList(all_info, 1.0 ,0.05)#(,rcut,rbuffer)
+    dpd = galamost.DpdForce(all_info, neighbor_list, 1.0, randomnum)#(,,rcut, the seed for RNG)
+    dpd.setParams('A', 'A',    s,    sigma)#(type,type,alpha,sigma)
+    dpd.setParams('A', 'B',    dab,  sigma)#(type,type,alpha,sigma)
+    dpd.setParams('B', 'B',    s,    sigma)#(type,type,alpha,sigma)
+    dpd.setParams('A', 'C',    s,    sigma)#(type,type,alpha,sigma)
+    dpd.setParams('B', 'C',    s,    sigma)#(type,type,alpha,sigma)
+    dpd.setParams('C', 'C',    s,    sigma)#(type,type,alpha,sigma)
+    app.add(dpd)
+    app.run(step)
+    app.remove(dpd)
+neighbor_list.printStats()
+
+
+
+# neighbor_list = galamost.NeighborList(all_info, 1.0 ,0.05)#(,rcut,rbuffer)
+# dpd = galamost.DpdForce(all_info, neighbor_list, 1.0, randomnum)#(,,rcut, the seed for RNG)
+# dpd.setParams('A', 'A',    s,      sigma)#(type,type,alpha,sigma)
+# dpd.setParams('A', 'B',    dab,    sigma)#(type,type,alpha,sigma)
+# dpd.setParams('B', 'B',    s,      sigma)#(type,type,alpha,sigma)
+
+# app.add(dpd)
+# app.run(step)
+# neighbor_list.printStats()

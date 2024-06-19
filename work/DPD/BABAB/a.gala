@@ -1,0 +1,162 @@
+#!/usr/bin/python
+import sys
+sys.path.append('/opt/galamost4/lib')
+import molgen
+import galamost
+from optparse import OptionParser
+from time import sleep
+
+
+def linear_BABAB(fA1, tau, ksi, lx, ly, lz, filename, factor=100):
+    fA2 = fA1
+    fB = 1 - fA1 - fA2
+    fB2 = fB * tau
+    rest_B = fB - fB2
+    fB1 = rest_B / (1 + 10**ksi)
+    fB3 = rest_B - fB1
+
+    f_list = [fB1, fA1, fB2, fA2, fB3]
+    n_list = [round(i*factor) for i in f_list]
+    
+    lenmol = int(sum(n_list))
+    f_real = [round(i/lenmol, 3) for i in n_list]
+    mol_BABAB = molgen.Molecule(lenmol)
+    mol_BABAB.setParticleTypes(
+        "B*{0},A*{1},B*{2},A*{3},B*{4}".format(
+        *n_list
+        )
+    )
+    s = ','.join(["{0}-{1}".format(i,i+1) for i in range(lenmol-1)])
+    mol_BABAB.setTopology(s)
+    mol_BABAB.setBondLength(0.75)
+    mol_BABAB.setMass(1.0)
+
+    ru = 3
+    gen = molgen.Generators(lx, ly, lz)  # box size in x, y, and z direction
+    nmol=int(ru*lx*ly*lz/lenmol)
+    gen.addMolecule(mol_BABAB, nmol)  # molecule, the number of molecules
+    gen.outPutXml(filename)  # file name
+    
+    gen = molgen.Generators(5,5,5)
+    nmol=2
+    gen.setMinimumDistance(0.75)
+    gen.addMolecule(mol_BABAB, nmol)
+    gen.outPutXml('single')
+    
+    print('volume fraction of A is: ', f_real)
+    print('length of molecules is: %d', lenmol)
+
+    return lenmol
+
+
+filename = 'b'
+lenmol = linear_BABAB(fA1=0.07, tau=0.13, ksi=0.46, lx=100, ly=100, lz=5, filename=filename)
+sleep(3)
+
+global _options
+parser = OptionParser()
+parser.add_option('--gpu', dest='gpu',help='GPU on which to execute')
+(_options, args) = parser.parse_args()
+
+filename_xml = filename + '.xml' # initial configuration file
+randomnum = 12342
+build_method = galamost.XmlReader(filename_xml)
+perform_config = galamost.PerformConfig(_options.gpu)# assign GPU by index
+all_info = galamost.AllInfo(build_method, perform_config) # build system information
+
+dt = 0.01
+app = galamost.Application(all_info, dt) # build up an application with system information and integration time-step
+
+kb=4
+bb=0
+
+bondforce = galamost.BondForceHarmonic(all_info)
+bondforce.setParams('B-A',  kb, bb)#(bond type, K0-spring constant, R0-equilibrium distance)
+bondforce.setParams('A-A',  kb, bb)#(bond type, K0-spring constant, R0-equilibrium distance)
+bondforce.setParams('B-B',  kb, bb)#(bond type, K0-spring constant, R0-equilibrium distance)
+app.add(bondforce)
+
+
+# group = galamost.ParticleSet(all_info,['A', 'B'])
+group = galamost.ParticleSet(all_info, "all") # a collection of particles
+
+comp_info = galamost.ComputeInfo(all_info, group)  # calculating system informations, such as temperature, pressure, and momentum
+
+Gwvv = galamost.DpdGwvv(all_info, group) # integration method with GWVV algorithm
+app.add(Gwvv)
+
+sort_method = galamost.Sort(all_info)  # memory sorting to improve performance
+sort_method.setPeriod(80)
+app.add(sort_method)
+
+
+
+DInfo = galamost.DumpInfo(all_info, comp_info, 'data.log') # output system informations, such as temperature, pressure, and momentum
+DInfo.setPeriod(100000)
+DInfo.dumpPressTensor()
+DInfo.dumpBoxSize()
+app.add(DInfo)
+
+
+tstep=int(1e6) 
+xml = galamost.XmlDump(all_info, 'particles') # output the configuration files in xml format
+xml.setPeriod(tstep)# (period)
+#xml.setOutput(['image','mass','bond','angle','velocity'])
+xml.setOutput(['image','mass','bond','velocity'])
+app.add(xml)
+
+tstepb=int(1e6)
+binary = galamost.BinaryDump(all_info, 'particle')
+binary.setOutput(['image','mass','bond','velocity'])
+binary.setOutputCtVersion(False)
+binary.setPeriod(tstepb)
+app.add(binary)
+
+def translation_d(lenmol, s, xNeff=150):
+    xNij = xNeff*(1+3.9*lenmol**(-1.0/3.0))/(lenmol)
+    d = s + 3.27*xNij
+    return d
+
+
+def translation_d_new(lenmol, s, xNeff=150):
+    xNij = xNeff*(1+3.9*lenmol**(-0.51))/(lenmol)
+    d = s + 3.27*xNij
+    return d
+
+s=25
+d=45
+# d=translation_d(lenmol=lenmol, s=s, xNeff=170)
+print('d=',d)
+sigma=3.0
+step = int(8e6)
+neighbor_list = galamost.NeighborList(all_info, 1.0 ,0.05)#(,rcut,rbuffer)
+dpd = galamost.DpdForce(all_info, neighbor_list, 1.0, randomnum)#(,,rcut, the seed for RNG)
+dpd.setParams('A', 'A',    s,    sigma)#(type,type,alpha,sigma)
+dpd.setParams('A', 'B',    d,    sigma)#(type,type,alpha,sigma)
+dpd.setParams('B', 'B',    s,    sigma)#(type,type,alpha,sigma)
+app.add(dpd)
+app.run(step)
+app.remove(dpd)
+neighbor_list.printStats()
+
+# s=25
+# d0=40
+# ite=10
+# start=d0-ite
+# for i in range(1,ite):
+#     if i==ite-1:
+#         step =int(4e6)
+#         dab=d0
+#     else:
+#         step = int(2e6)
+#         dab=start+float(i)
+#     sigma=3.0
+#     neighbor_list = galamost.NeighborList(all_info, 1.0 ,0.05)#(,rcut,rbuffer)
+#     dpd = galamost.DpdForce(all_info, neighbor_list, 1.0, randomnum)#(,,rcut, the seed for RNG)
+#     dpd.setParams('A', 'A',    s,    sigma)#(type,type,alpha,sigma)
+#     dpd.setParams('A', 'B',    dab,  sigma)#(type,type,alpha,sigma)
+#     dpd.setParams('B', 'B',    s,    sigma)#(type,type,alpha,sigma)
+#     app.add(dpd)
+#     app.run(step)
+#     app.remove(dpd)
+# neighbor_list.printStats()
