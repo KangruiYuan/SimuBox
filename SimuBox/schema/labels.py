@@ -16,6 +16,7 @@ CommonLabels: dict[str, str] = {
     "fA": r"$f_{\rm{A}}$",
     "chiN": r"$\chi N$",
     "gamma_B": r"$\gamma _{\rm B}$",
+    "phi": r"$\phi$",
     "phi_AB": r"$\phi _{\rm AB}$",
     "ly": r"$L_x/R_g$",
     "lz": r"$L_y/R_g$",

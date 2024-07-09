@@ -1,11 +1,11 @@
 from pathlib import Path
-
-from .MixinStructs import FigureAxesMixin, MixinBaseModel
-from .DataFile import DensityParseResult
-import pandas as pd
-import numpy as np
 from typing import Optional, Sequence, Any
+
+import numpy as np
 from scipy.spatial import Voronoi
+
+from .DataFile import DensityParseResult
+from .MixinStructs import FigureAxesMixin, MixinBaseModel
 
 
 class Peak(MixinBaseModel):
@@ -15,6 +15,7 @@ class Peak(MixinBaseModel):
     background: Optional[float] = None
     fix: Sequence[bool] = (False, False, False)
     area: Optional[float] = None
+
 
 class PeakFitResult(FigureAxesMixin):
     x: np.ndarray
@@ -26,10 +27,12 @@ class PeakFitResult(FigureAxesMixin):
     adj_r2: float
     area: float
 
+
 class ScatterResult(MixinBaseModel):
     parsed_density: DensityParseResult
     q_Intensity: np.ndarray
     q_idx: dict
+
 
 class ScatterPlot(FigureAxesMixin):
     peaks_location: np.ndarray
@@ -37,11 +40,13 @@ class ScatterPlot(FigureAxesMixin):
     plot_y: np.ndarray
     plot_x: np.ndarray
 
+
 class OpenCVResult(MixinBaseModel):
     path: Optional[Path]
     parsed_density: DensityParseResult
     facets: Sequence
     centers: np.ndarray
+
 
 class VoronoiAnalyzeResult(FigureAxesMixin):
     path: Optional[Path]
@@ -50,14 +55,19 @@ class VoronoiAnalyzeResult(FigureAxesMixin):
     triangle: Optional[list] = None
     coord_dict: Optional[dict] = None
 
-class ODTResult(FigureAxesMixin):
 
+class ODTResult(FigureAxesMixin):
     xN: np.ndarray
     f: np.ndarray
     expression: Any
     xlabel: str
     ylabel: str
 
+
 class TopoPlot(FigureAxesMixin):
     kind_color: dict[str, str]
     rad: float
+
+
+class Iso0DPlot(FigureAxesMixin):
+    data: np.ndarray

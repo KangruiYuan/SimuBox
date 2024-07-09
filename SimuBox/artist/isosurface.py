@@ -1,3 +1,4 @@
+import re
 from typing import Union, Iterable, Optional, Tuple, Sequence, Literal, List
 
 import matplotlib as mpl
@@ -13,10 +14,10 @@ from .plotter import (
     plot_savefig,
     STYLE_ABS,
 )
-from ..schema import Density, RealNum, PathLike, DensityParseResult
-from ..toolkit import parse_density
+from ..schema import Density, RealNum, PathLike, DensityParseResult, AbsCommonLabels, Iso0DPlot
+from ..toolkit import parse_density, read_density
 
-__all__ = ["iso1D", "iso2D", "iso3D"]
+__all__ = ["iso0D", "iso1D", "iso2D", "iso3D"]
 
 
 def iso3D(
@@ -340,3 +341,90 @@ def iso1D(
     elif len(parsed.NxNyNz) == 3:
         assert coord is not None and len(coord) == 6
         raise NotImplementedError
+
+
+def iso0D(
+    densities: Optional[Union[List[Density], List[DensityParseResult]]] = None,
+    paths: Optional[List[PathLike]] = None,
+    point: Optional[Union[Sequence[RealNum], str]] = "middle",
+    target: int = 0,
+    permute: Optional[Iterable[int]] = None,
+    parse_N: bool = True,
+    parse_L: bool = False,
+    filename: str = "phout.txt",
+    binary: bool = False,
+    encoding: str = "utf-8",
+    labels: Union[str, Sequence[str]] = "file",
+    figsize: Optional[Sequence[RealNum]] = (8, 6),
+    xlabel: Optional[str] = "xlabel",
+    ylabel: Optional[str] = "phi",
+    label_fontsize: int = 25,
+    tick_fontsize: int = 15,
+    **kwargs,
+):
+    if densities is None:
+        assert paths is not None
+        densities = [
+            read_density(
+                path,
+                parse_N=parse_N,
+                parse_L=parse_L,
+                filename=filename,
+                binary=binary,
+                encoding=encoding,
+            )
+            for path in paths
+        ]
+
+    if not isinstance(densities[0], DensityParseResult):
+        parsed = [
+            parse_density(density, target, permute, **kwargs) for density in densities
+        ]
+    else:
+        parsed = densities
+
+    NxNyNz = parsed[0].NxNyNz
+    ndim = len(NxNyNz)
+    if point == "middle":
+        point = 0.5 * NxNyNz
+    elif isinstance(point, Sequence):
+        assert len(point) == ndim
+        point = np.asarray(point) * NxNyNz
+    else:
+        raise NotImplementedError
+    point = np.around(point).astype(int)
+    datas = [p.mat[0][*point] for p in parsed]
+
+    if labels == "file":
+        labels = [p.path.stem for p in parsed]
+    elif isinstance(labels, str):
+        xlabel = labels
+        labels = []
+        for p in parsed:
+            s = p.path.parent.name
+            letters = re.findall(r"[a-zA-Z]+", s)
+            numbers = [float(num) for num in re.findall(r"\d+\.?\d*", s)]
+            result = {letter: num for letter, num in zip(letters, numbers)}
+            if xlabel in result:
+                labels.append(result[xlabel])
+            else:
+                print(result)
+                raise KeyError(f"未检测到关键词: {xlabel}")
+    elif isinstance(labels, Sequence):
+        assert len(labels) == len(parsed)
+    else:
+        raise NotImplementedError
+
+    fig, ax = plt.subplots(figsize=figsize)
+    ax.set_prop_cycle(STYLE_ABS)
+    ax.plot(labels, datas, ls="-", marker="o")
+    ax.set_xlabel(AbsCommonLabels.get(xlabel, xlabel), fontsize=label_fontsize)
+    ax.set_ylabel(AbsCommonLabels.get(ylabel, ylabel), fontsize=label_fontsize)
+    plt.xticks(fontsize=tick_fontsize)
+    plt.yticks(fontsize=tick_fontsize)
+    plt.tight_layout()
+    plt.show()
+    return Iso0DPlot(
+            fig=fig, ax=ax,
+            data=np.stack((labels, datas)).T
+    )
