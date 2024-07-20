@@ -1,9 +1,11 @@
 import re
+from pathlib import Path
 from typing import Union, Iterable, Optional, Tuple, Sequence, Literal, List
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import pyvista as pv
 from skimage.measure import marching_cubes
 
@@ -17,7 +19,7 @@ from .plotter import (
 from ..schema import Density, RealNum, PathLike, DensityParseResult, AbsCommonLabels, Iso0DPlot
 from ..toolkit import parse_density, read_density
 
-__all__ = ["iso0D", "iso1D", "iso2D", "iso3D"]
+__all__ = ["iso0D", "iso1D", "iso2D", "iso3D", "extract_label"]
 
 
 def iso3D(
@@ -342,10 +344,25 @@ def iso1D(
         assert coord is not None and len(coord) == 6
         raise NotImplementedError
 
+def extract_label(label: str, sentence: str):
+    letters = re.findall(r"[a-zA-Z]+", sentence)
+    numbers = re.findall(r"\d+\.?\d*", sentence)
+    if label in letters:
+        try:
+            num = numbers[letters.index(label)]
+        except IndexError:
+            raise IndexError(letters, numbers)
+
+        try:
+            return float(num)
+        except ValueError:
+            return num
+    else:
+        raise ValueError(f"未检测到关键词: {label}")
 
 def iso0D(
     densities: Optional[Union[List[Density], List[DensityParseResult]]] = None,
-    paths: Optional[List[PathLike]] = None,
+    paths: Optional[Union[PathLike, List[PathLike]]] = None,
     point: Optional[Union[Sequence[RealNum], str]] = "middle",
     target: int = 0,
     permute: Optional[Iterable[int]] = None,
@@ -360,10 +377,14 @@ def iso0D(
     ylabel: Optional[str] = "phi",
     label_fontsize: int = 25,
     tick_fontsize: int = 15,
+    path_to_save: Union[bool, PathLike] = True,
     **kwargs,
 ):
     if densities is None:
         assert paths is not None
+        if isinstance(paths, (Path, str)):
+            paths = [path for path in Path(paths).iterdir() if path.is_dir()]
+
         densities = [
             read_density(
                 path,
@@ -393,38 +414,42 @@ def iso0D(
     else:
         raise NotImplementedError
     point = np.around(point).astype(int)
-    datas = [p.mat[0][*point] for p in parsed]
+    yticks = [p.mat[0][*point] for p in parsed]
 
     if labels == "file":
-        labels = [p.path.stem for p in parsed]
+        xticks = [p.path.stem for p in parsed]
     elif isinstance(labels, str):
         xlabel = labels
-        labels = []
+        xticks = []
         for p in parsed:
             s = p.path.parent.name
-            letters = re.findall(r"[a-zA-Z]+", s)
-            numbers = [float(num) for num in re.findall(r"\d+\.?\d*", s)]
-            result = {letter: num for letter, num in zip(letters, numbers)}
-            if xlabel in result:
-                labels.append(result[xlabel])
-            else:
-                print(result)
-                raise KeyError(f"未检测到关键词: {xlabel}")
+            xticks.append(extract_label(xlabel, sentence=s))
     elif isinstance(labels, Sequence):
         assert len(labels) == len(parsed)
+        xticks = labels
     else:
         raise NotImplementedError
 
+    data = np.stack((xticks, yticks)).T
+
+    data = data[np.argsort(data[:,0])]
     fig, ax = plt.subplots(figsize=figsize)
     ax.set_prop_cycle(STYLE_ABS)
-    ax.plot(labels, datas, ls="-", marker="o")
+    ax.plot(xticks, yticks, ls="-", marker="o")
     ax.set_xlabel(AbsCommonLabels.get(xlabel, xlabel), fontsize=label_fontsize)
     ax.set_ylabel(AbsCommonLabels.get(ylabel, ylabel), fontsize=label_fontsize)
     plt.xticks(fontsize=tick_fontsize)
     plt.yticks(fontsize=tick_fontsize)
     plt.tight_layout()
     plt.show()
+    if path_to_save:
+        if not isinstance(path_to_save, (Path, str)):
+            assert paths is not None
+            path_to_save = paths[0].parent / f"{paths[0].parent.name}.xlsx"
+        pd.DataFrame(data=data, columns=["x", "y"]).to_excel(path_to_save, index=False)
+        print(f"Save to: {path_to_save}")
     return Iso0DPlot(
-            fig=fig, ax=ax,
-            data=np.stack((labels, datas)).T
+            fig=fig,
+            ax=ax,
+            data=data
     )

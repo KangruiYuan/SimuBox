@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "SimuBox"
-version = "0.2.5"
+version = "0.2.6"
 description = "Free python package to do some science calculation."
 authors = ["Alkaid Yuan <kryuan@qq.com>"]
 maintainers = ["Alkaid Yuan <kryuan@qq.com>"]
